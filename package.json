@@ -1,0 +1,51 @@
+{
+  "name": "mnee-autonomous-payroll",
+  "version": "1.0.0",
+  "description": "MNEE-native Autonomous Payroll Agent - Hackathon MVP",
+  "private": true,
+  "workspaces": [
+    "backend",
+    "frontend",
+    "contracts",
+    "agents"
+  ],
+  "scripts": {
+    "dev": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\"",
+    "dev:backend": "cd backend && npm run dev",
+    "dev:frontend": "cd frontend && npm run dev",
+    "build": "npm run build:backend && npm run build:frontend",
+    "build:backend": "cd backend && npm run build",
+    "build:frontend": "cd frontend && npm run build",
+    "test": "npm run test:backend && npm run test:frontend",
+    "test:backend": "cd backend && npm run test",
+    "test:frontend": "cd frontend && npm run test",
+    "db:migrate": "cd backend && npx prisma migrate dev",
+    "db:seed": "cd backend && npm run seed",
+    "deploy:contracts": "cd contracts && npm run deploy",
+    "deploy:agents": "cd agents && npm run deploy",
+    "setup": "npm install && npm run db:migrate && npm run db:seed"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/yourusername/mnee-autonomous-payroll"
+  },
+  "keywords": [
+    "mnee",
+    "payroll",
+    "autonomous-agent",
+    "web3",
+    "defi",
+    "salary"
+  ],
+  "author": "MNEE Hackathon Team",
+  "license": "MIT",
+  "dependencies": {
+    "@rollup/rollup-linux-x64-gnu": "^4.53.3"
+  }
+}
