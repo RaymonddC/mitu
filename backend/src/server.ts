@@ -15,6 +15,7 @@ import employerRoutes from './routes/employer';
 import employeeRoutes from './routes/employee';
 import payrollRoutes from './routes/payroll';
 import alertRoutes from './routes/alert';
+import balanceRoutes from './routes/balance';
 
 // Load environment variables
 dotenv.config();
@@ -45,7 +46,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // Logging middleware
-app.use((req, res, next) => {
+app.use((req, _res, next) => {
   logger.info(`${req.method} ${req.path}`, {
     ip: req.ip,
     userAgent: req.get('user-agent')
@@ -54,7 +55,7 @@ app.use((req, res, next) => {
 });
 
 // Health check endpoint
-app.get('/health', async (req, res) => {
+app.get('/health', async (_req, res) => {
   try {
     // Test database connection
     await prisma.$queryRaw`SELECT 1`;
@@ -77,6 +78,7 @@ app.use('/api/employers', employerRoutes);
 app.use('/api/employees', employeeRoutes);
 app.use('/api/payroll', payrollRoutes);
 app.use('/api/alerts', alertRoutes);
+app.use('/api/balance', balanceRoutes);
 
 // 404 handler
 app.use((req, res) => {
@@ -103,7 +105,7 @@ process.on('SIGINT', async () => {
 });
 
 // Start server
-const server = app.listen(PORT, () => {
+app.listen(PORT, () => {
   logger.info(`🚀 MNEE Payroll Backend running on port ${PORT}`);
   logger.info(`📊 Environment: ${process.env.NODE_ENV || 'development'}`);
   logger.info(`🌐 MNEE Network: ${process.env.MNEE_CHAIN_ID || 'testnet'}`);

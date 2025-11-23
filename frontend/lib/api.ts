@@ -76,6 +76,37 @@ export interface Alert {
   resolvedAt?: string;
 }
 
+export interface BalanceTransaction {
+  id: string;
+  employerId: string;
+  type: string;
+  amount: number;
+  balanceBefore: number;
+  balanceAfter: number;
+  description?: string;
+  txHash?: string;
+  referenceId?: string;
+  metadata?: any;
+  createdAt: string;
+}
+
+export interface BalanceInfo {
+  currentBalance: number;
+  totalDeposited: number;
+  totalWithdrawn: number;
+  lastUpdated?: string;
+}
+
+export interface PlatformStats {
+  totalDeposits: number;
+  totalWithdrawals: number;
+  totalPayrollPaid: number;
+  totalEmployers: number;
+  totalEmployees: number;
+  platformBalance: number;
+  lastUpdated: string;
+}
+
 // Employer API
 export const employerAPI = {
   create: (data: Partial<Employer>) => api.post('/employers', data),
@@ -113,6 +144,27 @@ export const alertAPI = {
     return api.get<{ data: Alert[] }>(`/alerts?${query}`);
   },
   resolve: (id: string) => api.put(`/alerts/${id}/resolve`),
+};
+
+// Balance API (Week 1: Virtual balance system)
+export const balanceAPI = {
+  deposit: (employerId: string, data: { amount: number; txHash?: string; description?: string }) =>
+    api.post(`/balance/employers/${employerId}/deposit`, data),
+  withdraw: (employerId: string, data: { amount: number; destinationAddress: string; description?: string }) =>
+    api.post(`/balance/employers/${employerId}/withdraw`, data),
+  getBalance: (employerId: string) =>
+    api.get<{ data: BalanceInfo }>(`/balance/employers/${employerId}/balance`),
+  getTransactionHistory: (employerId: string, params?: { limit?: number; offset?: number }) => {
+    const query = new URLSearchParams({
+      ...(params?.limit && { limit: String(params.limit) }),
+      ...(params?.offset && { offset: String(params.offset) }),
+    });
+    return api.get<{ data: { transactions: BalanceTransaction[]; pagination: any } }>(
+      `/balance/employers/${employerId}/transactions?${query}`
+    );
+  },
+  getPlatformStats: () =>
+    api.get<{ data: PlatformStats }>('/balance/platform/stats'),
 };
 
 export default api;

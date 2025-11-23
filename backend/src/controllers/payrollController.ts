@@ -8,10 +8,11 @@ import { prisma } from '../server';
 import { CustomError } from '../middleware/errorHandler';
 import { z } from 'zod';
 import { logger } from '../middleware/logger';
-import { MNEEService } from '../services/mneeService';
+import { ethereumService } from '../services/ethereumService';
+import { balanceService } from '../services/balanceService';
 import crypto from 'crypto';
 
-const mneeService = new MNEEService();
+// Using ethereumService for MNEE ERC-20 token on Ethereum (hackathon pivot)
 
 // Validation schemas
 const runPayrollSchema = z.object({
@@ -55,33 +56,25 @@ export async function runPayroll(req: Request, res: Response, next: NextFunction
       0
     );
 
-    // AI Guard: Check employer balance
-    try {
-      const balance = await mneeService.getBalance(employer.walletAddress);
+    // AI Guard: Check virtual balance (Week 1: Multi-employer custodial)
+    const virtualBalance = Number(employer.virtualBalance);
 
-      if (balance < totalAmount) {
-        await prisma.alert.create({
-          data: {
-            employerId: employer.id,
-            severity: 'critical',
-            category: 'insufficient_funds',
-            title: 'Insufficient Funds for Payroll',
-            message: `Employer wallet has ${balance} MNEE but needs ${totalAmount} MNEE to complete payroll`,
-            metadata: { balance, required: totalAmount, deficit: totalAmount - balance }
-          }
-        });
+    if (virtualBalance < totalAmount && !data.testMode) {
+      await prisma.alert.create({
+        data: {
+          employerId: employer.id,
+          severity: 'critical',
+          category: 'insufficient_funds',
+          title: 'Insufficient Virtual Balance for Payroll',
+          message: `Virtual balance has ${virtualBalance} MNEE but needs ${totalAmount} MNEE to complete payroll`,
+          metadata: { balance: virtualBalance, required: totalAmount, deficit: totalAmount - virtualBalance }
+        }
+      });
 
-        throw new CustomError(
-          `Insufficient funds: need ${totalAmount} MNEE, have ${balance} MNEE`,
-          400
-        );
-      }
-    } catch (error: any) {
-      logger.error('Failed to check employer balance', { error: error.message });
-      // Continue anyway if balance check fails (might be in test mode)
-      if (!data.testMode) {
-        throw error;
-      }
+      throw new CustomError(
+        `Insufficient virtual balance: need ${totalAmount} MNEE, have ${virtualBalance} MNEE`,
+        400
+      );
     }
 
     // Execute payroll for each employee
@@ -99,28 +92,61 @@ export async function runPayroll(req: Request, res: Response, next: NextFunction
         where: { idempotencyKey }
       });
 
-      if (existingLog && existingLog.status === 'completed') {
-        logger.info(`Employee ${employee.id} already paid today`);
-        results.push({
-          employeeId: employee.id,
-          employeeName: employee.name,
-          status: 'skipped',
-          reason: 'Already paid today'
-        });
-        continue;
+      if (existingLog) {
+        if (existingLog.status === 'completed') {
+          logger.info(`Employee ${employee.id} already paid today`, {
+            txHash: existingLog.txHash,
+            completedAt: existingLog.confirmedAt
+          });
+          results.push({
+            employeeId: employee.id,
+            employeeName: employee.name,
+            status: 'skipped',
+            reason: 'Already paid today',
+            txHash: existingLog.txHash || undefined
+          });
+          continue;
+        } else if (existingLog.status === 'pending' || existingLog.status === 'retrying') {
+          logger.info(`Employee ${employee.id} has pending payment`, {
+            status: existingLog.status,
+            logId: existingLog.id
+          });
+          results.push({
+            employeeId: employee.id,
+            employeeName: employee.name,
+            status: 'skipped',
+            reason: `Payment already ${existingLog.status}`
+          });
+          continue;
+        }
+        // If status is 'failed', we'll allow retry by not continuing here
+        logger.info(`Retrying failed payment for employee ${employee.id}`);
       }
 
       try {
-        // Create pending log
-        const payrollLog = await prisma.payrollLog.create({
-          data: {
-            employerId: employer.id,
-            employeeId: employee.id,
-            amount: employee.salaryAmount,
-            status: 'pending',
-            idempotencyKey
-          }
-        });
+        // Create or use existing failed log
+        let payrollLog = existingLog;
+
+        if (!existingLog) {
+          payrollLog = await prisma.payrollLog.create({
+            data: {
+              employerId: employer.id,
+              employeeId: employee.id,
+              amount: employee.salaryAmount,
+              status: 'pending',
+              idempotencyKey
+            }
+          });
+        } else {
+          // Update existing failed log
+          payrollLog = await prisma.payrollLog.update({
+            where: { id: existingLog.id },
+            data: {
+              status: 'retrying',
+              retryCount: { increment: 1 }
+            }
+          });
+        }
 
         // Execute salary transfer via MNEE Flow Contract
         let txHash: string | undefined;
@@ -150,6 +176,39 @@ export async function runPayroll(req: Request, res: Response, next: NextFunction
             }
           }
         });
+
+        // Deduct from virtual balance (Week 1: Multi-employer custodial)
+        if (!data.testMode) {
+          try {
+            await balanceService.deductPayroll(
+              employer.id,
+              Number(employee.salaryAmount),
+              payrollLog.id
+            );
+            logger.info('Virtual balance deducted', {
+              employerId: employer.id,
+              amount: Number(employee.salaryAmount),
+              payrollLogId: payrollLog.id
+            });
+          } catch (balanceError: any) {
+            logger.error('Failed to deduct virtual balance', {
+              error: balanceError.message,
+              employerId: employer.id,
+              payrollLogId: payrollLog.id
+            });
+            // Create alert but don't fail the payroll (transaction already succeeded)
+            await prisma.alert.create({
+              data: {
+                employerId: employer.id,
+                severity: 'warning',
+                category: 'system_error',
+                title: 'Balance Deduction Failed',
+                message: `Payroll succeeded but failed to update virtual balance: ${balanceError.message}`,
+                metadata: { payrollLogId: payrollLog.id, error: balanceError.message }
+              }
+            });
+          }
+        }
 
         logger.info(`Payroll executed for employee ${employee.id}`, { txHash });
 
@@ -333,6 +392,19 @@ export async function retryFailedPayroll(req: Request, res: Response, next: Next
     });
 
     try {
+      // Check virtual balance before retry
+      const hasSufficientBalance = await balanceService.hasSufficientBalance(
+        log.employerId,
+        Number(log.amount)
+      );
+
+      if (!hasSufficientBalance) {
+        throw new CustomError(
+          `Insufficient virtual balance for retry. Please deposit more funds.`,
+          400
+        );
+      }
+
       // Attempt transfer again
       const txHash = await mneeService.executeSalaryTransfer(
         log.employer.walletAddress,
@@ -349,6 +421,31 @@ export async function retryFailedPayroll(req: Request, res: Response, next: Next
           confirmedAt: new Date()
         }
       });
+
+      // Deduct from virtual balance
+      try {
+        await balanceService.deductPayroll(
+          log.employerId,
+          Number(log.amount),
+          logId
+        );
+      } catch (balanceError: any) {
+        logger.error('Failed to deduct virtual balance on retry', {
+          error: balanceError.message,
+          payrollLogId: logId
+        });
+        // Create alert but don't fail the retry (transaction already succeeded)
+        await prisma.alert.create({
+          data: {
+            employerId: log.employerId,
+            severity: 'warning',
+            category: 'system_error',
+            title: 'Balance Deduction Failed on Retry',
+            message: `Payroll retry succeeded but failed to update virtual balance: ${balanceError.message}`,
+            metadata: { payrollLogId: logId, error: balanceError.message }
+          }
+        });
+      }
 
       logger.info(`Retry successful for payroll log ${logId}`, { txHash });
 

@@ -8,6 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button'
 import { formatCurrency, formatDate, getSeverityColor } from '@/lib/utils'
 import { Users, DollarSign, Calendar, AlertCircle, PlayCircle } from 'lucide-react'
+import { BalanceDashboard } from '@/components/BalanceDashboard'
 
 export default function DashboardPage() {
   const router = useRouter()
@@ -75,6 +76,9 @@ export default function DashboardPage() {
         <h1 className="text-3xl font-bold">Dashboard</h1>
         <p className="text-gray-600 mt-1">Welcome back, {employer.companyName}</p>
       </div>
+
+      {/* Virtual Balance Dashboard */}
+      <BalanceDashboard employerId={employer.id} />
 
       {/* Summary Cards */}
       <div className="grid gap-6 md:grid-cols-3">

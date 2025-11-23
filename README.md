@@ -155,10 +155,11 @@ flowchart TB
 - **Language**: TypeScript
 
 ### Blockchain
-- **Network**: MNEE Testnet
-- **Contracts**: MNEE Flow Contracts (TypeScript DSL)
-- **Agent**: MNEE Agent Runtime
-- **Asset**: MNEE Native Stable Asset
+- **Network**: MNEE Testnet (sandbox environment)
+- **SDK**: @mnee/ts-sdk (official MNEE TypeScript SDK)
+- **Contracts**: MNEE Flow Contracts (TypeScript DSL) - optional
+- **Agent**: MNEE Agent Runtime - optional
+- **Asset**: MNEE USD (stablecoin on Bitcoin)
 
 ### DevOps
 - **Containerization**: Docker + Docker Compose
@@ -251,22 +252,36 @@ cp .env.example .env
 # Database
 DATABASE_URL="postgresql://postgres:postgres@localhost:5432/mnee_payroll"
 
-# MNEE Network
+# MNEE SDK Configuration
+MNEE_API_KEY="your-mnee-api-key-here"           # Get from https://developer.mnee.net/
+MNEE_ENVIRONMENT="sandbox"                       # Use "sandbox" for testnet, "production" for mainnet
+
+# Wallets (WIF format - get from MNEE testnet)
+EMPLOYER_PRIVATE_KEY="your_employer_wif_key"    # Wallet Import Format private key
+AGENT_PRIVATE_KEY="your_agent_wif_key"          # WIF private key for agent
+
+# Legacy Configuration (optional)
 MNEE_RPC_URL="https://testnet.mnee-rpc.io"
 MNEE_CHAIN_ID="mnee-testnet-1"
-
-# Wallets (get from MNEE testnet)
-EMPLOYER_PRIVATE_KEY="your_employer_testnet_key"
-AGENT_PRIVATE_KEY="your_agent_testnet_key"
-
-# Contracts (set after deployment)
-SALARY_CONTRACT_ADDRESS=""
+SALARY_CONTRACT_ADDRESS=""                       # Optional: set after contract deployment
 ```
 
+**Get MNEE SDK Access:**
+1. Create account at [MNEE Developer Portal](https://developer.mnee.net/)
+2. Generate API key for sandbox (testnet) environment
+3. Add API key to `.env` as `MNEE_API_KEY`
+
 **Get testnet funds:**
-1. Visit [MNEE Testnet Faucet](https://faucet.testnet.mnee.io)
-2. Request test MNEE for your employer wallet
-3. Save private key to `.env`
+1. Visit [MNEE Testnet Faucet](https://faucet.testnet.mnee.io) or use sandbox faucet
+2. Request test MNEE for your employer wallet (10 MNEE every 24 hours in sandbox)
+3. Export your wallet's WIF private key
+4. Save WIF key to `.env` as `EMPLOYER_PRIVATE_KEY`
+
+**Important Notes:**
+- The system uses the official `@mnee/ts-sdk` package for blockchain interactions
+- Wallet addresses must be Bitcoin format (start with '1', '3', or 'bc1')
+- Private keys must be in WIF (Wallet Import Format)
+- Mock mode activates automatically if `MNEE_API_KEY` is not configured
 
 ### Step 2: Database Setup
 
