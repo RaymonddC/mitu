@@ -3,19 +3,27 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useStore } from '@/lib/store'
-import { Button } from './ui/button'
-import { formatWalletAddress } from '@/lib/utils'
+import { ConnectButton } from '@rainbow-me/rainbowkit'
+import { useAccount } from 'wagmi'
+import { useEffect } from 'react'
 import { Wallet, Users, DollarSign, Settings, BarChart3 } from 'lucide-react'
 
 export function Navigation() {
   const pathname = usePathname()
   const { walletAddress, isConnected, connectWallet, disconnectWallet, employer } = useStore()
 
-  const handleConnect = () => {
-    // Mock wallet connection - in production, integrate MNEE WalletConnect
-    const mockAddress = 'mnee1test_employer_wallet_address_12345'
-    connectWallet(mockAddress)
-  }
+  // Sync Ethereum wallet connection with app state
+  const { address, isConnected: isWalletConnected } = useAccount()
+
+  useEffect(() => {
+    if (isWalletConnected && address && address !== walletAddress) {
+      // Wallet connected via MetaMask
+      connectWallet(address)
+    } else if (!isWalletConnected && isConnected) {
+      // Wallet disconnected
+      disconnectWallet()
+    }
+  }, [address, isWalletConnected, walletAddress, isConnected, connectWallet, disconnectWallet])
 
   const navItems = [
     { href: '/dashboard', label: 'Dashboard', icon: BarChart3 },
@@ -59,29 +67,15 @@ export function Navigation() {
           </div>
 
           <div className="flex items-center space-x-4">
-            {isConnected ? (
-              <>
-                {employer && (
-                  <div className="text-sm text-gray-600">
-                    <span className="font-medium">{employer.companyName}</span>
-                  </div>
-                )}
-                <div className="flex items-center space-x-2 rounded-md border border-gray-200 bg-gray-50 px-3 py-2">
-                  <Wallet className="h-4 w-4 text-gray-600" />
-                  <span className="text-sm font-medium">
-                    {formatWalletAddress(walletAddress!)}
-                  </span>
-                </div>
-                <Button variant="outline" size="sm" onClick={disconnectWallet}>
-                  Disconnect
-                </Button>
-              </>
-            ) : (
-              <Button onClick={handleConnect}>
-                <Wallet className="mr-2 h-4 w-4" />
-                Connect Wallet
-              </Button>
+            {employer && isConnected && (
+              <div className="text-sm text-gray-600">
+                <span className="font-medium">{employer.companyName}</span>
+              </div>
             )}
+            <ConnectButton
+              chainStatus="icon"
+              showBalance={false}
+            />
           </div>
         </div>
       </div>

@@ -152,7 +152,7 @@ export async function runPayroll(req: Request, res: Response, next: NextFunction
         let txHash: string | undefined;
 
         if (!data.testMode) {
-          txHash = await mneeService.executeSalaryTransfer(
+          txHash = await ethereumService.executeSalaryTransfer(
             employer.walletAddress,
             employee.walletAddress,
             Number(employee.salaryAmount)
@@ -406,7 +406,7 @@ export async function retryFailedPayroll(req: Request, res: Response, next: Next
       }
 
       // Attempt transfer again
-      const txHash = await mneeService.executeSalaryTransfer(
+      const txHash = await ethereumService.executeSalaryTransfer(
         log.employer.walletAddress,
         log.employee.walletAddress,
         Number(log.amount)
