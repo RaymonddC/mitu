@@ -4,7 +4,7 @@
 
 ### Opening (15 seconds)
 
-> "Hi, I'm [Your Name] and I built the **MNEE Autonomous Payroll Agent**—a fully autonomous system that eliminates manual payroll processing using 100% MNEE-native technology."
+> "Hi, I'm [Your Name] and I built the **MNEE Autonomous Payroll Agent**—a fully autonomous system that eliminates manual payroll processing using Ethereum blockchain and the MNEE ERC-20 stablecoin."
 
 ### The Problem (20 seconds)
 
@@ -20,9 +20,9 @@
 
 > "Our solution has three key components:
 >
-> 1. **MNEE Flow Contract** (TypeScript DSL): Handles on-chain salary logic with built-in validation
-> 2. **Autonomous Agent** (MNEE Agent Runtime): Runs daily, automatically executes due payroll
-> 3. **AI Guard**: Prevents errors before they happen—checks balances, validates wallets, detects anomalies
+> 1. **Ethereum Smart Contracts**: MNEE ERC-20 token transfers with on-chain transaction verification
+> 2. **Autonomous Agent**: Runs daily, automatically executes due payroll using ethers.js
+> 3. **AI Guard**: Prevents errors before they happen—checks balances, validates Ethereum addresses, detects anomalies
 >
 > Set your payday once, and forget about it. The agent handles everything."
 
@@ -48,10 +48,10 @@
 ### Technical Highlights (10 seconds)
 
 > "This is a full production-ready MVP:
-> - Next.js frontend with shadcn/ui
-> - Node.js + Express backend
+> - Next.js frontend with RainbowKit wallet integration
+> - Node.js + Express backend with ethers.js v6
 > - PostgreSQL for data
-> - MNEE Flow Contracts + Agent Runtime
+> - Ethereum blockchain with MNEE ERC-20 stablecoin
 > - Docker deployment, tests, CI/CD ready"
 
 ### Impact & Next Steps (10 seconds)
@@ -72,15 +72,15 @@
 
 ### Unique Value Props
 
-1. **100% MNEE-Native**
-   - No ICP, no external stablecoins
-   - Showcases MNEE's unique autonomous execution capabilities
-   - Uses MNEE Flow Contracts (TypeScript DSL)
+1. **Ethereum-Based with MNEE Stablecoin**
+   - Uses MNEE ERC-20 token for stable salary payments
+   - Transparent on-chain transactions with Etherscan verification
+   - MetaMask wallet integration for easy adoption
 
 2. **Truly Autonomous**
    - Set payday once, agent handles everything
    - No manual intervention needed
-   - Runs on MNEE Agent Runtime
+   - Conceptual implementation ready for MNEE Agent Runtime
 
 3. **Production-Ready**
    - Full-stack implementation

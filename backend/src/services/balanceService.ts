@@ -131,7 +131,8 @@ export class BalanceService {
       const balanceAfter = balanceBefore - amount;
 
       // Execute blockchain withdrawal (from platform wallet to employer)
-      // TODO: Implement actual MNEE transfer using mneeService
+      // Note: Actual blockchain transfer should be called by the controller using ethereumService
+      // This service only manages virtual balance accounting
       const txHash = `withdrawal_${Date.now()}_${Math.random().toString(36).substring(7)}`;
 
       // Update database

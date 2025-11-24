@@ -1,10 +1,10 @@
 # MNEE Autonomous Payroll Agent
 
-> **Hackathon Project**: Fully autonomous, MNEE-native payroll system powered by MNEE Flow Contracts and MNEE Agent Runtime
+> **Hackathon Project**: Fully autonomous, Ethereum-native payroll system powered by MNEE ERC-20 stablecoin
 
-[![MNEE Network](https://img.shields.io/badge/MNEE-Native-1B5BF9)](https://mnee.io)
+[![Ethereum](https://img.shields.io/badge/Ethereum-Sepolia-627EEA)](https://sepolia.etherscan.io/)
 [![License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
-[![Testnet](https://img.shields.io/badge/network-testnet-yellow)](https://testnet.mnee.io)
+[![MNEE Token](https://img.shields.io/badge/MNEE-ERC--20-1B5BF9)](https://etherscan.io/token/0x8ccedbAe4916b79da7F3F612EfB2EB93A2bFD6cF)
 
 ---
 
@@ -28,22 +28,22 @@
 
 ## 🎯 Overview
 
-The **MNEE Autonomous Payroll Agent** is a production-ready MVP that automates employee salary payments using **100% MNEE-native technology**. No ICP, no external stablecoins—just pure MNEE.
+The **MNEE Autonomous Payroll Agent** is a production-ready MVP that automates employee salary payments using **Ethereum blockchain** and the **MNEE ERC-20 stablecoin**.
 
 ### What it does:
 
-1. **Employers** register and add employees with wallet addresses and salary amounts
+1. **Employers** register with MetaMask and add employees with Ethereum addresses and salary amounts
 2. **Autonomous Agent** runs daily, checking if it's payday for any employer
-3. **Flow Contract** executes transfers with built-in safety checks (balance validation, budget caps)
+3. **Smart Contracts** execute MNEE token transfers with built-in safety checks
 4. **AI Guard** prevents errors (insufficient funds, invalid wallets, suspicious changes)
-5. **Full Audit Trail** stores events on-chain + database for transparency
+5. **Full Audit Trail** stores transaction history on-chain + database for transparency
 
 ### Why it matters:
 
 - **Eliminates manual payroll** → Set it and forget it
-- **100% transparent** → Every transaction on-chain
+- **100% transparent** → Every transaction on Ethereum blockchain
 - **Secure by design** → AI-powered checks before every payment
-- **MNEE-native** → Leverages MNEE's unique autonomous execution capabilities
+- **Multi-employer platform** → Virtual balance system supports multiple companies
 
 ---
 
@@ -53,60 +53,56 @@ The **MNEE Autonomous Payroll Agent** is a production-ready MVP that automates e
 flowchart TB
     subgraph Frontend["🖥️ Frontend (Next.js)"]
         UI[Dashboard + Employees + Payroll Pages]
-        Wallet[MNEE Wallet Connect]
+        Wallet[MetaMask + RainbowKit]
     end
 
     subgraph Backend["⚙️ Backend (Node.js + Express)"]
         API[REST API]
         DB[(PostgreSQL)]
-        SDK[MNEE SDK]
+        EthService[Ethereum Service<br/>ethers.js]
     end
 
-    subgraph MNEE["🔷 MNEE Network"]
+    subgraph Ethereum["⛓️ Ethereum Network"]
+        MNEE[MNEE ERC-20 Token<br/>0x8cce...D6cF]
         Agent[🤖 Autonomous Agent<br/>salary_agent.ts]
-        Contract[📜 Flow Contract<br/>salary_flow.mnee.ts]
-        Blockchain[⛓️ MNEE Blockchain<br/>Native Asset Layer]
+        Blockchain[Sepolia Testnet]
     end
 
     UI -->|API Calls| API
-    Wallet -->|Connect| UI
+    Wallet -->|Connect via RainbowKit| UI
     API -->|Store/Query| DB
-    API -->|Trigger Payroll| SDK
-    SDK -->|Call Contract| Contract
+    API -->|ERC-20 Operations| EthService
+    EthService -->|Transfer MNEE| MNEE
 
     Agent -->|Daily Check| API
     Agent -->|Read Schedule| DB
-    Agent -->|Execute Salary| Contract
+    Agent -->|Execute Payroll| EthService
 
-    Contract -->|Validate & Transfer| Blockchain
-    Contract -->|Emit Events| Agent
-    Contract -->|Log TX| DB
-
-    Blockchain -->|Balance Check| Contract
+    MNEE -->|On-chain Events| Blockchain
     Blockchain -->|Confirmed TX| API
 
     style Frontend fill:#1B5BF9,stroke:#fff,color:#fff
     style Backend fill:#111827,stroke:#fff,color:#fff
-    style MNEE fill:#22C55E,stroke:#fff,color:#fff
+    style Ethereum fill:#627EEA,stroke:#fff,color:#fff
 ```
 
 ### Component Flow:
 
-1. **Employer** connects wallet → adds employees via frontend
+1. **Employer** connects MetaMask wallet → adds employees via frontend
 2. **Backend** stores employee data + schedules in PostgreSQL
-3. **Autonomous Agent** (runs on MNEE Agent Runtime):
+3. **Autonomous Agent** (conceptual MNEE Agent Runtime implementation):
    - Checks daily if it's payday for any employer
-   - Validates balances via Flow Contract
-   - Executes salary transfers for each employee
+   - Validates balances via Ethereum Service
+   - Executes MNEE token transfers for each employee
    - Retries failures, creates alerts
-4. **Flow Contract** (MNEE TypeScript DSL):
-   - Validates employer/employee relationships
-   - Checks monthly budget caps
-   - Transfers MNEE from employer → employee
-   - Emits events for audit trail
+4. **Ethereum Service** (ethers.js v6):
+   - Validates employer/employee Ethereum addresses
+   - Checks virtual balance sufficiency
+   - Transfers MNEE ERC-20 tokens
+   - Emits transaction events for audit trail
 5. **Frontend** displays:
    - Real-time payroll status
-   - Transaction history with tx hashes
+   - Transaction history with Etherscan links
    - AI agent alerts and recommendations
 
 ---
@@ -115,17 +111,18 @@ flowchart TB
 
 ### Core MVP Features
 
-- ✅ **Employer Onboarding**: Connect MNEE wallet, set up company profile
-- ✅ **Employee Management**: Add/edit/deactivate employees with wallet addresses
+- ✅ **Employer Onboarding**: Connect MetaMask wallet, set up company profile
+- ✅ **Employee Management**: Add/edit/deactivate employees with Ethereum addresses
 - ✅ **Payroll Scheduling**: Configure payday (1-28 of month)
 - ✅ **Autonomous Execution**: Agent runs daily, executes due payroll automatically
 - ✅ **Manual Override**: "Run Payroll Now" button for immediate execution
+- ✅ **Virtual Balance System**: Multi-employer custodial platform with instant deposits/withdrawals
 - ✅ **AI Guard Checks**:
   - Insufficient balance detection
-  - Invalid wallet validation
+  - Invalid Ethereum address validation
   - Suspicious salary change alerts (>50% change)
   - Monthly budget cap enforcement
-- ✅ **Audit Trail**: Full transaction history with tx hashes
+- ✅ **Audit Trail**: Full transaction history with Etherscan tx hashes
 - ✅ **Test Mode**: Simulate transactions without blockchain execution
 
 ### Security Features
@@ -136,6 +133,7 @@ flowchart TB
 - 🔒 Signed audit logs with tx metadata
 - 🔒 Rate limiting on API endpoints
 - 🔒 Input validation with Zod schemas
+- 🔒 Mock mode for safe development without private keys
 
 ---
 
@@ -145,21 +143,22 @@ flowchart TB
 - **Framework**: Next.js 14 (App Router)
 - **Styling**: TailwindCSS + shadcn/ui components
 - **State**: Zustand
+- **Wallet**: RainbowKit + wagmi + viem
 - **Language**: TypeScript
 
 ### Backend
 - **Runtime**: Node.js 18+
 - **Framework**: Express
-- **Database**: PostgreSQL
+- **Database**: PostgreSQL 16
 - **ORM**: Prisma
+- **Blockchain**: ethers.js v6
 - **Language**: TypeScript
 
 ### Blockchain
-- **Network**: MNEE Testnet (sandbox environment)
-- **SDK**: @mnee/ts-sdk (official MNEE TypeScript SDK)
-- **Contracts**: MNEE Flow Contracts (TypeScript DSL) - optional
-- **Agent**: MNEE Agent Runtime - optional
-- **Asset**: MNEE USD (stablecoin on Bitcoin)
+- **Network**: Ethereum Sepolia Testnet (development) / Mainnet (production)
+- **Token**: MNEE ERC-20 Stablecoin (0x8ccedbAe4916b79da7F3F612EfB2EB93A2bFD6cF)
+- **RPC Provider**: Infura / Alchemy
+- **Agent**: Autonomous agent (conceptual implementation ready for MNEE Agent Runtime)
 
 ### DevOps
 - **Containerization**: Docker + Docker Compose
@@ -177,7 +176,11 @@ Before you begin, ensure you have:
 - **npm** or **pnpm**
 - **Docker** (optional, for containerized setup)
 - **Git**
-- **MNEE Testnet Wallet** with test funds ([Get from faucet](https://faucet.testnet.mnee.io))
+- **MetaMask** browser extension
+- **Infura Account** ([Free tier](https://infura.io/)) or Alchemy
+- **WalletConnect Project ID** ([Free](https://cloud.walletconnect.com/))
+- **Sepolia ETH** from faucet ([Get from](https://sepoliafaucet.com/))
+- **MNEE Tokens** from hackathon organizers
 
 ---
 
@@ -193,23 +196,37 @@ cd mnee-autonomous-payroll
 # 2. Install dependencies (monorepo)
 npm install
 
-# 3. Copy environment template
-cp .env.example .env
+# 3. Generate Ethereum wallets for testing
+npx tsx scripts/generate-eth-wallets.ts
+# Copy the output addresses
 
-# 4. Edit .env and add your MNEE testnet wallet keys
-nano .env
+# 4. Copy environment template
+cp .env.example backend/.env
 
-# 5. Start PostgreSQL (via Docker)
+# 5. Edit backend/.env and add:
+#    - Your Infura API key
+#    - Generated platform wallet address & private key
+#    - MNEE token address (already filled)
+nano backend/.env
+
+# 6. Create frontend env file
+cp .env.example frontend/.env.local
+# Add your WalletConnect Project ID
+nano frontend/.env.local
+
+# 7. Start PostgreSQL (via Docker)
 docker run --name mnee-db -e POSTGRES_PASSWORD=postgres -p 5432:5432 -d postgres:16-alpine
 
-# 6. Run database migrations + seed data
+# 8. Run database migrations + seed data
+cd backend
 npm run db:migrate
 npm run db:seed
 
-# 7. Start backend + frontend concurrently
+# 9. Start backend + frontend (from root)
+cd ..
 npm run dev
 
-# 8. Open browser
+# 10. Open browser
 # - Frontend: http://localhost:3000
 # - Backend: http://localhost:3001
 ```
@@ -220,12 +237,16 @@ npm run dev
 # 1. Clone and setup
 git clone https://github.com/yourusername/mnee-autonomous-payroll.git
 cd mnee-autonomous-payroll
-cp .env.example .env
 
-# 2. Edit .env with your keys
-nano .env
+# 2. Generate wallets
+npx tsx scripts/generate-eth-wallets.ts
 
-# 3. Start all services
+# 3. Copy and edit environment files
+cp .env.example backend/.env
+cp .env.example frontend/.env.local
+# Edit both files with your API keys and wallet info
+
+# 4. Start all services
 docker-compose up
 
 # Services will be available at:
@@ -240,48 +261,43 @@ docker-compose up
 
 ### Step 1: Environment Configuration
 
-Create `.env` file from template:
-
-```bash
-cp .env.example .env
-```
-
-**Required variables:**
+**Backend (.env):**
 
 ```env
 # Database
 DATABASE_URL="postgresql://postgres:postgres@localhost:5432/mnee_payroll"
 
-# MNEE SDK Configuration
-MNEE_API_KEY="your-mnee-api-key-here"           # Get from https://developer.mnee.net/
-MNEE_ENVIRONMENT="sandbox"                       # Use "sandbox" for testnet, "production" for mainnet
+# Ethereum Configuration
+ETHEREUM_RPC_URL="https://sepolia.infura.io/v3/YOUR_INFURA_KEY"
+ETHEREUM_CHAIN_ID=11155111  # Sepolia testnet
 
-# Wallets (WIF format - get from MNEE testnet)
-EMPLOYER_PRIVATE_KEY="your_employer_wif_key"    # Wallet Import Format private key
-AGENT_PRIVATE_KEY="your_agent_wif_key"          # WIF private key for agent
+# MNEE Token (ERC-20)
+MNEE_TOKEN_ADDRESS="0x8ccedbAe4916b79da7F3F612EfB2EB93A2bFD6cF"
 
-# Legacy Configuration (optional)
-MNEE_RPC_URL="https://testnet.mnee-rpc.io"
-MNEE_CHAIN_ID="mnee-testnet-1"
-SALARY_CONTRACT_ADDRESS=""                       # Optional: set after contract deployment
+# Platform Wallet (custodial)
+PLATFORM_WALLET_ADDRESS="0xYourGeneratedPlatformAddress"
+PLATFORM_PRIVATE_KEY="0xYourGeneratedPrivateKey"
+
+# For mock mode (development without real transactions)
+# Simply leave PLATFORM_PRIVATE_KEY empty
 ```
 
-**Get MNEE SDK Access:**
-1. Create account at [MNEE Developer Portal](https://developer.mnee.net/)
-2. Generate API key for sandbox (testnet) environment
-3. Add API key to `.env` as `MNEE_API_KEY`
+**Frontend (.env.local):**
 
-**Get testnet funds:**
-1. Visit [MNEE Testnet Faucet](https://faucet.testnet.mnee.io) or use sandbox faucet
-2. Request test MNEE for your employer wallet (10 MNEE every 24 hours in sandbox)
-3. Export your wallet's WIF private key
-4. Save WIF key to `.env` as `EMPLOYER_PRIVATE_KEY`
+```env
+NEXT_PUBLIC_API_URL="http://localhost:3001"
+NEXT_PUBLIC_ETHEREUM_CHAIN_ID=11155111
+NEXT_PUBLIC_MNEE_TOKEN_ADDRESS="0x8ccedbAe4916b79da7F3F612EfB2EB93A2bFD6cF"
+NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID="your_project_id_here"
+```
 
-**Important Notes:**
-- The system uses the official `@mnee/ts-sdk` package for blockchain interactions
-- Wallet addresses must be Bitcoin format (start with '1', '3', or 'bc1')
-- Private keys must be in WIF (Wallet Import Format)
-- Mock mode activates automatically if `MNEE_API_KEY` is not configured
+**Get API Keys:**
+1. **Infura**: Sign up at [infura.io](https://infura.io/), create project, copy API key
+2. **WalletConnect**: Sign up at [cloud.walletconnect.com](https://cloud.walletconnect.com/), create project, copy Project ID
+
+**Get Test Funds:**
+1. **Sepolia ETH**: Visit [sepoliafaucet.com](https://sepoliafaucet.com/), request 0.5 ETH for gas
+2. **MNEE Tokens**: Contact hackathon organizers for test MNEE on Sepolia
 
 ### Step 2: Database Setup
 
@@ -301,22 +317,7 @@ npm run seed
 npx prisma studio
 ```
 
-### Step 3: Deploy Contracts
-
-```bash
-cd contracts
-
-# Install dependencies
-npm install
-
-# Deploy salary flow contract to MNEE testnet
-npm run deploy
-
-# Copy the contract address from output
-# Add it to .env: SALARY_CONTRACT_ADDRESS="mnee_contract_..."
-```
-
-### Step 4: Deploy Autonomous Agent
+### Step 3: Deploy Agent (Optional)
 
 ```bash
 cd agents
@@ -324,14 +325,14 @@ cd agents
 # Install dependencies
 npm install
 
-# Deploy agent to MNEE Agent Runtime
-npm run deploy
+# For local testing
+npm run dev
 
-# Agent will run daily at 00:00 UTC
-# For local testing: npm run dev
+# For deployment to MNEE Agent Runtime (conceptual)
+npm run deploy
 ```
 
-### Step 5: Start Application
+### Step 4: Start Application
 
 ```bash
 # From root directory
@@ -345,12 +346,13 @@ cd frontend
 npm run dev
 ```
 
-### Step 6: Connect Wallet
+### Step 5: Connect Wallet
 
 1. Open http://localhost:3000
-2. Click **"Connect Wallet"**
-3. Use test wallet address: `mnee1test_employer_wallet_address_12345`
-4. Explore dashboard, employees, payroll pages
+2. Click **"Connect Wallet"** (RainbowKit button)
+3. Connect your MetaMask with Sepolia testnet
+4. System will auto-create employer profile if new wallet
+5. Explore dashboard, employees, payroll pages
 
 ---
 
@@ -373,7 +375,7 @@ chmod +x demo.sh
 3. ✅ Lists current employees
 4. ✅ Adds a new employee
 5. ✅ Runs payroll (test mode)
-6. ✅ Shows transaction results
+6. ✅ Shows transaction results with tx hashes
 7. ✅ Displays any alerts
 
 **Perfect for hackathon judges!** 🏆
@@ -393,7 +395,11 @@ npm run build
 # Deploy to Vercel
 vercel --prod
 
-# Set environment variables in Vercel dashboard
+# Set environment variables in Vercel dashboard:
+# - NEXT_PUBLIC_API_URL
+# - NEXT_PUBLIC_ETHEREUM_CHAIN_ID
+# - NEXT_PUBLIC_MNEE_TOKEN_ADDRESS
+# - NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID
 ```
 
 ### Backend (Railway / Render)
@@ -408,21 +414,16 @@ npm run build
 railway up
 
 # Or push to GitHub and connect Railway/Render
+# Set environment variables in dashboard
 ```
 
-### Contracts & Agent (MNEE Network)
+### Agent (MNEE Agent Runtime)
 
 ```bash
-# Deploy contract
-cd contracts
-npm run deploy
-
-# Deploy agent
 cd agents
 npm run deploy
 
-# Both deploy to MNEE Testnet
-# Monitor at: https://agent-dashboard.mnee.io
+# Monitor at: https://agent-dashboard.mnee.io (conceptual)
 ```
 
 ---
@@ -436,10 +437,6 @@ npm run deploy
 cd backend
 npm run test
 
-# Contract tests
-cd contracts
-npm run test
-
 # Frontend tests
 cd frontend
 npm run test
@@ -451,24 +448,23 @@ npm run test
 # Start services
 docker-compose up -d
 
-# Run integration tests
-npm run test:integration
-
 # Run demo script
 ./demo.sh
 ```
 
 ### Manual Testing Checklist
 
-- [ ] Connect wallet successfully
-- [ ] View dashboard with summary cards
-- [ ] Add a new employee
+- [ ] Connect MetaMask successfully (Sepolia network)
+- [ ] View dashboard with summary cards and virtual balance
+- [ ] Add a new employee with Ethereum address
 - [ ] Edit employee details
 - [ ] Deactivate an employee
 - [ ] Run payroll (test mode)
 - [ ] View transaction in payroll history
+- [ ] Check Etherscan link for transaction
 - [ ] Check alerts panel for warnings
 - [ ] Update settings (payroll day, budget)
+- [ ] Test deposit/withdrawal flows
 - [ ] Disconnect wallet
 
 ---
@@ -481,7 +477,9 @@ mnee-autonomous-payroll/
 │   ├── src/
 │   │   ├── controllers/     # Request handlers
 │   │   ├── routes/          # API routes
-│   │   ├── services/        # MNEE SDK integration
+│   │   ├── services/
+│   │   │   ├── ethereumService.ts  # MNEE ERC-20 integration
+│   │   │   └── balanceService.ts   # Virtual balance management
 │   │   ├── middleware/      # Auth, logging, errors
 │   │   ├── server.ts        # Main entry point
 │   │   └── seed.ts          # Database seeding
@@ -494,29 +492,35 @@ mnee-autonomous-payroll/
 │   │   ├── dashboard/       # Dashboard page
 │   │   ├── employees/       # Employee management
 │   │   ├── payroll/         # Payroll execution
-│   │   └── settings/        # Settings page
+│   │   ├── settings/        # Settings page
+│   │   ├── providers.tsx    # RainbowKit + Wagmi setup
+│   │   └── layout.tsx       # Root layout
 │   ├── components/
 │   │   ├── ui/              # shadcn components
-│   │   └── Navigation.tsx   # Main navigation
+│   │   ├── Navigation.tsx   # Main navigation
+│   │   └── BalanceDashboard.tsx  # Virtual balance UI
 │   ├── lib/
 │   │   ├── api.ts           # Backend API client
 │   │   ├── store.ts         # Zustand state
 │   │   └── utils.ts         # Helper functions
 │   └── package.json
-├── contracts/               # MNEE Flow Contracts
-│   ├── salary_flow.mnee.ts  # Main payroll contract
-│   ├── deploy.ts            # Contract deployment
-│   ├── tests/               # Contract tests
-│   └── package.json
-├── agents/                  # MNEE Autonomous Agents
+├── contracts/               # Smart Contract (Conceptual)
+│   ├── salary_flow.mnee.ts  # Flow contract (TypeScript DSL)
+│   ├── deploy.ts            # Deployment script
+│   └── tests/               # Contract tests
+├── agents/                  # Autonomous Agent
 │   ├── salary_agent.ts      # Payroll automation agent
 │   ├── deploy_agent.ts      # Agent deployment
 │   └── package.json
+├── scripts/
+│   ├── generate-eth-wallets.ts  # Generate test Ethereum wallets
+│   └── create-test-wallets.ts   # Legacy (Bitcoin, deprecated)
 ├── docs/                    # Specification docs
+│   ├── ETHEREUM_MIGRATION.md     # Migration guide
+│   ├── MIGRATION_STATUS.md       # Progress tracker
 │   ├── mvp_features_list.md
 │   ├── architecture.md
-│   ├── project_setup.md
-│   └── ui_ux_spec.md
+│   └── project_setup.md
 ├── docker-compose.yml       # Docker orchestration
 ├── demo.sh                  # Hackathon demo script
 ├── .env.example             # Environment template
@@ -531,7 +535,7 @@ mnee-autonomous-payroll/
 
 ### **2-Minute Pitch for Judges**
 
-> **"We built a fully autonomous payroll system that runs 100% on MNEE Network."**
+> **"We built a fully autonomous payroll system that runs on Ethereum using the MNEE ERC-20 stablecoin."**
 
 **The Problem:**
 - Companies manually process payroll every month
@@ -541,19 +545,20 @@ mnee-autonomous-payroll/
 **Our Solution:**
 - **Autonomous Agent** runs daily, executes payroll automatically
 - **AI Guard** prevents errors before they happen
-- **100% MNEE-native**—no external dependencies
-- **Full transparency**—every transaction on-chain with audit trail
+- **Ethereum-based**—transparent, auditable, secure
+- **Full transparency**—every transaction on-chain with Etherscan verification
 
 **What Makes It Special:**
 1. **Truly Autonomous**: Set payday once, agent handles everything
-2. **Built-in Safety**: AI checks balances, validates wallets, detects anomalies
-3. **MNEE-Native**: Uses MNEE Flow Contracts + Agent Runtime
+2. **Built-in Safety**: AI checks balances, validates addresses, detects anomalies
+3. **Multi-Employer Platform**: Virtual balance system supports multiple companies
 4. **Production-Ready**: Full backend, frontend, tests, deployment scripts
 
 **Tech Highlights:**
-- **MNEE Flow Contract** (TypeScript DSL) for on-chain logic
-- **MNEE Agent Runtime** for autonomous execution
-- **MNEE Native Asset** for stable salary payments
+- **Ethereum blockchain** with Sepolia testnet support
+- **MNEE ERC-20 stablecoin** for salary payments
+- **ethers.js v6** for blockchain interactions
+- **RainbowKit + wagmi** for wallet connections
 - **Full-Stack MVP**: Next.js + Node.js + PostgreSQL
 
 **Demo:**
@@ -563,7 +568,7 @@ mnee-autonomous-payroll/
 - Saves companies hours per month
 - Eliminates human error
 - Provides transparent, auditable payments
-- Showcases MNEE's unique autonomous capabilities
+- Showcases MNEE's stablecoin integration on Ethereum
 
 **Next Steps:**
 - Add streaming payments (real-time salary accrual)
@@ -571,7 +576,7 @@ mnee-autonomous-payroll/
 - Tax withholding automation
 - Mobile app for employees
 
-**We're ready for mainnet deployment today.** 🚀
+**We're ready for testnet demonstration today.** 🚀
 
 ---
 
@@ -580,7 +585,7 @@ mnee-autonomous-payroll/
 ### Phase 2 Features
 
 - [ ] **Streaming Payments**: Real-time salary accrual (e.g., pay-per-second)
-- [ ] **Multi-Currency Support**: Pay in USDC, USDT, ETH via MNEE
+- [ ] **Multi-Currency Support**: Pay in USDC, USDT, DAI via DEX integration
 - [ ] **Org Role Management**: Separate permissions for HR and Finance teams
 - [ ] **Tax Module**: Automatic tax withholding and reporting
 - [ ] **Realtime Notifications**: Email/SMS alerts for payments
@@ -590,8 +595,8 @@ mnee-autonomous-payroll/
 
 ### Phase 3 (Scaling)
 
-- [ ] **Multi-Chain**: Expand beyond MNEE (Ethereum, Polygon)
-- [ ] **Fiat Off-Ramp**: Direct bank transfers
+- [ ] **Multi-Chain**: Expand beyond Ethereum (Polygon, Arbitrum, Base)
+- [ ] **Fiat Off-Ramp**: Direct bank transfers via Stripe/Circle
 - [ ] **Compliance Tools**: SOC 2, GDPR compliance features
 - [ ] **API for Third-Party Apps**: Zapier integration, webhooks
 - [ ] **White-Label Solution**: Rebrand for enterprises
@@ -620,15 +625,16 @@ This is a hackathon project, but contributions are welcome!
 
 - **Issues**: [GitHub Issues](https://github.com/yourusername/mnee-autonomous-payroll/issues)
 - **Discussions**: [GitHub Discussions](https://github.com/yourusername/mnee-autonomous-payroll/discussions)
-- **MNEE Network**: [mnee.io](https://mnee.io)
+- **MNEE Hackathon**: [mnee-eth.devpost.com](https://mnee-eth.devpost.com/)
+- **Etherscan**: [Token Contract](https://etherscan.io/token/0x8ccedbAe4916b79da7F3F612EfB2EB93A2bFD6cF)
 
 ---
 
 ## 🙏 Acknowledgments
 
-- **MNEE Network** for providing the autonomous execution infrastructure
+- **MNEE Team** for providing the ERC-20 stablecoin for Ethereum integration
 - **Hackathon Organizers** for the opportunity
-- **Open Source Community** for amazing tools (Next.js, Prisma, shadcn/ui)
+- **Open Source Community** for amazing tools (Next.js, Prisma, shadcn/ui, RainbowKit)
 
 ---
 
@@ -642,4 +648,4 @@ It helps others discover the project and motivates us to keep improving it.
 
 **Built with ❤️ for the MNEE Hackathon**
 
-*100% MNEE-Native | Production-Ready | Open Source*
+*Ethereum-Native | Production-Ready | Open Source*

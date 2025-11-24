@@ -108,7 +108,7 @@ process.on('SIGINT', async () => {
 app.listen(PORT, () => {
   logger.info(`🚀 MNEE Payroll Backend running on port ${PORT}`);
   logger.info(`📊 Environment: ${process.env.NODE_ENV || 'development'}`);
-  logger.info(`🌐 MNEE Network: ${process.env.MNEE_CHAIN_ID || 'testnet'}`);
+  logger.info(`🌐 Ethereum Network: ${process.env.ETHEREUM_CHAIN_ID === '1' ? 'mainnet' : 'sepolia testnet'}`);
 });
 
 export default app;
