@@ -1,54 +1,54 @@
-'use client'
+'use client';
 
-import { useEffect, useState } from 'react'
-import { useRouter } from 'next/navigation'
-import { useStore } from '@/lib/store'
-import { employerAPI, employeeAPI, alertAPI, type Alert } from '@/lib/api'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { formatCurrency, formatDate, getSeverityColor } from '@/lib/utils'
-import { Users, DollarSign, Calendar, AlertCircle, PlayCircle } from 'lucide-react'
-import { BalanceDashboard } from '@/components/BalanceDashboard'
+import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { useStore } from '@/lib/store';
+import { employerAPI, employeeAPI, alertAPI, type Alert } from '@/lib/api';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { formatCurrency, formatDate, getSeverityColor } from '@/lib/utils';
+import { Users, DollarSign, Calendar, AlertCircle, PlayCircle } from 'lucide-react';
+import { BalanceDashboard } from '@/components/BalanceDashboard';
 
 export default function DashboardPage() {
-  const router = useRouter()
-  const { walletAddress, isConnected, employer, setEmployer } = useStore()
-  const [loading, setLoading] = useState(true)
-  const [alerts, setAlerts] = useState<Alert[]>([])
+  const router = useRouter();
+  const { walletAddress, isConnected, employer, setEmployer } = useStore();
+  const [loading, setLoading] = useState(true);
+  const [alerts, setAlerts] = useState<Alert[]>([]);
 
   useEffect(() => {
     if (!isConnected) {
-      router.push('/')
-      return
+      router.push('/');
+      return;
     }
 
-    loadData()
-  }, [isConnected, walletAddress])
+    loadData();
+  }, [isConnected, walletAddress]);
 
   const loadData = async () => {
-    if (!walletAddress) return
+    if (!walletAddress) return;
 
     try {
       // Load employer data
-      const empRes = await employerAPI.get(walletAddress)
-      setEmployer(empRes.data.data)
+      const empRes = await employerAPI.get(walletAddress);
+      setEmployer(empRes.data.data);
 
       // Load alerts
-      const alertRes = await alertAPI.list(empRes.data.data.id, { resolved: false })
-      setAlerts(alertRes.data.data)
+      const alertRes = await alertAPI.list(empRes.data.data.id, { resolved: false });
+      setAlerts(alertRes.data.data);
     } catch (error) {
-      console.error('Failed to load dashboard data:', error)
+      console.error('Failed to load dashboard data:', error);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   if (loading) {
     return (
       <div className="flex items-center justify-center h-96">
         <div className="text-lg text-gray-600">Loading...</div>
       </div>
-    )
+    );
   }
 
   if (!employer) {
@@ -59,15 +59,15 @@ export default function DashboardPage() {
           <p className="text-gray-600">Employer account not found. Please set up your profile.</p>
         </div>
       </div>
-    )
+    );
   }
 
-  const totalMonthlyPayroll = employer.totalMonthlyPayroll || 0
-  const employeeCount = employer.employees?.length || 0
-  const nextPayday = new Date()
-  nextPayday.setDate(employer.payrollDay)
+  const totalMonthlyPayroll = employer.totalMonthlyPayroll || 0;
+  const employeeCount = employer.employees?.length || 0;
+  const nextPayday = new Date();
+  nextPayday.setDate(employer.payrollDay);
   if (nextPayday < new Date()) {
-    nextPayday.setMonth(nextPayday.getMonth() + 1)
+    nextPayday.setMonth(nextPayday.getMonth() + 1);
   }
 
   return (
@@ -147,15 +147,10 @@ export default function DashboardPage() {
           <CardContent>
             <div className="space-y-3">
               {alerts.map((alert) => (
-                <div
-                  key={alert.id}
-                  className="flex items-start justify-between rounded-lg border p-4"
-                >
+                <div key={alert.id} className="flex items-start justify-between rounded-lg border p-4">
                   <div className="flex-1">
                     <div className="flex items-center gap-2">
-                      <span className={`px-2 py-1 rounded text-xs font-medium ${getSeverityColor(alert.severity)}`}>
-                        {alert.severity}
-                      </span>
+                      <span className={`px-2 py-1 rounded text-xs font-medium ${getSeverityColor(alert.severity)}`}>{alert.severity}</span>
                       <h4 className="font-semibold">{alert.title}</h4>
                     </div>
                     <p className="text-sm text-gray-600 mt-1">{alert.message}</p>
@@ -165,8 +160,8 @@ export default function DashboardPage() {
                     size="sm"
                     variant="ghost"
                     onClick={async () => {
-                      await alertAPI.resolve(alert.id)
-                      loadData()
+                      await alertAPI.resolve(alert.id);
+                      loadData();
                     }}
                   >
                     Dismiss
@@ -178,5 +173,5 @@ export default function DashboardPage() {
         </Card>
       )}
     </div>
-  )
+  );
 }
