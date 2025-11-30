@@ -15,6 +15,10 @@ export default function DashboardPage() {
   const { walletAddress, isConnected, employer, setEmployer } = useStore();
   const [loading, setLoading] = useState(true);
   const [alerts, setAlerts] = useState<Alert[]>([]);
+  const [showOnboarding, setShowOnboarding] = useState(false);
+  const [companyName, setCompanyName] = useState('');
+  const [payrollDay, setPayrollDay] = useState(28);
+  const [registering, setRegistering] = useState(false);
 
   useEffect(() => {
     // Redirect to home if wallet disconnected
@@ -45,6 +49,27 @@ export default function DashboardPage() {
     }
   };
 
+  const handleRegisterEmployer = async () => {
+    if (!walletAddress || !companyName.trim()) return;
+
+    setRegistering(true);
+    try {
+      const response = await employerAPI.create({
+        walletAddress,
+        companyName: companyName.trim(),
+        payrollDay,
+      });
+
+      setEmployer(response.data.data);
+      setShowOnboarding(false);
+    } catch (error: any) {
+      console.error('Failed to register employer:', error);
+      alert(error.response?.data?.message || 'Failed to register. Please try again.');
+    } finally {
+      setRegistering(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-96">
@@ -53,13 +78,139 @@ export default function DashboardPage() {
     );
   }
 
-  if (!employer) {
+  if (!employer && !showOnboarding) {
     return (
-      <div className="flex items-center justify-center h-96">
-        <div className="text-center">
-          <h2 className="text-2xl font-bold mb-2">Welcome to MNEE Payroll</h2>
-          <p className="text-gray-600">Employer account not found. Please set up your profile.</p>
-        </div>
+      <div className="flex items-center justify-center min-h-[80vh]">
+        <Card className="max-w-2xl w-full">
+          <CardHeader className="text-center">
+            <div className="mx-auto mb-4 h-16 w-16 bg-gradient-to-br from-purple-500 to-pink-500 rounded-full flex items-center justify-center">
+              <Users className="h-8 w-8 text-white" />
+            </div>
+            <CardTitle className="text-3xl">Welcome to MNEE Payroll!</CardTitle>
+            <CardDescription className="text-lg mt-2">
+              Your wallet is connected. Let's set up your employer account to start managing payroll.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+              <div className="flex items-start gap-3">
+                <AlertCircle className="h-5 w-5 text-blue-600 mt-0.5" />
+                <div className="text-sm text-blue-900">
+                  <p className="font-medium mb-1">Connected Wallet</p>
+                  <p className="font-mono text-xs">{walletAddress}</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="grid gap-4">
+              <div className="flex items-center gap-4">
+                <div className="h-10 w-10 bg-green-100 rounded-full flex items-center justify-center text-green-600 font-bold">
+                  ✓
+                </div>
+                <div>
+                  <p className="font-medium">Wallet Connected</p>
+                  <p className="text-sm text-gray-600">Ready to create your employer profile</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-4">
+                <div className="h-10 w-10 bg-gray-100 rounded-full flex items-center justify-center text-gray-600 font-bold">
+                  2
+                </div>
+                <div>
+                  <p className="font-medium">Set Up Company</p>
+                  <p className="text-sm text-gray-600">Provide your company details</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-4">
+                <div className="h-10 w-10 bg-gray-100 rounded-full flex items-center justify-center text-gray-600 font-bold">
+                  3
+                </div>
+                <div>
+                  <p className="font-medium">Add Employees</p>
+                  <p className="text-sm text-gray-600">Start building your team</p>
+                </div>
+              </div>
+            </div>
+
+            <Button
+              onClick={() => setShowOnboarding(true)}
+              className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700"
+              size="lg"
+            >
+              Get Started
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  if (!employer && showOnboarding) {
+    return (
+      <div className="flex items-center justify-center min-h-[80vh]">
+        <Card className="max-w-2xl w-full">
+          <CardHeader>
+            <CardTitle className="text-2xl">Create Employer Profile</CardTitle>
+            <CardDescription>
+              Set up your company details to start managing payroll
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Company Name</label>
+              <input
+                type="text"
+                placeholder="e.g., Acme Corp"
+                value={companyName}
+                onChange={(e) => setCompanyName(e.target.value)}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+                disabled={registering}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Payroll Day of Month</label>
+              <select
+                value={payrollDay}
+                onChange={(e) => setPayrollDay(Number(e.target.value))}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+                disabled={registering}
+              >
+                {Array.from({ length: 28 }, (_, i) => i + 1).map((day) => (
+                  <option key={day} value={day}>
+                    {day}{day === 1 ? 'st' : day === 2 ? 'nd' : day === 3 ? 'rd' : 'th'} of each month
+                  </option>
+                ))}
+              </select>
+              <p className="text-xs text-gray-500">
+                When should employees receive their monthly salary?
+              </p>
+            </div>
+
+            <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+              <p className="text-sm text-gray-700 mb-2"><strong>Your Wallet:</strong></p>
+              <p className="text-xs font-mono text-gray-600 break-all">{walletAddress}</p>
+            </div>
+
+            <div className="flex gap-3">
+              <Button
+                onClick={() => setShowOnboarding(false)}
+                variant="outline"
+                className="flex-1"
+                disabled={registering}
+              >
+                Back
+              </Button>
+              <Button
+                onClick={handleRegisterEmployer}
+                disabled={!companyName.trim() || registering}
+                className="flex-1 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700"
+              >
+                {registering ? 'Creating Account...' : 'Create Account'}
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
       </div>
     );
   }
