@@ -17,13 +17,15 @@ export default function DashboardPage() {
   const [alerts, setAlerts] = useState<Alert[]>([]);
 
   useEffect(() => {
-    if (!isConnected) {
+    // Redirect to home if wallet disconnected
+    if (!isConnected || !walletAddress) {
       router.push('/');
       return;
     }
 
+    // Load dashboard data
     loadData();
-  }, [isConnected, walletAddress]);
+  }, [isConnected, walletAddress, router]);
 
   const loadData = async () => {
     if (!walletAddress) return;
