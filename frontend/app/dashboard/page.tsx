@@ -215,6 +215,11 @@ export default function DashboardPage() {
     );
   }
 
+  // Add null check for employer (should not happen due to earlier checks)
+  if (!employer) {
+    return null;
+  }
+
   const totalMonthlyPayroll = employer.totalMonthlyPayroll || 0;
   const employeeCount = employer.employees?.length || 0;
   const nextPayday = new Date();
