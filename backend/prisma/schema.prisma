@@ -34,6 +34,8 @@ model Employer {
   payrollLogs       PayrollLog[]
   alerts            Alert[]
   balanceTransactions BalanceTransaction[]
+  payrollApprovals  PayrollApproval[]
+  payrollBudgets    PayrollBudget[]
 
   @@map("employers")
 }
@@ -155,4 +157,68 @@ model PlatformStats {
   updatedAt         DateTime  @updatedAt
 
   @@map("platform_stats")
+}
+
+// Week 2: Non-Custodial Wallet Signing Models
+
+// Pending transaction approvals (for wallet signing)
+model PayrollApproval {
+  id              String    @id @default(uuid())
+  employerId      String
+  employer        Employer  @relation(fields: [employerId], references: [id], onDelete: Cascade)
+
+  status          String    // 'pending', 'approved', 'rejected', 'expired'
+  unsignedTx      String?   @db.Text  // Raw unsigned transaction data (JSON)
+  signedTx        String?   @db.Text  // Signed transaction (after approval)
+
+  // Transaction details
+  totalAmount     Decimal   @db.Decimal(20, 8)  // Total MNEE being sent
+  recipientCount  Int                           // Number of employees
+  recipients      Json                          // Array of {employeeId, address, amount, name}
+
+  // Timing
+  createdAt       DateTime  @default(now())
+  expiresAt       DateTime                      // Unsigned TX expires after 15 minutes
+  approvedAt      DateTime?
+  broadcastedAt   DateTime?
+
+  // Transaction result
+  txHash          String?                       // After broadcasting
+  ticketId        String?                       // MNEE SDK ticket ID
+
+  // Metadata
+  description     String?
+  metadata        Json?
+
+  @@index([employerId, status])
+  @@index([status, expiresAt])
+  @@map("payroll_approvals")
+}
+
+// Pre-authorized payroll budgets (for autonomous execution within limits)
+model PayrollBudget {
+  id                String    @id @default(uuid())
+  employerId        String
+  employer          Employer  @relation(fields: [employerId], references: [id], onDelete: Cascade)
+
+  // Budget limits
+  monthlyLimit      Decimal   @db.Decimal(20, 8)  // Max amount per month
+  perEmployeeLimit  Decimal?  @db.Decimal(20, 8)  // Max per employee (optional)
+
+  // Validity period
+  startDate         DateTime
+  endDate           DateTime
+
+  // Tracking
+  usedThisMonth     Decimal   @default(0) @db.Decimal(20, 8)
+  lastResetAt       DateTime  @default(now())
+
+  // Status
+  isActive          Boolean   @default(true)
+
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  @@index([employerId, isActive])
+  @@map("payroll_budgets")
 }

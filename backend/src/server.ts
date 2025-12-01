@@ -16,6 +16,7 @@ import employeeRoutes from './routes/employee';
 import payrollRoutes from './routes/payroll';
 import alertRoutes from './routes/alert';
 import balanceRoutes from './routes/balance';
+import walletSigningRoutes from './routes/walletSigning';
 
 // Load environment variables
 dotenv.config();
@@ -79,6 +80,7 @@ app.use('/api/employees', employeeRoutes);
 app.use('/api/payroll', payrollRoutes);
 app.use('/api/alerts', alertRoutes);
 app.use('/api/balance', balanceRoutes);
+app.use('/api/wallet', walletSigningRoutes);
 
 // 404 handler
 app.use((req, res) => {

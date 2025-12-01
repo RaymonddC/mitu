@@ -167,4 +167,29 @@ export const balanceAPI = {
     api.get<{ data: PlatformStats }>('/balance/platform/stats'),
 };
 
+// Wallet Signing API (Week 2: Non-custodial wallet signing)
+export const walletSigningAPI = {
+  createApproval: (data: { employerId: string; employees: any[] }) =>
+    api.post('/wallet/approvals/create', data),
+  getApproval: (approvalId: string) =>
+    api.get(`/wallet/approvals/${approvalId}`),
+  listApprovals: (employerId: string, status?: string) =>
+    api.get(`/wallet/approvals?employerId=${employerId}${status ? `&status=${status}` : ''}`),
+  submitSignedTransaction: (approvalId: string, data: { txHash: string }) =>
+    api.post(`/wallet/approvals/${approvalId}/submit`, data),
+  rejectApproval: (approvalId: string, reason?: string) =>
+    api.post(`/wallet/approvals/${approvalId}/reject`, { reason }),
+  createBudget: (data: {
+    employerId: string;
+    monthlyLimit: number;
+    startDate: string;
+    endDate: string;
+    perEmployeeLimit?: number;
+  }) => api.post('/wallet/budgets', data),
+  getEmployerBudgets: (employerId: string) =>
+    api.get(`/wallet/budgets/${employerId}`),
+  checkBudgetAuthorization: (employerId: string, amount: number) =>
+    api.post(`/wallet/budgets/${employerId}/check`, { amount }),
+};
+
 export default api;

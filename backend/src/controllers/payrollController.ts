@@ -10,6 +10,7 @@ import { z } from 'zod';
 import { logger } from '../middleware/logger';
 import { ethereumService } from '../services/ethereumService';
 import { balanceService } from '../services/balanceService';
+import { walletSigningService } from '../services/walletSigningService';
 import crypto from 'crypto';
 
 // Using ethereumService for MNEE ERC-20 token on Ethereum (hackathon pivot)
@@ -18,7 +19,8 @@ import crypto from 'crypto';
 const runPayrollSchema = z.object({
   employerId: z.string().uuid(),
   employeeIds: z.array(z.string().uuid()).optional(), // If empty, run for all active employees
-  testMode: z.boolean().default(false)
+  testMode: z.boolean().default(false),
+  useWalletSigning: z.boolean().default(false) // Week 2: Use wallet signing instead of custodial
 });
 
 /**
@@ -55,6 +57,53 @@ export async function runPayroll(req: Request, res: Response, next: NextFunction
       (sum, emp) => sum + Number(emp.salaryAmount),
       0
     );
+
+    // Week 2: Check if wallet signing mode is requested or if budget authorization exists
+    if (data.useWalletSigning) {
+      // Check if payroll is within pre-approved budget
+      const withinBudget = await walletSigningService.checkBudgetAuthorization(
+        employer.id,
+        totalAmount
+      );
+
+      if (!withinBudget) {
+        // Create approval request for wallet signing
+        const approval = await walletSigningService.createPayrollApproval(
+          employer.id,
+          employer.employees.map(emp => ({
+            id: emp.id,
+            name: emp.name,
+            walletAddress: emp.walletAddress,
+            salaryAmount: Number(emp.salaryAmount)
+          }))
+        );
+
+        logger.info('Payroll approval created (wallet signing mode)', {
+          approvalId: approval.approvalId,
+          employerId: employer.id,
+          totalAmount
+        });
+
+        return res.json({
+          success: true,
+          requiresApproval: true,
+          message: 'Payroll requires wallet approval',
+          data: {
+            approvalId: approval.approvalId,
+            totalAmount,
+            recipientCount: employer.employees.length,
+            expiresAt: approval.expiresAt
+          }
+        });
+      } else {
+        // Within budget - update budget usage but still requires wallet signing
+        // (This would be handled by the autonomous agent or scheduled job)
+        logger.info('Payroll within pre-approved budget', {
+          employerId: employer.id,
+          totalAmount
+        });
+      }
+    }
 
     // AI Guard: Check virtual balance (Week 1: Multi-employer custodial)
     const virtualBalance = Number(employer.virtualBalance);
