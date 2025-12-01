@@ -1,7 +1,18 @@
 /**
  * Ethereum Service
- * Handles MNEE ERC-20 token interactions on Ethereum blockchain
- * Replaces the previous Bitcoin-based mneeService for hackathon pivot
+ *
+ * ⚠️ DEPRECATED - NOT USED IN NON-CUSTODIAL MODE ⚠️
+ *
+ * This service was designed for custodial mode where the platform wallet
+ * would execute transfers on behalf of employers.
+ *
+ * Current Architecture: NON-CUSTODIAL WALLET SIGNING
+ * - Employers sign transactions with their own wallets (MetaMask)
+ * - Platform NEVER has custody of funds
+ * - Platform NEVER needs private keys
+ * - This service is kept for potential test/demo purposes only
+ *
+ * @deprecated Use wallet signing via frontend (wagmi/viem) instead
  */
 
 import { ethers } from 'ethers';
@@ -9,7 +20,7 @@ import { logger } from '../middleware/logger';
 
 const MNEE_TOKEN_ADDRESS = process.env.MNEE_TOKEN_ADDRESS || '0x8ccedbAe4916b79da7F3F612EfB2EB93A2bFD6cF';
 const ETHEREUM_RPC_URL = process.env.ETHEREUM_RPC_URL || 'https://sepolia.infura.io/v3/YOUR_KEY';
-const PLATFORM_PRIVATE_KEY = process.env.PLATFORM_PRIVATE_KEY;
+const PLATFORM_PRIVATE_KEY = process.env.PLATFORM_PRIVATE_KEY; // OPTIONAL - not needed for non-custodial mode
 const MOCK_MODE = !PLATFORM_PRIVATE_KEY || process.env.NODE_ENV === 'test';
 
 // Minimal ERC-20 ABI for MNEE token interactions
@@ -32,9 +43,10 @@ export class EthereumService {
 
   constructor() {
     if (this.mockMode) {
-      logger.warn('⚠️  EthereumService running in MOCK MODE', {
-        reason: PLATFORM_PRIVATE_KEY ? 'test environment' : 'missing PLATFORM_PRIVATE_KEY',
-        note: 'Set PLATFORM_PRIVATE_KEY in .env for real Ethereum interactions'
+      logger.info('⚠️  EthereumService in MOCK MODE (expected for non-custodial architecture)', {
+        mode: 'non-custodial',
+        note: 'This is NORMAL - platform uses wallet signing, not custodial transfers',
+        architecture: 'Employers sign transactions with their own wallets via MetaMask'
       });
       return;
     }

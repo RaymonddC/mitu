@@ -16,6 +16,7 @@ export default function EmployeesPage() {
   const [employees, setEmployees] = useState<Employee[]>([])
   const [loading, setLoading] = useState(true)
   const [showAddForm, setShowAddForm] = useState(false)
+  const [editingId, setEditingId] = useState<string | null>(null)
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -55,23 +56,54 @@ export default function EmployeesPage() {
     if (!employer) return
 
     try {
-      await employeeAPI.create({
-        employerId: employer.id,
-        name: formData.name,
-        email: formData.email || undefined,
-        walletAddress: formData.walletAddress,
-        salaryAmount: parseFloat(formData.salaryAmount),
-        notes: formData.notes || undefined
-      })
+      if (editingId) {
+        // Update existing employee
+        await employeeAPI.update(editingId, {
+          name: formData.name,
+          email: formData.email || undefined,
+          salaryAmount: parseFloat(formData.salaryAmount),
+          notes: formData.notes || undefined
+        })
+        toast({ title: 'Success', description: 'Employee updated successfully' })
+      } else {
+        // Create new employee
+        await employeeAPI.create({
+          employerId: employer.id,
+          name: formData.name,
+          email: formData.email || undefined,
+          walletAddress: formData.walletAddress,
+          salaryAmount: parseFloat(formData.salaryAmount),
+          notes: formData.notes || undefined
+        })
+        toast({ title: 'Success', description: 'Employee added successfully' })
+      }
 
-      toast({ title: 'Success', description: 'Employee added successfully' })
       setShowAddForm(false)
+      setEditingId(null)
       setFormData({ name: '', email: '', walletAddress: '', salaryAmount: '', notes: '' })
       loadEmployees()
     } catch (error: any) {
-      console.error('Failed to add employee:', error)
-      toast({ title: 'Error', description: error.response?.data?.message || 'Failed to add employee' })
+      console.error('Failed to save employee:', error)
+      toast({ title: 'Error', description: error.response?.data?.message || 'Failed to save employee' })
     }
+  }
+
+  const handleEdit = (employee: Employee) => {
+    setEditingId(employee.id)
+    setFormData({
+      name: employee.name,
+      email: employee.email || '',
+      walletAddress: employee.walletAddress,
+      salaryAmount: employee.salaryAmount.toString(),
+      notes: employee.notes || ''
+    })
+    setShowAddForm(true)
+  }
+
+  const handleCancelEdit = () => {
+    setShowAddForm(false)
+    setEditingId(null)
+    setFormData({ name: '', email: '', walletAddress: '', salaryAmount: '', notes: '' })
   }
 
   const handleDelete = async (id: string, name: string) => {
@@ -104,12 +136,12 @@ export default function EmployeesPage() {
         </Button>
       </div>
 
-      {/* Add Employee Form */}
+      {/* Add/Edit Employee Form */}
       {showAddForm && (
         <Card>
           <CardHeader>
-            <CardTitle>Add New Employee</CardTitle>
-            <CardDescription>Enter employee details</CardDescription>
+            <CardTitle>{editingId ? 'Edit Employee' : 'Add New Employee'}</CardTitle>
+            <CardDescription>{editingId ? 'Update employee details' : 'Enter employee details'}</CardDescription>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-4">
@@ -138,11 +170,15 @@ export default function EmployeesPage() {
                   <input
                     type="text"
                     required
-                    className="w-full rounded-md border border-gray-300 px-3 py-2 font-mono text-sm"
+                    disabled={!!editingId}
+                    className={`w-full rounded-md border px-3 py-2 font-mono text-sm ${editingId ? 'bg-gray-100 cursor-not-allowed' : 'border-gray-300'}`}
                     value={formData.walletAddress}
                     onChange={(e) => setFormData({ ...formData, walletAddress: e.target.value })}
-                    placeholder="mnee1..."
+                    placeholder="0x..."
                   />
+                  {editingId && (
+                    <p className="text-xs text-gray-500 mt-1">Wallet address cannot be changed</p>
+                  )}
                 </div>
                 <div>
                   <label className="block text-sm font-medium mb-1">Monthly Salary (MNEE) *</label>
@@ -167,8 +203,10 @@ export default function EmployeesPage() {
                 />
               </div>
               <div className="flex gap-3">
-                <Button type="submit">Add Employee</Button>
-                <Button type="button" variant="outline" onClick={() => setShowAddForm(false)}>
+                <Button type="submit">
+                  {editingId ? 'Update Employee' : 'Add Employee'}
+                </Button>
+                <Button type="button" variant="outline" onClick={handleCancelEdit}>
                   Cancel
                 </Button>
               </div>
@@ -236,13 +274,19 @@ export default function EmployeesPage() {
                       </td>
                       <td className="py-4 text-right">
                         <div className="flex justify-end gap-2">
-                          <Button size="sm" variant="ghost">
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => handleEdit(employee)}
+                            title="Edit employee"
+                          >
                             <Edit className="h-4 w-4" />
                           </Button>
                           <Button
                             size="sm"
                             variant="ghost"
                             onClick={() => handleDelete(employee.id, employee.name)}
+                            title="Deactivate employee"
                           >
                             <Trash2 className="h-4 w-4 text-red-600" />
                           </Button>

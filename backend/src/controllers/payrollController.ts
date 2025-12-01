@@ -58,51 +58,46 @@ export async function runPayroll(req: Request, res: Response, next: NextFunction
       0
     );
 
-    // Week 2: Check if wallet signing mode is requested or if budget authorization exists
+    // Week 2: Wallet signing mode - ALWAYS create approval (never use custodial)
     if (data.useWalletSigning) {
-      // Check if payroll is within pre-approved budget
+      // Check if payroll is within pre-approved budget (for metadata only)
       const withinBudget = await walletSigningService.checkBudgetAuthorization(
         employer.id,
         totalAmount
       );
 
-      if (!withinBudget) {
-        // Create approval request for wallet signing
-        const approval = await walletSigningService.createPayrollApproval(
-          employer.id,
-          employer.employees.map(emp => ({
-            id: emp.id,
-            name: emp.name,
-            walletAddress: emp.walletAddress,
-            salaryAmount: Number(emp.salaryAmount)
-          }))
-        );
+      // Create approval request for wallet signing
+      const approval = await walletSigningService.createPayrollApproval(
+        employer.id,
+        employer.employees.map(emp => ({
+          id: emp.id,
+          name: emp.name,
+          walletAddress: emp.walletAddress,
+          salaryAmount: Number(emp.salaryAmount)
+        }))
+      );
 
-        logger.info('Payroll approval created (wallet signing mode)', {
+      logger.info('Payroll approval created (wallet signing mode)', {
+        approvalId: approval.approvalId,
+        employerId: employer.id,
+        totalAmount,
+        withinBudget
+      });
+
+      return res.json({
+        success: true,
+        requiresApproval: true,
+        message: withinBudget
+          ? 'Payroll within budget - please approve with your wallet'
+          : 'Payroll requires wallet approval',
+        data: {
           approvalId: approval.approvalId,
-          employerId: employer.id,
-          totalAmount
-        });
-
-        return res.json({
-          success: true,
-          requiresApproval: true,
-          message: 'Payroll requires wallet approval',
-          data: {
-            approvalId: approval.approvalId,
-            totalAmount,
-            recipientCount: employer.employees.length,
-            expiresAt: approval.expiresAt
-          }
-        });
-      } else {
-        // Within budget - update budget usage but still requires wallet signing
-        // (This would be handled by the autonomous agent or scheduled job)
-        logger.info('Payroll within pre-approved budget', {
-          employerId: employer.id,
-          totalAmount
-        });
-      }
+          totalAmount,
+          recipientCount: employer.employees.length,
+          expiresAt: approval.expiresAt,
+          withinBudget
+        }
+      });
     }
 
     // AI Guard: Check virtual balance (Week 1: Multi-employer custodial)

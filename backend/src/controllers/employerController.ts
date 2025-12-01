@@ -65,13 +65,22 @@ export async function createEmployer(req: Request, res: Response, next: NextFunc
 
 /**
  * Get employer by wallet address
+ * Case-insensitive lookup (Ethereum addresses can be checksummed or lowercase)
  */
 export async function getEmployer(req: Request, res: Response, next: NextFunction) {
   try {
     const { walletAddress } = req.params;
 
-    const employer = await prisma.employer.findUnique({
-      where: { walletAddress },
+    // Ethereum addresses are case-insensitive, so normalize to lowercase for comparison
+    const normalizedAddress = walletAddress.toLowerCase();
+
+    const employer = await prisma.employer.findFirst({
+      where: {
+        walletAddress: {
+          equals: normalizedAddress,
+          mode: 'insensitive'
+        }
+      },
       include: {
         employees: {
           where: { active: true }

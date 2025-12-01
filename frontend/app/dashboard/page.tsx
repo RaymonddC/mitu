@@ -8,7 +8,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { formatCurrency, formatDate, getSeverityColor } from '@/lib/utils';
 import { Users, DollarSign, Calendar, AlertCircle, PlayCircle } from 'lucide-react';
-import { BalanceDashboard } from '@/components/BalanceDashboard';
+import { WalletApproval } from '@/components/WalletApproval';
+import { BudgetManagement } from '@/components/BudgetManagement';
 
 export default function DashboardPage() {
   const router = useRouter();
@@ -42,8 +43,13 @@ export default function DashboardPage() {
       // Load alerts
       const alertRes = await alertAPI.list(empRes.data.data.id, { resolved: false });
       setAlerts(alertRes.data.data);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Failed to load dashboard data:', error);
+
+      // If employer not found (404), clear employer state to show onboarding
+      if (error.response?.status === 404) {
+        setEmployer(null);
+      }
     } finally {
       setLoading(false);
     }
@@ -235,8 +241,11 @@ export default function DashboardPage() {
         <p className="text-gray-600 mt-1">Welcome back, {employer.companyName}</p>
       </div>
 
-      {/* Virtual Balance Dashboard */}
-      <BalanceDashboard employerId={employer.id} />
+      {/* Pending Approvals */}
+      <WalletApproval employerId={employer.id} onApprovalComplete={loadData} />
+
+      {/* Budget Management */}
+      <BudgetManagement employerId={employer.id} />
 
       {/* Summary Cards */}
       <div className="grid gap-6 md:grid-cols-3">

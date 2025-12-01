@@ -17,7 +17,6 @@ export default function PayrollPage() {
   const [payrollHistory, setPayrollHistory] = useState<PayrollLog[]>([])
   const [loading, setLoading] = useState(true)
   const [running, setRunning] = useState(false)
-  const [testMode, setTestMode] = useState(true)
 
   useEffect(() => {
     if (!isConnected) {
@@ -51,7 +50,7 @@ export default function PayrollPage() {
   const handleRunPayroll = async () => {
     if (!employer) return
 
-    if (!confirm(`Run payroll for ${employees.length} employees in ${testMode ? 'TEST' : 'LIVE'} mode?`)) {
+    if (!confirm(`Create payroll approval for ${employees.length} employees? You will sign with your wallet.`)) {
       return
     }
 
@@ -60,20 +59,25 @@ export default function PayrollPage() {
     try {
       const res = await payrollAPI.run({
         employerId: employer.id,
-        testMode
+        useWalletSigning: true // Always use wallet signing
       })
 
+      // Always expects approval (non-custodial mode only)
       toast({
-        title: 'Payroll Executed',
-        description: res.data.message
+        title: 'Approval Created',
+        description: 'Redirecting to dashboard to approve with your wallet...'
       })
 
-      await loadData()
+      // Redirect to dashboard after 1 second
+      setTimeout(() => {
+        router.push('/dashboard')
+      }, 1500)
+
     } catch (error: any) {
-      console.error('Failed to run payroll:', error)
+      console.error('Failed to create approval:', error)
       toast({
-        title: 'Payroll Failed',
-        description: error.response?.data?.message || 'Failed to execute payroll'
+        title: 'Failed to Create Approval',
+        description: error.response?.data?.message || 'Failed to create payroll approval'
       })
     } finally {
       setRunning(false)
@@ -102,16 +106,16 @@ export default function PayrollPage() {
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="text-3xl font-bold">Payroll Execution</h1>
-        <p className="text-gray-600 mt-1">Run payroll and view payment history</p>
+        <h1 className="text-3xl font-bold">Payroll Management</h1>
+        <p className="text-gray-600 mt-1">Create payroll approvals and view payment history</p>
       </div>
 
       {/* Run Payroll Card */}
       <Card>
         <CardHeader>
-          <CardTitle>Execute Payroll</CardTitle>
+          <CardTitle>Create Payroll Approval</CardTitle>
           <CardDescription>
-            Trigger salary payments for all active employees
+            Generate approval request for salary payments - you'll sign with your wallet
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -134,16 +138,21 @@ export default function PayrollPage() {
             </div>
           </div>
 
-          <div className="flex items-center gap-4">
-            <label className="flex items-center gap-2">
-              <input
-                type="checkbox"
-                checked={testMode}
-                onChange={(e) => setTestMode(e.target.checked)}
-                className="h-4 w-4 rounded"
-              />
-              <span className="text-sm">Test Mode (simulate transactions)</span>
-            </label>
+          <div className="rounded-lg bg-purple-50 border border-purple-200 p-4">
+            <div className="flex items-start gap-3">
+              <div className="flex-shrink-0">
+                <div className="h-10 w-10 bg-purple-500 rounded-full flex items-center justify-center">
+                  <span className="text-white text-lg">🔐</span>
+                </div>
+              </div>
+              <div>
+                <h3 className="font-semibold text-purple-900 mb-1">Non-Custodial Wallet Signing</h3>
+                <p className="text-sm text-purple-800">
+                  This system uses <strong>wallet signing only</strong>. When you run payroll, an approval will be created.
+                  You'll then sign the transactions with your MetaMask wallet. Your funds stay in your wallet - maximum security!
+                </p>
+              </div>
+            </div>
           </div>
 
           <div className="flex gap-3">
@@ -151,26 +160,21 @@ export default function PayrollPage() {
               onClick={handleRunPayroll}
               disabled={running || employees.length === 0}
               size="lg"
+              className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700"
             >
               {running ? (
                 <>
                   <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
-                  Running Payroll...
+                  Creating Approval...
                 </>
               ) : (
                 <>
                   <PlayCircle className="mr-2 h-4 w-4" />
-                  Run Payroll Now
+                  Create Payroll Approval
                 </>
               )}
             </Button>
           </div>
-
-          {testMode && (
-            <div className="rounded-lg bg-yellow-50 border border-yellow-200 p-3 text-sm text-yellow-800">
-              <strong>Test Mode:</strong> Transactions will be simulated. No actual MNEE transfers will occur.
-            </div>
-          )}
         </CardContent>
       </Card>
 
