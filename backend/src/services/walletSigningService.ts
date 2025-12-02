@@ -199,10 +199,50 @@ export class WalletSigningService {
         }
       });
 
-      logger.info('Signed transaction submitted', {
+      // Create PayrollLog records for each employee
+      // Parse transaction hashes (comma-separated if multiple employees)
+      const txHashes = txHash.split(',');
+      const recipients = approval.recipients as any[];
+
+      // Create individual PayrollLog records for payment history
+      for (let i = 0; i < recipients.length; i++) {
+        const recipient = recipients[i];
+        const employeeTxHash = txHashes[i] || txHashes[0]; // Use corresponding hash or first one
+
+        // Generate idempotency key to prevent duplicates
+        const date = new Date().toISOString().split('T')[0];
+        const idempotencyKey = `${approval.employerId}-${recipient.employeeId}-${date}`;
+
+        // Check if log already exists (prevent duplicates)
+        const existingLog = await prisma.payrollLog.findUnique({
+          where: { idempotencyKey }
+        });
+
+        if (!existingLog) {
+          await prisma.payrollLog.create({
+            data: {
+              employerId: approval.employerId,
+              employeeId: recipient.employeeId,
+              amount: recipient.amount,
+              txHash: employeeTxHash,
+              status: 'completed',
+              idempotencyKey,
+              confirmedAt: new Date(),
+              metadata: {
+                approvalId,
+                walletSigned: true,
+                recipient: recipient.address
+              }
+            }
+          });
+        }
+      }
+
+      logger.info('Signed transaction submitted and PayrollLog records created', {
         approvalId,
         txHash,
-        employerId: approval.employerId
+        employerId: approval.employerId,
+        recipientCount: recipients.length
       });
 
       return {

@@ -356,10 +356,18 @@ export async function getPayrollHistory(req: Request, res: Response, next: NextF
       take: 100
     });
 
+    // Add Etherscan links to each log
+    const logsWithLinks = logs.map(log => ({
+      ...log,
+      etherscanLink: log.txHash
+        ? `https://sepolia.etherscan.io/tx/${log.txHash}`
+        : null
+    }));
+
     res.json({
       success: true,
-      data: logs,
-      count: logs.length
+      data: logsWithLinks,
+      count: logsWithLinks.length
     });
   } catch (error) {
     next(error);

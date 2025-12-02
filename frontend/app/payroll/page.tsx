@@ -228,7 +228,7 @@ export default function PayrollPage() {
                       <Button
                         size="sm"
                         variant="ghost"
-                        onClick={() => window.open(`https://explorer.mnee.io/tx/${log.txHash}`, '_blank')}
+                        onClick={() => window.open(`https://sepolia.etherscan.io/tx/${log.txHash}`, '_blank')}
                       >
                         <ExternalLink className="h-4 w-4" />
                       </Button>
