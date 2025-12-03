@@ -24,11 +24,11 @@ const config: Config = {
         background: 'hsl(var(--background))',
         foreground: 'hsl(var(--foreground))',
         primary: {
-          DEFAULT: '#1B5BF9', // MNEE blue
+          DEFAULT: '#3b82f6', // Blue
           foreground: 'hsl(var(--primary-foreground))',
         },
         secondary: {
-          DEFAULT: '#111827', // dark neutral
+          DEFAULT: '#1f2937', // Dark gray
           foreground: 'hsl(var(--secondary-foreground))',
         },
         destructive: {
@@ -51,8 +51,8 @@ const config: Config = {
           DEFAULT: 'hsl(var(--card))',
           foreground: 'hsl(var(--card-foreground))',
         },
-        success: '#22C55E',
-        warning: '#F97316',
+        success: '#10b981',
+        warning: '#f59e0b',
       },
       borderRadius: {
         lg: 'var(--radius)',

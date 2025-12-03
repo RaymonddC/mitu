@@ -78,18 +78,21 @@ export default function DashboardPage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-96">
-        <div className="text-lg text-gray-600">Loading...</div>
+      <div className="container mx-auto px-4 py-8">
+        <div className="flex items-center justify-center h-96">
+          <div className="text-lg text-gray-600">Loading...</div>
+        </div>
       </div>
     );
   }
 
   if (!employer && !showOnboarding) {
     return (
-      <div className="flex items-center justify-center min-h-[80vh]">
+      <div className="container mx-auto px-4 py-8">
+        <div className="flex items-center justify-center min-h-[80vh]">
         <Card className="max-w-2xl w-full">
           <CardHeader className="text-center">
-            <div className="mx-auto mb-4 h-16 w-16 bg-gradient-to-br from-purple-500 to-pink-500 rounded-full flex items-center justify-center">
+            <div className="mx-auto mb-4 h-16 w-16 bg-primary rounded-full flex items-center justify-center">
               <Users className="h-8 w-8 text-white" />
             </div>
             <CardTitle className="text-3xl">Welcome to MNEE Payroll!</CardTitle>
@@ -140,20 +143,22 @@ export default function DashboardPage() {
 
             <Button
               onClick={() => setShowOnboarding(true)}
-              className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700"
+              className="w-full bg-primary hover:bg-primary/90"
               size="lg"
             >
               Get Started
             </Button>
           </CardContent>
         </Card>
+        </div>
       </div>
     );
   }
 
   if (!employer && showOnboarding) {
     return (
-      <div className="flex items-center justify-center min-h-[80vh]">
+      <div className="container mx-auto px-4 py-8">
+        <div className="flex items-center justify-center min-h-[80vh]">
         <Card className="max-w-2xl w-full">
           <CardHeader>
             <CardTitle className="text-2xl">Create Employer Profile</CardTitle>
@@ -210,13 +215,14 @@ export default function DashboardPage() {
               <Button
                 onClick={handleRegisterEmployer}
                 disabled={!companyName.trim() || registering}
-                className="flex-1 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700"
+                className="flex-1 bg-primary hover:bg-primary/90"
               >
                 {registering ? 'Creating Account...' : 'Create Account'}
               </Button>
             </div>
           </CardContent>
         </Card>
+        </div>
       </div>
     );
   }
@@ -235,7 +241,7 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="space-y-8">
+    <div className="container mx-auto px-4 py-8 space-y-8">
       <div>
         <h1 className="text-3xl font-bold">Dashboard</h1>
         <p className="text-gray-600 mt-1">Welcome back, {employer.companyName}</p>

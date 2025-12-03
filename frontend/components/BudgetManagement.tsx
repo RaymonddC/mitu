@@ -140,9 +140,9 @@ export function BudgetManagement({ employerId }: BudgetManagementProps) {
                 <p className="text-xs text-blue-700 font-medium mb-1">Remaining</p>
                 <p className="text-lg font-bold text-blue-900">{remaining.toLocaleString()} MNEE</p>
               </div>
-              <div className="bg-purple-50 border border-purple-200 rounded-lg p-3">
-                <p className="text-xs text-purple-700 font-medium mb-1">Per Employee Limit</p>
-                <p className="text-lg font-bold text-purple-900">
+              <div className="bg-secondary border border-border rounded-lg p-3">
+                <p className="text-xs text-muted-foreground font-medium mb-1">Per Employee Limit</p>
+                <p className="text-lg font-bold text-foreground">
                   {activeBudget.perEmployeeLimit ? `${activeBudget.perEmployeeLimit.toLocaleString()} MNEE` : 'None'}
                 </p>
               </div>
@@ -177,7 +177,7 @@ export function BudgetManagement({ employerId }: BudgetManagementProps) {
             </div>
             <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
               <DialogTrigger asChild>
-                <Button className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700">
+                <Button className="bg-primary hover:bg-primary/90">
                   <Plus className="mr-2 h-4 w-4" />
                   Create Budget
                 </Button>
@@ -241,7 +241,7 @@ export function BudgetManagement({ employerId }: BudgetManagementProps) {
                   <Button
                     onClick={handleCreateBudget}
                     disabled={loading}
-                    className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700"
+                    className="w-full bg-primary hover:bg-primary/90"
                   >
                     {loading ? 'Creating...' : 'Create Budget'}
                   </Button>

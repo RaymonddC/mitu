@@ -21,9 +21,9 @@ export default function RootLayout({
     <html lang="en">
       <body className={inter.className}>
         <Providers>
-          <div className="min-h-screen bg-gray-50">
+          <div className="min-h-screen">
             <Navigation />
-            <main className="container mx-auto px-4 py-8">
+            <main>
               {children}
             </main>
           </div>

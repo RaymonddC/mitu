@@ -28,7 +28,7 @@ export default function Home() {
   }, [isConnected, address, router]);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900">
       {/* Animated background effects */}
       <div className="absolute inset-0 bg-[url('/grid.svg')] bg-center [mask-image:linear-gradient(180deg,white,rgba(255,255,255,0))]"></div>
 
@@ -37,16 +37,16 @@ export default function Home() {
         <div className="container mx-auto px-4 pt-20 pb-16">
           <div className="max-w-5xl mx-auto text-center">
             {/* Badge */}
-            <div className="inline-flex items-center gap-2 px-4 py-2 bg-purple-500/10 border border-purple-500/20 rounded-full mb-8">
-              <Sparkles className="h-4 w-4 text-purple-400" />
-              <span className="text-sm text-purple-200">Built on Ethereum with MNEE Stablecoin</span>
+            <div className="inline-flex items-center gap-2 px-4 py-2 bg-blue-500/10 border border-blue-500/20 rounded-full mb-8">
+              <Sparkles className="h-4 w-4 text-blue-400" />
+              <span className="text-sm text-blue-200">Built on Ethereum with MNEE Stablecoin</span>
             </div>
 
             {/* Main Title */}
             <h1 className="text-6xl md:text-7xl font-bold text-white mb-6 leading-tight">
               Autonomous Payroll
               <br />
-              <span className="bg-gradient-to-r from-purple-400 to-pink-400 text-transparent bg-clip-text">
+              <span className="bg-gradient-to-r from-blue-400 to-cyan-400 text-transparent bg-clip-text">
                 Powered by AI
               </span>
             </h1>
@@ -149,7 +149,7 @@ export default function Home() {
 
               <Card className="bg-white/5 backdrop-blur-xl border-white/10 hover:bg-white/10 transition-all duration-300 hover:scale-105">
                 <CardHeader>
-                  <div className="h-12 w-12 bg-gradient-to-br from-purple-500 to-pink-500 rounded-lg flex items-center justify-center mb-4">
+                  <div className="h-12 w-12 bg-gradient-to-br from-blue-500 to-indigo-500 rounded-lg flex items-center justify-center mb-4">
                     <Clock className="h-6 w-6 text-white" />
                   </div>
                   <CardTitle className="text-white text-lg">Set & Forget</CardTitle>
@@ -207,7 +207,7 @@ export default function Home() {
               </div>
 
               <div className="flex items-start gap-6 bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-8 hover:bg-white/10 transition-all">
-                <div className="flex-shrink-0 h-14 w-14 bg-gradient-to-br from-purple-500 to-pink-500 text-white rounded-full flex items-center justify-center text-2xl font-bold">
+                <div className="flex-shrink-0 h-14 w-14 bg-gradient-to-br from-blue-500 to-indigo-500 text-white rounded-full flex items-center justify-center text-2xl font-bold">
                   2
                 </div>
                 <div className="flex-1">
@@ -242,11 +242,11 @@ export default function Home() {
         {/* CTA Footer */}
         <div className="container mx-auto px-4 py-16">
           <div className="max-w-4xl mx-auto text-center">
-            <div className="bg-gradient-to-r from-purple-600 to-pink-600 rounded-3xl p-12">
+            <div className="bg-gradient-to-r from-blue-600 to-indigo-600 rounded-3xl p-12">
               <h2 className="text-4xl font-bold text-white mb-4">
                 Ready to Modernize Your Payroll?
               </h2>
-              <p className="text-xl text-purple-100 mb-8">
+              <p className="text-xl text-blue-100 mb-8">
                 Join the future of autonomous payments on Ethereum
               </p>
               <div className="inline-block bg-white/10 backdrop-blur-xl border border-white/20 rounded-2xl p-6">

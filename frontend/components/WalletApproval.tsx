@@ -219,9 +219,9 @@ export function WalletApproval({ employerId, onApprovalComplete }: WalletApprova
                   <p className="text-xs text-blue-700 font-medium mb-1">Total Amount</p>
                   <p className="text-2xl font-bold text-blue-900">{approval.totalAmount.toLocaleString()} MNEE</p>
                 </div>
-                <div className="bg-purple-50 border border-purple-200 rounded-lg p-3">
-                  <p className="text-xs text-purple-700 font-medium mb-1">Recipients</p>
-                  <p className="text-2xl font-bold text-purple-900 flex items-center gap-1">
+                <div className="bg-secondary border border-border rounded-lg p-3">
+                  <p className="text-xs text-muted-foreground font-medium mb-1">Recipients</p>
+                  <p className="text-2xl font-bold text-foreground flex items-center gap-1">
                     <Users className="h-5 w-5" />
                     {approval.recipientCount}
                   </p>
@@ -235,8 +235,8 @@ export function WalletApproval({ employerId, onApprovalComplete }: WalletApprova
                   {approval.recipients.map((recipient, idx) => (
                     <li key={idx} className="flex items-center justify-between text-sm">
                       <div className="flex items-center gap-2">
-                        <div className="h-8 w-8 bg-purple-100 rounded-full flex items-center justify-center">
-                          <span className="text-purple-700 font-medium text-xs">
+                        <div className="h-8 w-8 bg-primary/20 rounded-full flex items-center justify-center">
+                          <span className="text-primary font-medium text-xs">
                             {recipient.name.charAt(0).toUpperCase()}
                           </span>
                         </div>
@@ -256,7 +256,7 @@ export function WalletApproval({ employerId, onApprovalComplete }: WalletApprova
                 <Button
                   onClick={() => handleApprove(approval)}
                   disabled={loading || isExpired}
-                  className="flex-1 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700"
+                  className="flex-1 bg-primary hover:bg-primary/90"
                 >
                   {isProcessing ? (
                     <>

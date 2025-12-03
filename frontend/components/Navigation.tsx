@@ -33,7 +33,7 @@ export function Navigation() {
   ]
 
   return (
-    <nav className="border-b bg-white">
+    <nav className="border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container mx-auto px-4">
         <div className="flex h-16 items-center justify-between">
           <div className="flex items-center space-x-8">
@@ -54,7 +54,7 @@ export function Navigation() {
                       className={`flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
                         isActive
                           ? 'bg-primary text-white'
-                          : 'text-gray-600 hover:bg-gray-100'
+                          : 'text-muted-foreground hover:bg-secondary hover:text-foreground'
                       }`}
                     >
                       <Icon className="h-4 w-4" />
@@ -68,7 +68,7 @@ export function Navigation() {
 
           <div className="flex items-center space-x-4">
             {employer && isConnected && (
-              <div className="text-sm text-gray-600">
+              <div className="text-sm text-foreground">
                 <span className="font-medium">{employer.companyName}</span>
               </div>
             )}

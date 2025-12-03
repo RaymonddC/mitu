@@ -98,13 +98,17 @@ export default function PayrollPage() {
   }
 
   if (loading) {
-    return <div className="flex justify-center py-12">Loading...</div>
+    return (
+      <div className="container mx-auto px-4 py-8">
+        <div className="flex justify-center py-12">Loading...</div>
+      </div>
+    )
   }
 
   const totalPayroll = employees.reduce((sum, emp) => sum + Number(emp.salaryAmount), 0)
 
   return (
-    <div className="space-y-8">
+    <div className="container mx-auto px-4 py-8 space-y-8">
       <div>
         <h1 className="text-3xl font-bold">Payroll Management</h1>
         <p className="text-gray-600 mt-1">Create payroll approvals and view payment history</p>
@@ -138,16 +142,16 @@ export default function PayrollPage() {
             </div>
           </div>
 
-          <div className="rounded-lg bg-purple-50 border border-purple-200 p-4">
+          <div className="rounded-lg bg-secondary border border-border p-4">
             <div className="flex items-start gap-3">
               <div className="flex-shrink-0">
-                <div className="h-10 w-10 bg-purple-500 rounded-full flex items-center justify-center">
+                <div className="h-10 w-10 bg-primary rounded-full flex items-center justify-center">
                   <span className="text-white text-lg">🔐</span>
                 </div>
               </div>
               <div>
-                <h3 className="font-semibold text-purple-900 mb-1">Non-Custodial Wallet Signing</h3>
-                <p className="text-sm text-purple-800">
+                <h3 className="font-semibold text-foreground mb-1">Non-Custodial Wallet Signing</h3>
+                <p className="text-sm text-muted-foreground">
                   This system uses <strong>wallet signing only</strong>. When you run payroll, an approval will be created.
                   You'll then sign the transactions with your MetaMask wallet. Your funds stay in your wallet - maximum security!
                 </p>
@@ -160,7 +164,7 @@ export default function PayrollPage() {
               onClick={handleRunPayroll}
               disabled={running || employees.length === 0}
               size="lg"
-              className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700"
+              className="bg-primary hover:bg-primary/90"
             >
               {running ? (
                 <>
