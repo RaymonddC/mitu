@@ -78,7 +78,7 @@ export default function DashboardPage() {
 
   if (loading) {
     return (
-      <div className="container mx-auto px-4 py-8">
+      <div className="container mx-auto px-4 py-8 pt-24">
         <div className="flex items-center justify-center h-96">
           <div className="text-lg text-gray-600">Loading...</div>
         </div>
@@ -88,7 +88,7 @@ export default function DashboardPage() {
 
   if (!employer && !showOnboarding) {
     return (
-      <div className="container mx-auto px-4 py-8">
+      <div className="container mx-auto px-4 py-8 pt-24">
         <div className="flex items-center justify-center min-h-[80vh]">
         <Card className="max-w-2xl w-full">
           <CardHeader className="text-center">
@@ -157,7 +157,7 @@ export default function DashboardPage() {
 
   if (!employer && showOnboarding) {
     return (
-      <div className="container mx-auto px-4 py-8">
+      <div className="container mx-auto px-4 py-8 pt-24">
         <div className="flex items-center justify-center min-h-[80vh]">
         <Card className="max-w-2xl w-full">
           <CardHeader>
@@ -241,7 +241,7 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8 space-y-8">
+    <div className="container mx-auto px-4 py-8 pt-24 space-y-8">
       <div>
         <h1 className="text-3xl font-bold">Dashboard</h1>
         <p className="text-gray-600 mt-1">Welcome back, {employer.companyName}</p>

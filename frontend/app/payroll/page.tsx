@@ -99,7 +99,7 @@ export default function PayrollPage() {
 
   if (loading) {
     return (
-      <div className="container mx-auto px-4 py-8">
+      <div className="container mx-auto px-4 py-8 pt-24">
         <div className="flex justify-center py-12">Loading...</div>
       </div>
     )
@@ -108,7 +108,7 @@ export default function PayrollPage() {
   const totalPayroll = employees.reduce((sum, emp) => sum + Number(emp.salaryAmount), 0)
 
   return (
-    <div className="container mx-auto px-4 py-8 space-y-8">
+    <div className="container mx-auto px-4 py-8 pt-24 space-y-8">
       <div>
         <h1 className="text-3xl font-bold">Payroll Management</h1>
         <p className="text-gray-600 mt-1">Create payroll approvals and view payment history</p>

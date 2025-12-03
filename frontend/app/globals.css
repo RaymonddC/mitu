@@ -56,4 +56,129 @@
   body {
     @apply bg-background text-foreground;
   }
+  html {
+    scroll-behavior: smooth;
+  }
+}
+
+/* Custom animations */
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-20px);
+  }
+}
+
+@keyframes gradient {
+  0%, 100% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+}
+
+.animate-gradient {
+  background-size: 200% auto;
+  animation: gradient 3s ease infinite;
+}
+
+/* RainbowKit button custom styling - Remove blue background */
+button[data-testid="rk-connect-button"],
+button[data-testid="rk-account-button"] {
+  background: rgba(255, 255, 255, 0.1) !important;
+  backdrop-filter: blur(16px) !important;
+  -webkit-backdrop-filter: blur(16px) !important;
+  border: 1px solid rgba(255, 255, 255, 0.25) !important;
+  border-radius: 16px !important;
+  color: white !important;
+  font-weight: 600 !important;
+  font-size: 16px !important;
+  padding: 14px 32px !important;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.15), 0 0 1px rgba(255, 255, 255, 0.1) inset !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 8px !important;
+  cursor: pointer !important;
+  position: relative !important;
+  overflow: hidden !important;
+}
+
+/* Glass reflection effect */
+button[data-testid="rk-connect-button"]::before,
+button[data-testid="rk-account-button"]::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+  transition: left 0.5s ease;
+}
+
+button[data-testid="rk-connect-button"]:hover::before,
+button[data-testid="rk-account-button"]:hover::before {
+  left: 100%;
+}
+
+button[data-testid="rk-connect-button"]:hover,
+button[data-testid="rk-account-button"]:hover {
+  background: rgba(255, 255, 255, 0.18) !important;
+  transform: translateY(-2px) !important;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2), 0 0 1px rgba(255, 255, 255, 0.2) inset !important;
+  border-color: rgba(255, 255, 255, 0.35) !important;
+}
+
+button[data-testid="rk-connect-button"]:active,
+button[data-testid="rk-account-button"]:active {
+  transform: translateY(0px) !important;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.15) !important;
+}
+
+/* Center text and icons inside button */
+button[data-testid="rk-connect-button"] > div,
+button[data-testid="rk-account-button"] > div {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 8px !important;
+}
+
+/* Smooth transitions for all interactive elements */
+a, button, [role="button"] {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Improve focus states for accessibility */
+*:focus-visible {
+  outline: 2px solid rgba(59, 130, 246, 0.6);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* Subtle page load animation */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+body {
+  animation: fadeIn 0.5s ease-out;
+}
+
+/* Improve selection styling */
+::selection {
+  background-color: rgba(59, 130, 246, 0.3);
+  color: white;
 }
