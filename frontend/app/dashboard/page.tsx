@@ -10,6 +10,9 @@ import { formatCurrency, formatDate, getSeverityColor } from '@/lib/utils';
 import { Users, DollarSign, Calendar, AlertCircle, PlayCircle } from 'lucide-react';
 import { WalletApproval } from '@/components/WalletApproval';
 import { BudgetManagement } from '@/components/BudgetManagement';
+import { isBatchTransferAvailable, calculateGasSavings } from '@/lib/batchTransferABI';
+import { checkBatchApproval, approveBatchContract } from '@/lib/batchApproval';
+import { useWalletClient } from 'wagmi';
 
 export default function DashboardPage() {
   const router = useRouter();
@@ -20,6 +23,11 @@ export default function DashboardPage() {
   const [companyName, setCompanyName] = useState('');
   const [payrollDay, setPayrollDay] = useState(28);
   const [registering, setRegistering] = useState(false);
+  const [enableBatchTransfer, setEnableBatchTransfer] = useState(false);
+  const [approvingBatch, setApprovingBatch] = useState(false);
+  const { data: walletClient } = useWalletClient();
+
+  const batchAvailable = isBatchTransferAvailable();
 
   useEffect(() => {
     // Redirect to home if wallet disconnected
@@ -67,6 +75,26 @@ export default function DashboardPage() {
       });
 
       setEmployer(response.data.data);
+
+      // If user opted in for batch transfers, approve the contract
+      if (enableBatchTransfer && batchAvailable && walletClient) {
+        setApprovingBatch(true);
+        try {
+          const tokenAddress = process.env.NEXT_PUBLIC_MNEE_TOKEN_ADDRESS;
+          if (!tokenAddress) {
+            throw new Error('Token address not configured');
+          }
+
+          const hash = await approveBatchContract(walletClient, walletAddress, tokenAddress);
+          alert(`✅ Employer registered! Batch transfers enabled. Transaction: ${hash.slice(0, 10)}...`);
+        } catch (error: any) {
+          console.error('Batch approval failed during onboarding:', error);
+          alert(`⚠️ Employer registered successfully, but batch approval failed: ${error.message}. You can enable batch transfers later in settings.`);
+        } finally {
+          setApprovingBatch(false);
+        }
+      }
+
       setShowOnboarding(false);
     } catch (error: any) {
       console.error('Failed to register employer:', error);
@@ -193,6 +221,61 @@ export default function DashboardPage() {
               </p>
             </div>
 
+            {/* Batch Transfer Option */}
+            {batchAvailable && (
+              <div className="bg-gradient-to-br from-blue-50 to-purple-50 border border-purple-200 rounded-lg p-4 space-y-3">
+                <div className="flex items-start gap-3">
+                  <input
+                    type="checkbox"
+                    id="batch-transfer-opt-in"
+                    checked={enableBatchTransfer}
+                    onChange={(e) => setEnableBatchTransfer(e.target.checked)}
+                    disabled={registering || approvingBatch}
+                    className="mt-1 h-4 w-4 text-purple-600 border-gray-300 rounded focus:ring-purple-500"
+                  />
+                  <div className="flex-1">
+                    <label htmlFor="batch-transfer-opt-in" className="font-medium text-gray-900 cursor-pointer">
+                      Enable Batch Transfers (Recommended)
+                    </label>
+                    <p className="text-sm text-gray-700 mt-1">
+                      Pay all employees in one transaction instead of separate transactions. Saves gas costs.
+                    </p>
+                    {(() => {
+                      const costData = calculateGasSavings(3);
+                      return (
+                        <div className="mt-2 text-xs text-purple-800 bg-white rounded-lg border border-purple-100 p-2">
+                          <p className="font-medium mb-1">Cost Savings Example (3 employees):</p>
+                          <div className="grid grid-cols-2 gap-2">
+                            <div>
+                              <p className="text-gray-600">Individual:</p>
+                              <p className="font-bold">${costData.individual.costUSD}</p>
+                            </div>
+                            <div>
+                              <p className="text-gray-600">Batch:</p>
+                              <p className="font-bold text-purple-700">${costData.batch.costUSD}</p>
+                            </div>
+                          </div>
+                          <p className="mt-2 font-medium text-green-700">
+                            Save ${costData.savings.costUSD} ({costData.savings.percent}%) per payroll!
+                          </p>
+                        </div>
+                      );
+                    })()}
+                    <p className="text-xs text-gray-600 mt-2">
+                      {enableBatchTransfer ? (
+                        <>
+                          <AlertCircle className="inline h-3 w-3 mr-1" />
+                          After registration, you'll approve the batch contract (~$1-2 gas, one-time).
+                        </>
+                      ) : (
+                        "You can enable this later in settings."
+                      )}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+
             <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
               <p className="text-sm text-gray-700 mb-2"><strong>Your Wallet:</strong></p>
               <p className="text-xs font-mono text-gray-600 break-all">{walletAddress}</p>
@@ -209,10 +292,10 @@ export default function DashboardPage() {
               </Button>
               <Button
                 onClick={handleRegisterEmployer}
-                disabled={!companyName.trim() || registering}
+                disabled={!companyName.trim() || registering || approvingBatch}
                 className="flex-1 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700"
               >
-                {registering ? 'Creating Account...' : 'Create Account'}
+                {approvingBatch ? 'Approving Batch Transfer...' : registering ? 'Creating Account...' : 'Create Account'}
               </Button>
             </div>
           </CardContent>
