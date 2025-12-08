@@ -4,9 +4,10 @@ import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { CheckCircle, XCircle, Clock, AlertCircle, Users, Wallet, Zap, Info, Lock } from 'lucide-react';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { CheckCircle, XCircle, Clock, AlertCircle, Users, Wallet, Zap, Info, Lock, ArrowRight } from 'lucide-react';
 import { useAccount, useWalletClient } from 'wagmi';
-import { parseEther, encodeFunctionData, erc20Abi } from 'viem';
+import { parseEther, encodeFunctionData, erc20Abi, formatEther } from 'viem';
 import axios from 'axios';
 import { BATCH_TRANSFER_ABI, getBatchContractAddress, isBatchTransferAvailable, calculateGasSavings } from '@/lib/batchTransferABI';
 import { checkBatchApproval, approveBatchContract } from '@/lib/batchApproval';
@@ -52,6 +53,8 @@ export function WalletApproval({ employerId, onApprovalComplete }: WalletApprova
   const [isBatchApproved, setIsBatchApproved] = useState(false);
   const [checkingApproval, setCheckingApproval] = useState(false);
   const [approvingBatch, setApprovingBatch] = useState(false);
+  const [showConfirmDialog, setShowConfirmDialog] = useState(false);
+  const [pendingApproval, setPendingApproval] = useState<PendingApproval | null>(null);
   const { address } = useAccount();
   const { data: walletClient } = useWalletClient();
 
@@ -143,10 +146,20 @@ export function WalletApproval({ employerId, onApprovalComplete }: WalletApprova
       return;
     }
 
-    setProcessingId(approval.id);
+    // Show confirmation dialog first
+    setPendingApproval(approval);
+    setShowConfirmDialog(true);
+  };
+
+  const executeApproval = async () => {
+    if (!walletClient || !address || !pendingApproval) return;
+
+    setShowConfirmDialog(false);
+    setProcessingId(pendingApproval.id);
     setLoading(true);
 
     try {
+      const approval = pendingApproval;
       const tokenAddress = process.env.NEXT_PUBLIC_MNEE_TOKEN_ADDRESS || approval.unsignedTx?.tokenAddress;
 
       if (!tokenAddress) {
@@ -529,6 +542,128 @@ export function WalletApproval({ employerId, onApprovalComplete }: WalletApprova
           </Card>
         );
       })}
+
+      {/* Confirmation Dialog */}
+      <Dialog open={showConfirmDialog} onOpenChange={setShowConfirmDialog}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Wallet className="h-5 w-5 text-purple-600" />
+              Confirm Payroll Transaction
+            </DialogTitle>
+            <DialogDescription>
+              Please review the transaction details before signing with MetaMask
+            </DialogDescription>
+          </DialogHeader>
+
+          {pendingApproval && (
+            <div className="space-y-4 py-4">
+              {/* Total Amount Highlight */}
+              <div className="bg-gradient-to-r from-purple-50 to-pink-50 border-2 border-purple-200 rounded-lg p-4">
+                <p className="text-sm text-purple-700 font-medium mb-2">Total Amount to Transfer</p>
+                <p className="text-4xl font-bold text-purple-900">{pendingApproval.totalAmount.toLocaleString()} MNEE</p>
+                <p className="text-sm text-purple-600 mt-1">to {pendingApproval.recipientCount} employees</p>
+              </div>
+
+              {/* Employee Breakdown */}
+              <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 max-h-64 overflow-y-auto">
+                <p className="text-sm font-semibold text-gray-900 mb-3 flex items-center gap-2">
+                  <Users className="h-4 w-4" />
+                  Employee Breakdown
+                </p>
+                <div className="space-y-2">
+                  {pendingApproval.recipients.map((recipient, index) => (
+                    <div key={recipient.employeeId} className="flex items-center justify-between bg-white rounded-lg p-3 border border-gray-200">
+                      <div className="flex items-center gap-3">
+                        <div className="h-8 w-8 rounded-full bg-purple-100 flex items-center justify-center text-purple-700 font-semibold text-sm">
+                          {index + 1}
+                        </div>
+                        <div>
+                          <p className="font-medium text-gray-900">{recipient.name}</p>
+                          <p className="text-xs text-gray-500 font-mono">{recipient.address.slice(0, 10)}...{recipient.address.slice(-8)}</p>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <p className="font-bold text-gray-900">{recipient.amount.toLocaleString()} MNEE</p>
+                        <ArrowRight className="h-4 w-4 text-green-600 ml-auto" />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Transfer Mode Info */}
+              {useBatchMode ? (
+                <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                  <div className="flex items-start gap-3">
+                    <Zap className="h-5 w-5 text-green-600 mt-0.5" />
+                    <div className="flex-1">
+                      <p className="font-semibold text-green-900 mb-1">Batch Mode Enabled</p>
+                      <p className="text-sm text-green-700">
+                        All {pendingApproval.recipientCount} payments will be processed in <strong>1 transaction</strong>.
+                        {(() => {
+                          const costData = calculateGasSavings(pendingApproval.recipientCount);
+                          return ` Estimated gas: ~$${costData.batch.costUSD} (saving $${costData.savings.costUSD})`;
+                        })()}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                  <div className="flex items-start gap-3">
+                    <Info className="h-5 w-5 text-blue-600 mt-0.5" />
+                    <div className="flex-1">
+                      <p className="font-semibold text-blue-900 mb-1">Individual Mode</p>
+                      <p className="text-sm text-blue-700">
+                        You'll need to approve <strong>{pendingApproval.recipientCount} separate transactions</strong> in MetaMask.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* MetaMask Warning (only for batch mode) */}
+              {useBatchMode && (
+                <div className="bg-amber-50 border border-amber-300 rounded-lg p-4">
+                  <div className="flex items-start gap-3">
+                    <AlertCircle className="h-5 w-5 text-amber-600 mt-0.5 flex-shrink-0" />
+                    <div>
+                      <p className="font-semibold text-amber-900 mb-2">MetaMask Display Limitation</p>
+                      <p className="text-sm text-amber-800 mb-2">
+                        Due to MetaMask's limitations, it will only show <strong>{pendingApproval.recipients[0]?.amount.toLocaleString()} MNEE</strong> (first employee's amount) instead of the total <strong>{pendingApproval.totalAmount.toLocaleString()} MNEE</strong>.
+                      </p>
+                      <p className="text-xs text-amber-700 bg-amber-100 rounded p-2 border border-amber-200">
+                        <strong>This is normal!</strong> The actual transfer will be {pendingApproval.totalAmount.toLocaleString()} MNEE to all {pendingApproval.recipientCount} employees.
+                        You can verify the full transaction on Etherscan after signing.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          <DialogFooter className="gap-2">
+            <Button
+              variant="outline"
+              onClick={() => {
+                setShowConfirmDialog(false);
+                setPendingApproval(null);
+              }}
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={executeApproval}
+              className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700"
+            >
+              <CheckCircle className="mr-2 h-4 w-4" />
+              Confirm & Sign with MetaMask
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
