@@ -125,4 +125,17 @@ function DialogDescription({ children, className }: DialogDescriptionProps) {
   );
 }
 
-export { Dialog, DialogTrigger, DialogContent, DialogHeader, DialogTitle, DialogDescription }
+interface DialogFooterProps {
+  children: React.ReactNode;
+  className?: string;
+}
+
+function DialogFooter({ children, className }: DialogFooterProps) {
+  return (
+    <div className={`p-6 pt-4 flex justify-end gap-2 ${className || ''}`}>
+      {children}
+    </div>
+  );
+}
+
+export { Dialog, DialogTrigger, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter }
