@@ -5,12 +5,13 @@ import { usePathname } from 'next/navigation'
 import { useStore } from '@/lib/store'
 import { ConnectButton } from '@rainbow-me/rainbowkit'
 import { useAccount } from 'wagmi'
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { Wallet, Users, DollarSign, Settings, BarChart3 } from 'lucide-react'
 
 export function Navigation() {
   const pathname = usePathname()
   const { walletAddress, isConnected, connectWallet, disconnectWallet, employer } = useStore()
+  const [scrolled, setScrolled] = useState(false)
 
   // Sync Ethereum wallet connection with app state
   const { address, isConnected: isWalletConnected } = useAccount()
@@ -25,6 +26,16 @@ export function Navigation() {
     }
   }, [address, isWalletConnected, walletAddress, isConnected, connectWallet, disconnectWallet])
 
+  // Handle scroll animation
+  useEffect(() => {
+    const handleScroll = () => {
+      setScrolled(window.scrollY > 20)
+    }
+
+    window.addEventListener('scroll', handleScroll)
+    return () => window.removeEventListener('scroll', handleScroll)
+  }, [])
+
   const navItems = [
     { href: '/dashboard', label: 'Dashboard', icon: BarChart3 },
     { href: '/employees', label: 'Employees', icon: Users },
@@ -33,13 +44,19 @@ export function Navigation() {
   ]
 
   return (
-    <nav className="border-b bg-white">
+    <nav
+      className={`fixed top-0 left-0 right-0 z-50 border-b transition-all duration-300 ${
+        scrolled
+          ? 'bg-background/95 backdrop-blur-xl border-border shadow-lg'
+          : 'bg-transparent border-transparent'
+      }`}
+    >
       <div className="container mx-auto px-4">
         <div className="flex h-16 items-center justify-between">
           <div className="flex items-center space-x-8">
             <Link href="/" className="flex items-center space-x-2">
-              <Wallet className="h-6 w-6 text-primary" />
-              <span className="text-xl font-bold text-primary">MNEE Payroll</span>
+              <Wallet className={`h-6 w-6 transition-colors ${scrolled ? 'text-primary' : 'text-white'}`} />
+              <span className={`text-xl font-bold transition-colors ${scrolled ? 'text-primary' : 'text-white'}`}>MNEE Payroll</span>
             </Link>
 
             {isConnected && (
@@ -54,7 +71,7 @@ export function Navigation() {
                       className={`flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
                         isActive
                           ? 'bg-primary text-white'
-                          : 'text-gray-600 hover:bg-gray-100'
+                          : 'text-muted-foreground hover:bg-secondary hover:text-foreground'
                       }`}
                     >
                       <Icon className="h-4 w-4" />
@@ -68,7 +85,7 @@ export function Navigation() {
 
           <div className="flex items-center space-x-4">
             {employer && isConnected && (
-              <div className="text-sm text-gray-600">
+              <div className="text-sm text-foreground">
                 <span className="font-medium">{employer.companyName}</span>
               </div>
             )}
