@@ -44,8 +44,5 @@
     "salary"
   ],
   "author": "MNEE Hackathon Team",
-  "license": "MIT",
-  "dependencies": {
-    "@rollup/rollup-linux-x64-gnu": "^4.53.3"
-  }
+  "license": "MIT"
 }
