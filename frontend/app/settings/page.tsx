@@ -137,14 +137,16 @@ export default function SettingsPage() {
   const costData = calculateGasSavings(employeeCount);
 
   return (
-    <div className="space-y-8">
-      <div>
-        <h1 className="text-3xl font-bold">Settings</h1>
-        <p className="text-gray-600 mt-1">Manage your payroll preferences</p>
+    <div className="container mx-auto px-4 pt-24 pb-8 max-w-7xl">
+      <div className="mb-10">
+        <h1 className="text-4xl font-bold mb-2">Settings</h1>
+        <p className="text-gray-600 text-lg">Manage your payroll preferences</p>
       </div>
 
+      <div className="space-y-6">
+
       {/* Batch Transfer Settings */}
-      <Card>
+      <Card className="shadow-2xl bg-white backdrop-blur-2xl border border-gray-200">
         <CardHeader>
           <div className="flex items-center gap-2">
             <Zap className="h-5 w-5 text-purple-600" />
@@ -170,11 +172,11 @@ export default function SettingsPage() {
           ) : (
             <>
               {/* Status */}
-              <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg border border-gray-200">
+              <div className="flex items-center justify-between p-4 bg-gradient-to-r from-purple-50/80 to-blue-50/80 rounded-lg border border-purple-200/50 backdrop-blur-sm">
                 <div className="flex items-center gap-3">
                   {isBatchApproved ? (
                     <>
-                      <div className="h-10 w-10 bg-green-100 rounded-full flex items-center justify-center">
+                      <div className="h-10 w-10 bg-gradient-to-br from-green-100 to-emerald-100 rounded-full flex items-center justify-center shadow-md">
                         <CheckCircle className="h-6 w-6 text-green-600" />
                       </div>
                       <div>
@@ -200,7 +202,7 @@ export default function SettingsPage() {
               </div>
 
               {/* Cost Comparison */}
-              <div className="bg-gradient-to-br from-blue-50 to-purple-50 border border-purple-200 rounded-lg p-4 space-y-3">
+              <div className="bg-gradient-to-br from-blue-100/60 via-purple-100/60 to-pink-100/60 border-2 border-purple-300/60 rounded-xl p-4 space-y-3 backdrop-blur-sm shadow-lg">
                 <button
                   onClick={() => setShowCostComparison(!showCostComparison)}
                   className="flex items-center justify-between w-full text-left"
@@ -243,7 +245,7 @@ export default function SettingsPage() {
               </div>
 
               {/* Contract Info */}
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 space-y-2">
+              <div className="bg-gradient-to-br from-cyan-50/80 to-blue-50/80 border-2 border-cyan-300/60 rounded-xl p-4 space-y-2 backdrop-blur-sm shadow-md">
                 <div className="flex items-start gap-2">
                   <Shield className="h-5 w-5 text-blue-600 mt-0.5" />
                   <div className="flex-1">
@@ -316,7 +318,7 @@ export default function SettingsPage() {
               </div>
 
               {/* Warning */}
-              <div className="bg-amber-50 border border-amber-200 rounded-lg p-3">
+              <div className="bg-gradient-to-br from-amber-50/80 to-yellow-50/80 border-2 border-amber-300/60 rounded-xl p-3 backdrop-blur-sm shadow-md">
                 <div className="flex items-start gap-2 text-sm text-amber-800">
                   <AlertCircle className="h-4 w-4 mt-0.5 flex-shrink-0" />
                   <div>
@@ -334,7 +336,7 @@ export default function SettingsPage() {
       </Card>
 
       {/* Other Settings (Placeholder) */}
-      <Card>
+      <Card className="shadow-2xl bg-white backdrop-blur-2xl border border-gray-200">
         <CardHeader>
           <CardTitle>Company Settings</CardTitle>
           <CardDescription>Manage your company information</CardDescription>
@@ -356,6 +358,7 @@ export default function SettingsPage() {
           </div>
         </CardContent>
       </Card>
+      </div>
     </div>
   );
 }

@@ -124,8 +124,8 @@ export default function EmployeesPage() {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8 max-w-7xl">
-      <div className="mb-8">
+    <div className="container mx-auto px-4 pt-24 pb-8 max-w-7xl">
+      <div className="mb-10">
         <h1 className="text-4xl font-bold mb-2">Employees</h1>
         <p className="text-gray-600 text-lg">Manage your team members</p>
       </div>
@@ -134,7 +134,7 @@ export default function EmployeesPage() {
 
       {/* Add/Edit Employee Form */}
       {showAddForm && (
-        <Card className="shadow-lg">
+        <Card className="shadow-2xl bg-white backdrop-blur-2xl border border-gray-200">
           <CardHeader>
             <CardTitle>{editingId ? 'Edit Employee' : 'Add New Employee'}</CardTitle>
             <CardDescription>{editingId ? 'Update employee details' : 'Enter employee details'}</CardDescription>
@@ -212,7 +212,7 @@ export default function EmployeesPage() {
       )}
 
       {/* Employee List */}
-      <Card className="shadow-lg">
+      <Card className="shadow-2xl bg-white backdrop-blur-2xl border border-gray-200">
         <CardHeader>
           <div className="flex justify-between items-center">
             <div>
@@ -221,10 +221,10 @@ export default function EmployeesPage() {
             </div>
             <Button
               onClick={() => setShowAddForm(!showAddForm)}
-              className="relative bg-gradient-to-r from-blue-500/20 to-purple-500/20 backdrop-blur-xl border border-white/30 shadow-2xl hover:from-blue-500/30 hover:to-purple-500/30 hover:border-white/40 text-white font-semibold transition-all duration-300 hover:scale-105"
+              className="relative z-10 overflow-hidden bg-white/20 backdrop-blur-2xl border-2 border-white/40 shadow-[0_8px_32px_0_rgba(255,255,255,0.18)] hover:shadow-[0_8px_40px_0_rgba(255,255,255,0.25)] hover:bg-white/30 hover:border-white/50 text-gray-900 font-bold tracking-wide transition-all duration-300 hover:scale-105 before:absolute before:inset-0 before:bg-gradient-to-r before:from-white/0 before:via-white/40 before:to-white/0 before:translate-x-[-200%] hover:before:translate-x-[200%] before:transition-transform before:duration-700"
             >
-              <Plus className="mr-2 h-5 w-5" />
-              Add Employee
+              <Plus className="mr-2 h-5 w-5 relative z-10" />
+              <span className="relative z-10">Add Employee</span>
             </Button>
           </div>
         </CardHeader>
