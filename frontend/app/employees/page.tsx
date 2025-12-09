@@ -124,21 +124,17 @@ export default function EmployeesPage() {
   }
 
   return (
-    <div className="space-y-8">
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-3xl font-bold">Employees</h1>
-          <p className="text-gray-600 mt-1">Manage your team members</p>
-        </div>
-        <Button onClick={() => setShowAddForm(!showAddForm)}>
-          <Plus className="mr-2 h-4 w-4" />
-          Add Employee
-        </Button>
+    <div className="container mx-auto px-4 py-8 max-w-7xl">
+      <div className="mb-8">
+        <h1 className="text-4xl font-bold mb-2">Employees</h1>
+        <p className="text-gray-600 text-lg">Manage your team members</p>
       </div>
+
+      <div className="space-y-6">
 
       {/* Add/Edit Employee Form */}
       {showAddForm && (
-        <Card>
+        <Card className="shadow-lg">
           <CardHeader>
             <CardTitle>{editingId ? 'Edit Employee' : 'Add New Employee'}</CardTitle>
             <CardDescription>{editingId ? 'Update employee details' : 'Enter employee details'}</CardDescription>
@@ -216,10 +212,21 @@ export default function EmployeesPage() {
       )}
 
       {/* Employee List */}
-      <Card>
+      <Card className="shadow-lg">
         <CardHeader>
-          <CardTitle>Team Members ({employees.length})</CardTitle>
-          <CardDescription>Active employees on payroll</CardDescription>
+          <div className="flex justify-between items-center">
+            <div>
+              <CardTitle>Team Members ({employees.length})</CardTitle>
+              <CardDescription>Active employees on payroll</CardDescription>
+            </div>
+            <Button
+              onClick={() => setShowAddForm(!showAddForm)}
+              className="relative bg-gradient-to-r from-blue-500/20 to-purple-500/20 backdrop-blur-xl border border-white/30 shadow-2xl hover:from-blue-500/30 hover:to-purple-500/30 hover:border-white/40 text-white font-semibold transition-all duration-300 hover:scale-105"
+            >
+              <Plus className="mr-2 h-5 w-5" />
+              Add Employee
+            </Button>
+          </div>
         </CardHeader>
         <CardContent>
           {employees.length === 0 ? (
@@ -227,22 +234,22 @@ export default function EmployeesPage() {
               No employees yet. Add your first team member!
             </div>
           ) : (
-            <div className="overflow-x-auto">
+            <div className="overflow-x-auto -mx-6 px-6">
               <table className="w-full">
-                <thead className="border-b">
+                <thead className="border-b border-gray-200">
                   <tr className="text-left text-sm text-gray-600">
-                    <th className="pb-3 font-medium">Name</th>
-                    <th className="pb-3 font-medium">Wallet Address</th>
-                    <th className="pb-3 font-medium">Salary</th>
-                    <th className="pb-3 font-medium">Status</th>
-                    <th className="pb-3 font-medium">Added</th>
-                    <th className="pb-3 font-medium text-right">Actions</th>
+                    <th className="pb-4 pt-2 px-2 font-semibold">Name</th>
+                    <th className="pb-4 pt-2 px-2 font-semibold">Wallet Address</th>
+                    <th className="pb-4 pt-2 px-2 font-semibold">Salary</th>
+                    <th className="pb-4 pt-2 px-2 font-semibold">Status</th>
+                    <th className="pb-4 pt-2 px-2 font-semibold">Added</th>
+                    <th className="pb-4 pt-2 px-2 font-semibold text-right">Actions</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y">
+                <tbody className="divide-y divide-gray-100">
                   {employees.map((employee) => (
-                    <tr key={employee.id} className="text-sm">
-                      <td className="py-4">
+                    <tr key={employee.id} className="text-sm hover:bg-gray-50/50 transition-colors">
+                      <td className="py-5 px-2">
                         <div>
                           <div className="font-medium">{employee.name}</div>
                           {employee.email && (
@@ -250,13 +257,13 @@ export default function EmployeesPage() {
                           )}
                         </div>
                       </td>
-                      <td className="py-4 font-mono text-xs">
+                      <td className="py-5 px-2 font-mono text-xs">
                         {formatWalletAddress(employee.walletAddress)}
                       </td>
-                      <td className="py-4 font-medium">
+                      <td className="py-5 px-2 font-medium">
                         {formatCurrency(Number(employee.salaryAmount))}
                       </td>
-                      <td className="py-4">
+                      <td className="py-5 px-2">
                         {employee.active ? (
                           <span className="inline-flex items-center px-2 py-1 rounded-full text-xs bg-green-50 text-green-600">
                             <CheckCircle className="h-3 w-3 mr-1" />
@@ -269,10 +276,10 @@ export default function EmployeesPage() {
                           </span>
                         )}
                       </td>
-                      <td className="py-4 text-gray-500">
+                      <td className="py-5 px-2 text-gray-500">
                         {formatDate(employee.createdAt)}
                       </td>
-                      <td className="py-4 text-right">
+                      <td className="py-5 px-2 text-right">
                         <div className="flex justify-end gap-2">
                           <Button
                             size="sm"
@@ -300,6 +307,7 @@ export default function EmployeesPage() {
           )}
         </CardContent>
       </Card>
+      </div>
     </div>
   )
 }
