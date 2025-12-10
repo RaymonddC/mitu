@@ -6,6 +6,7 @@
 import { Request, Response } from 'express';
 import { walletSigningService } from '../services/walletSigningService';
 import { logger } from '../middleware/logger';
+import { prisma } from '../server';
 
 export class WalletSigningController {
   /**
@@ -100,6 +101,88 @@ export class WalletSigningController {
       logger.error('List approvals endpoint error', { error: error.message });
       res.status(500).json({
         error: 'Failed to list approvals',
+        message: error.message
+      });
+    }
+  }
+
+  /**
+   * Validate approval before blockchain transaction
+   * POST /api/wallet/approvals/:approvalId/validate
+   */
+  async validateApproval(req: Request, res: Response) {
+    try {
+      const { approvalId } = req.params;
+
+      const approval = await walletSigningService.getApproval(approvalId);
+
+      if (!approval) {
+        return res.status(404).json({
+          error: 'Approval not found',
+          message: 'Approval not found'
+        });
+      }
+
+      if (approval.status !== 'pending') {
+        return res.status(400).json({
+          error: 'Approval not pending',
+          message: `Approval is ${approval.status}. Only pending approvals can be validated.`
+        });
+      }
+
+      // Check if employees have already been paid today (BEFORE blockchain transaction)
+      const today = new Date().toISOString().split('T')[0];
+      const alreadyPaidEmployees: Array<{ name: string; amount: number; paidAt: Date }> = [];
+      const recipients = approval.recipients as any[];
+
+      const crypto = require('crypto');
+
+      for (const recipient of recipients) {
+        const idempotencyKey = crypto
+          .createHash('sha256')
+          .update(`${approval.employerId}-${recipient.employeeId}-${today}`)
+          .digest('hex');
+
+        const existingLog = await prisma.payrollLog.findUnique({
+          where: { idempotencyKey }
+        });
+
+        if (existingLog) {
+          alreadyPaidEmployees.push({
+            name: recipient.name,
+            amount: recipient.amount,
+            paidAt: existingLog.executedAt
+          });
+        }
+      }
+
+      const allAlreadyPaid = alreadyPaidEmployees.length === recipients.length;
+      const someAlreadyPaid = alreadyPaidEmployees.length > 0 && alreadyPaidEmployees.length < recipients.length;
+
+      logger.info('Approval validation result', {
+        approvalId,
+        totalRecipients: recipients.length,
+        alreadyPaidCount: alreadyPaidEmployees.length,
+        allAlreadyPaid,
+        someAlreadyPaid
+      });
+
+      res.json({
+        success: true,
+        data: {
+          approvalId,
+          valid: !allAlreadyPaid, // Only valid if not all already paid
+          allAlreadyPaid,
+          someAlreadyPaid,
+          totalRecipients: recipients.length,
+          alreadyPaidCount: alreadyPaidEmployees.length,
+          alreadyPaidEmployees: alreadyPaidEmployees.length > 0 ? alreadyPaidEmployees : undefined
+        }
+      });
+    } catch (error: any) {
+      logger.error('Validate approval endpoint error', { error: error.message });
+      res.status(500).json({
+        error: 'Failed to validate approval',
         message: error.message
       });
     }

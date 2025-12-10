@@ -9,6 +9,7 @@ export const BATCH_TRANSFER_ABI = [
   {
     inputs: [
       { internalType: "address", name: "token", type: "address" },
+      { internalType: "uint256", name: "totalAmount", type: "uint256" },
       { internalType: "address[]", name: "recipients", type: "address[]" },
       { internalType: "uint256[]", name: "amounts", type: "uint256[]" }
     ],

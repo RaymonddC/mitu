@@ -204,52 +204,184 @@ export class WalletSigningService {
       const txHashes = txHash.split(',');
       const recipients = approval.recipients as any[];
 
+      logger.info('Starting PayrollLog creation', {
+        approvalId,
+        totalRecipients: recipients.length,
+        txHashCount: txHashes.length,
+        employerId: approval.employerId
+      });
+
+      const createdLogs: any[] = [];
+      const skippedLogs: any[] = [];
+
       // Create individual PayrollLog records for payment history
       for (let i = 0; i < recipients.length; i++) {
         const recipient = recipients[i];
         const employeeTxHash = txHashes[i] || txHashes[0]; // Use corresponding hash or first one
 
-        // Generate idempotency key to prevent duplicates
-        const date = new Date().toISOString().split('T')[0];
-        const idempotencyKey = `${approval.employerId}-${recipient.employeeId}-${date}`;
+        try {
+          // Generate idempotency key to prevent duplicates (must match format in payrollController)
+          const date = new Date().toISOString().split('T')[0];
+          const crypto = require('crypto');
+          const idempotencyKey = crypto
+            .createHash('sha256')
+            .update(`${approval.employerId}-${recipient.employeeId}-${date}`)
+            .digest('hex');
 
-        // Check if log already exists (prevent duplicates)
-        const existingLog = await prisma.payrollLog.findUnique({
-          where: { idempotencyKey }
-        });
+          logger.info('Attempting PayrollLog creation', {
+            index: i,
+            employerId: approval.employerId,
+            employeeId: recipient.employeeId,
+            amount: recipient.amount,
+            amountType: typeof recipient.amount,
+            idempotencyKey,
+            txHash: employeeTxHash
+          });
 
-        if (!existingLog) {
-          await prisma.payrollLog.create({
+          // Check if log already exists (duplicate payment detection)
+          const existingLog = await prisma.payrollLog.findUnique({
+            where: { idempotencyKey }
+          });
+
+          let finalIdempotencyKey = idempotencyKey;
+          let isDuplicate = false;
+
+          if (existingLog) {
+            // CRITICAL: Transaction already executed on blockchain!
+            // We MUST create a log even if it's a duplicate payment
+            logger.error('⚠️  DUPLICATE PAYMENT DETECTED - Employee already paid today but transaction was executed!', {
+              idempotencyKey,
+              existingLogId: existingLog.id,
+              existingLogCreated: existingLog.executedAt,
+              employeeName: recipient.name,
+              employeeId: recipient.employeeId,
+              amount: recipient.amount,
+              newTxHash: employeeTxHash
+            });
+
+            // Modify idempotency key to allow duplicate log creation
+            // Format: original_key + timestamp to make it unique
+            finalIdempotencyKey = `${idempotencyKey}-duplicate-${Date.now()}`;
+            isDuplicate = true;
+
+            // Still track that it was skipped in the sense of being a duplicate
+            skippedLogs.push({
+              employeeId: recipient.employeeId,
+              employeeName: recipient.name,
+              amount: recipient.amount,
+              reason: 'Duplicate payment - already paid today',
+              existingLogId: existingLog.id,
+              existingLogDate: existingLog.executedAt
+            });
+          }
+
+          const newLog = await prisma.payrollLog.create({
             data: {
               employerId: approval.employerId,
               employeeId: recipient.employeeId,
-              amount: recipient.amount,
+              amount: Number(recipient.amount), // Ensure it's a number
               txHash: employeeTxHash,
               status: 'completed',
-              idempotencyKey,
+              idempotencyKey: finalIdempotencyKey, // Use modified key for duplicates
               confirmedAt: new Date(),
               metadata: {
                 approvalId,
                 walletSigned: true,
-                recipient: recipient.address
+                recipient: recipient.address,
+                isDuplicate, // Flag if this is a duplicate payment
+                ...(isDuplicate && {
+                  duplicateWarning: 'This employee was already paid today',
+                  originalIdempotencyKey: idempotencyKey,
+                  existingLogId: existingLog?.id
+                })
               }
             }
           });
+
+          if (isDuplicate) {
+            logger.warn('⚠️  PayrollLog created for DUPLICATE PAYMENT', {
+              logId: newLog.id,
+              employeeId: recipient.employeeId,
+              employeeName: recipient.name,
+              amount: newLog.amount,
+              executedAt: newLog.executedAt,
+              idempotencyKey: newLog.idempotencyKey,
+              originalLogId: existingLog?.id,
+              warning: 'Employee was paid twice today!'
+            });
+          } else {
+            logger.info('✅ PayrollLog created successfully', {
+              logId: newLog.id,
+              employeeId: recipient.employeeId,
+              amount: newLog.amount,
+              executedAt: newLog.executedAt,
+              idempotencyKey: newLog.idempotencyKey
+            });
+          }
+
+          createdLogs.push({
+            logId: newLog.id,
+            employeeId: recipient.employeeId,
+            employeeName: recipient.name,
+            amount: newLog.amount,
+            isDuplicate, // Flag duplicate payments
+            ...(isDuplicate && { originalLogId: existingLog?.id })
+          });
+
+        } catch (logError: any) {
+          logger.error('❌ Failed to create PayrollLog', {
+            error: logError.message,
+            stack: logError.stack,
+            employeeId: recipient.employeeId,
+            approvalId,
+            recipientData: recipient
+          });
+
+          skippedLogs.push({
+            employeeId: recipient.employeeId,
+            employeeName: recipient.name,
+            amount: recipient.amount,
+            reason: `Error: ${logError.message}`
+          });
+
+          // Continue with other employees even if one fails
         }
+      }
+
+      logger.info('Finished PayrollLog creation loop', {
+        approvalId,
+        totalRecipients: recipients.length,
+        created: createdLogs.length,
+        skipped: skippedLogs.length
+      });
+
+      // Log warning if any were skipped
+      if (skippedLogs.length > 0) {
+        logger.warn('⚠️  Some PayrollLogs were skipped!', {
+          skippedCount: skippedLogs.length,
+          skippedEmployees: skippedLogs.map(s => s.employeeName),
+          details: skippedLogs
+        });
       }
 
       logger.info('Signed transaction submitted and PayrollLog records created', {
         approvalId,
         txHash,
         employerId: approval.employerId,
-        recipientCount: recipients.length
+        recipientCount: recipients.length,
+        logsCreated: createdLogs.length,
+        logsSkipped: skippedLogs.length
       });
 
       return {
         approvalId,
         txHash,
         status: 'approved',
-        approval: updatedApproval
+        approval: updatedApproval,
+        logsCreated: createdLogs.length,
+        logsSkipped: skippedLogs.length,
+        createdLogs,
+        skippedLogs
       };
     } catch (error: any) {
       logger.error('Failed to submit signed transaction', {

@@ -12,6 +12,7 @@ const router = Router();
 router.post('/approvals/create', walletSigningController.createApproval.bind(walletSigningController));
 router.get('/approvals/:approvalId', walletSigningController.getApproval.bind(walletSigningController));
 router.get('/approvals', walletSigningController.listApprovals.bind(walletSigningController));
+router.post('/approvals/:approvalId/validate', walletSigningController.validateApproval.bind(walletSigningController));
 router.post('/approvals/:approvalId/submit', walletSigningController.submitSignedTransaction.bind(walletSigningController));
 router.post('/approvals/:approvalId/reject', walletSigningController.rejectApproval.bind(walletSigningController));
 

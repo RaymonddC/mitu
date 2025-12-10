@@ -60,6 +60,48 @@ export async function runPayroll(req: Request, res: Response, next: NextFunction
 
     // Week 2: Wallet signing mode - ALWAYS create approval (never use custodial)
     if (data.useWalletSigning) {
+      // Check if employees have already been paid today (idempotency check)
+      const today = new Date().toISOString().split('T')[0];
+      const alreadyPaidEmployees: Array<{ name: string; amount: number; paidAt: Date }> = [];
+
+      for (const employee of employer.employees) {
+        const idempotencyKey = crypto
+          .createHash('sha256')
+          .update(`${employer.id}-${employee.id}-${today}`)
+          .digest('hex');
+
+        const existingLog = await prisma.payrollLog.findUnique({
+          where: { idempotencyKey }
+        });
+
+        if (existingLog) {
+          alreadyPaidEmployees.push({
+            name: employee.name,
+            amount: Number(employee.salaryAmount),
+            paidAt: existingLog.executedAt
+          });
+        }
+      }
+
+      // Warn if some employees already paid today
+      if (alreadyPaidEmployees.length > 0) {
+        logger.warn('⚠️  Some employees were already paid today', {
+          employerId: employer.id,
+          alreadyPaidCount: alreadyPaidEmployees.length,
+          totalEmployees: employer.employees.length,
+          alreadyPaidEmployees: alreadyPaidEmployees.map(e => e.name)
+        });
+
+        // If ALL employees already paid, reject the request
+        if (alreadyPaidEmployees.length === employer.employees.length) {
+          return res.status(400).json({
+            error: 'Payroll already executed today',
+            message: 'All selected employees have already been paid today. Payroll can only be run once per day per employee.',
+            alreadyPaidEmployees
+          });
+        }
+      }
+
       // Check if payroll is within pre-approved budget (for metadata only)
       const withinBudget = await walletSigningService.checkBudgetAuthorization(
         employer.id,
@@ -84,18 +126,28 @@ export async function runPayroll(req: Request, res: Response, next: NextFunction
         withinBudget
       });
 
+      let message = withinBudget
+        ? 'Payroll within budget - please approve with your wallet'
+        : 'Payroll requires wallet approval';
+
+      // Add warning if some employees already paid
+      if (alreadyPaidEmployees.length > 0) {
+        const names = alreadyPaidEmployees.map(e => e.name).join(', ');
+        message += `. Warning: ${names} already paid today and will be skipped.`;
+      }
+
       return res.json({
         success: true,
         requiresApproval: true,
-        message: withinBudget
-          ? 'Payroll within budget - please approve with your wallet'
-          : 'Payroll requires wallet approval',
+        message,
         data: {
           approvalId: approval.approvalId,
           totalAmount,
           recipientCount: employer.employees.length,
           expiresAt: approval.expiresAt,
-          withinBudget
+          withinBudget,
+          alreadyPaidCount: alreadyPaidEmployees.length,
+          alreadyPaidEmployees: alreadyPaidEmployees.length > 0 ? alreadyPaidEmployees : undefined
         }
       });
     }

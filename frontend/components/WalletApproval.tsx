@@ -160,6 +160,30 @@ export function WalletApproval({ employerId, onApprovalComplete }: WalletApprova
 
     try {
       const approval = pendingApproval;
+
+      // CRITICAL: Check if employees already paid BEFORE executing blockchain transaction
+      const validateResponse = await axios.post(`${API_URL}/api/wallet/approvals/${approval.id}/validate`);
+      const validation = validateResponse.data?.data;
+
+      if (validation?.allAlreadyPaid) {
+        throw new Error(
+          `All employees in this approval were already paid today. This transaction would duplicate payments. Please refresh the page.`
+        );
+      }
+
+      if (validation?.someAlreadyPaid && validation.alreadyPaidEmployees?.length > 0) {
+        const names = validation.alreadyPaidEmployees.map((e: any) => e.name).join(', ');
+        const confirmed = confirm(
+          `⚠️ WARNING: ${names} were already paid today!\n\n` +
+          `If you continue, they will receive DUPLICATE PAYMENTS on the blockchain.\n\n` +
+          `Do you want to proceed anyway?`
+        );
+
+        if (!confirmed) {
+          throw new Error('Transaction cancelled by user');
+        }
+      }
+
       const tokenAddress = process.env.NEXT_PUBLIC_MNEE_TOKEN_ADDRESS || approval.unsignedTx?.tokenAddress;
 
       if (!tokenAddress) {
@@ -180,12 +204,16 @@ export function WalletApproval({ employerId, onApprovalComplete }: WalletApprova
         const recipients = approval.recipients.map(r => r.address as `0x${string}`);
         const amounts = approval.recipients.map(r => parseEther(r.amount.toString()));
 
+        // Calculate total amount (sum of all amounts)
+        const totalAmount = amounts.reduce((sum, amount) => sum + amount, 0n);
+
         // Encode batch transfer call
         const data = encodeFunctionData({
           abi: BATCH_TRANSFER_ABI,
           functionName: 'batchTransfer',
           args: [
             tokenAddress as `0x${string}`,
+            totalAmount,  // ← NOW METAMASK WILL SHOW THIS!
             recipients,
             amounts
           ]
@@ -231,9 +259,27 @@ export function WalletApproval({ employerId, onApprovalComplete }: WalletApprova
       }
 
       // Submit the transaction hashes to backend
-      await axios.post(`${API_URL}/api/wallet/approvals/${approval.id}/submit`, {
+      const submitResponse = await axios.post(`${API_URL}/api/wallet/approvals/${approval.id}/submit`, {
         txHash: txHashes.join(',') // Store multiple hashes comma-separated
       });
+
+      // Check for duplicate payments
+      const result = submitResponse.data?.data;
+
+      // Check if any logs are marked as duplicates
+      const duplicateLogs = result?.createdLogs?.filter((log: any) => log.isDuplicate) || [];
+      if (duplicateLogs.length > 0) {
+        const duplicateNames = duplicateLogs.map((log: any) => log.employeeName).join(', ');
+        alert(
+          `🚨 DUPLICATE PAYMENT DETECTED!\n\n` +
+          `${duplicateNames} were already paid today, but you just sent another payment on the blockchain.\n\n` +
+          `These employees have now received DOUBLE payment. Please check your accounting records.`
+        );
+      } else if (result?.logsSkipped > 0) {
+        // This should not happen anymore, but keep as fallback
+        const skippedNames = result.skippedLogs?.map((s: any) => s.employeeName).join(', ') || 'some employees';
+        alert(`⚠️ Warning: ${skippedNames} - payment status unclear.`);
+      }
 
       // Refresh approvals
       await fetchPendingApprovals();

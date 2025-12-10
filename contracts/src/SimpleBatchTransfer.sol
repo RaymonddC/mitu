@@ -13,27 +13,37 @@ contract SimpleBatchTransfer {
     /**
      * @notice Transfer ERC20 tokens to multiple recipients in one transaction
      * @param token The ERC20 token address (e.g., MNEE token)
+     * @param totalAmount The total amount being transferred (visible in MetaMask!)
      * @param recipients Array of recipient addresses (employees)
      * @param amounts Array of amounts to transfer (must match recipients length)
      * @dev Caller must have approved this contract to spend tokens first
      * @dev Gas efficient: saves ~40% compared to individual transactions
+     * @dev totalAmount parameter makes the total visible in wallet UIs like MetaMask
      */
     function batchTransfer(
         address token,
+        uint256 totalAmount,
         address[] calldata recipients,
         uint256[] calldata amounts
     ) external {
         require(recipients.length == amounts.length, "Length mismatch");
         require(recipients.length > 0, "Empty batch");
         require(recipients.length <= 200, "Batch too large"); // Gas limit protection
+        require(totalAmount > 0, "Invalid total amount");
 
         IERC20 tokenContract = IERC20(token);
 
-        // Transfer from caller to each recipient
-        for (uint256 i = 0; i < recipients.length; i++) {
+        // Verify totalAmount matches the sum of individual amounts
+        uint256 sum = 0;
+        for (uint256 i = 0; i < amounts.length; i++) {
             require(recipients[i] != address(0), "Invalid recipient");
             require(amounts[i] > 0, "Invalid amount");
+            sum += amounts[i];
+        }
+        require(sum == totalAmount, "Total amount mismatch");
 
+        // Transfer from caller to each recipient
+        for (uint256 i = 0; i < recipients.length; i++) {
             // Transfer tokens from msg.sender to recipient
             // Note: msg.sender must have approved this contract first
             tokenContract.transferFrom(

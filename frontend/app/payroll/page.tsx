@@ -17,6 +17,7 @@ export default function PayrollPage() {
   const [payrollHistory, setPayrollHistory] = useState<PayrollLog[]>([])
   const [loading, setLoading] = useState(true)
   const [running, setRunning] = useState(false)
+  const [refreshing, setRefreshing] = useState(false)
 
   useEffect(() => {
     if (!isConnected) {
@@ -28,6 +29,18 @@ export default function PayrollPage() {
       loadData()
     }
   }, [isConnected, employer])
+
+  // Auto-refresh when page becomes visible
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible' && employer) {
+        loadData()
+      }
+    }
+
+    document.addEventListener('visibilitychange', handleVisibilityChange)
+    return () => document.removeEventListener('visibilitychange', handleVisibilityChange)
+  }, [employer])
 
   const loadData = async () => {
     if (!employer) return
@@ -81,6 +94,21 @@ export default function PayrollPage() {
       })
     } finally {
       setRunning(false)
+    }
+  }
+
+  const handleRefresh = async () => {
+    setRefreshing(true)
+    try {
+      await loadData()
+      toast({ title: 'Success', description: 'Payroll history refreshed' })
+    } catch (error: any) {
+      toast({
+        title: 'Error',
+        description: error.response?.data?.message || 'Failed to refresh data'
+      })
+    } finally {
+      setRefreshing(false)
     }
   }
 
@@ -185,8 +213,21 @@ export default function PayrollPage() {
       {/* Payroll History */}
       <Card>
         <CardHeader>
-          <CardTitle>Payment History</CardTitle>
-          <CardDescription>Recent salary executions</CardDescription>
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle>Payment History</CardTitle>
+              <CardDescription>Recent salary executions</CardDescription>
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleRefresh}
+              disabled={refreshing}
+            >
+              <RefreshCw className={`h-4 w-4 mr-2 ${refreshing ? 'animate-spin' : ''}`} />
+              Refresh
+            </Button>
+          </div>
         </CardHeader>
         <CardContent>
           {payrollHistory.length === 0 ? (
