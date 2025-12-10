@@ -424,5 +424,298 @@ If you had virtual balance before:
 - ✅ Pre-authorized budgets enable autonomous execution
 - ✅ Maximum security with zero custody liability
 - ✅ Clean, simple, production-ready architecture
+- ✅ Batch transfer support for efficient payments
+- ✅ Three-layer duplicate payment prevention
+- ✅ Pre-transaction validation system
 
 **The system is now ready for production deployment!** 🚀
+
+---
+
+## 🚀 Latest Features (December 2025)
+
+### 1. Batch Transfer Support
+
+**What It Is**: Pay multiple employees in a single blockchain transaction instead of multiple separate transactions.
+
+**Benefits**:
+- ✅ Single MetaMask popup (vs N popups for N employees)
+- ✅ Lower gas fees (one transaction vs many)
+- ✅ Faster execution
+- ✅ Better user experience
+
+**How to Use**:
+1. **One-Time Setup**: Approve the batch contract
+   ```
+   Dashboard → Batch Approval section
+   → Click "Approve Batch Contract"
+   → Sign in MetaMask (ERC-20 approve)
+   ```
+
+2. **Automatic Mode Switch**: After approval, system automatically uses batch mode
+
+3. **Execute Payroll**: When you run payroll, you'll see:
+   - "Using Batch Mode" indicator
+   - Single MetaMask popup for all employees
+   - One transaction hash for entire payroll
+
+**Technical Details**:
+- Contract: `SimpleBatchTransfer V2`
+- Address (Sepolia): `0xa3bBB8F74a548dfd13aB5c05Bc5c328cA087ABC7`
+- V2 includes `totalAmount` parameter (shows in MetaMask)
+
+**See**: [BATCH_CONTRACT_V2_UPGRADE.md](BATCH_CONTRACT_V2_UPGRADE.md) for deployment details.
+
+---
+
+### 2. Duplicate Payment Prevention
+
+**What It Is**: Three-layer system to prevent accidentally paying employees twice on the same day.
+
+**The Problem It Solves**:
+```
+❌ Without Prevention:
+User clicks "Run Payroll" → $15 sent
+User clicks "Run Payroll" again → $15 sent AGAIN!
+Result: Employee got $30 instead of $15!
+
+✅ With Prevention:
+User clicks "Run Payroll" → $15 sent
+User clicks "Run Payroll" again → BLOCKED!
+Result: Employee got $15 (correct!)
+```
+
+**How It Works**:
+
+**Layer 1: Pre-Approval Check**
+- Backend checks if employees already paid today
+- If all paid → Rejects request immediately
+- If some paid → Shows warning in response
+
+**Layer 2: Pre-Transaction Validation**
+- Before MetaMask opens, frontend validates with backend
+- If duplicates detected → Shows explicit warning
+- User can Cancel or Proceed (with full knowledge)
+
+**Layer 3: Always Record Transactions**
+- If transaction executed, ALWAYS create PayrollLog
+- If duplicate detected → Flags in metadata
+- Never skips recording (maintains audit trail)
+
+**Idempotency Key System**:
+```javascript
+// Unique key per employee per day
+const key = SHA256(employerId + employeeId + date)
+// Same day = same key = duplicate detected
+```
+
+**Benefits**:
+- ✅ Prevents accidental double payments
+- ✅ Maintains complete audit trail
+- ✅ Explicit user warnings
+- ✅ Blockchain reality = database reality
+
+**See**: [DUPLICATE_PAYMENT_PREVENTION.md](DUPLICATE_PAYMENT_PREVENTION.md) and [IDEMPOTENCY_KEY_EXPLAINED.md](IDEMPOTENCY_KEY_EXPLAINED.md) for complete details.
+
+---
+
+### 3. Pre-Transaction Validation
+
+**What It Is**: Validation endpoint that checks payment eligibility BEFORE executing blockchain transaction.
+
+**Why It Matters**:
+```
+❌ Old Flow (Bad):
+1. MetaMask transaction executes → Money sent!
+2. Backend tries to create log → Finds duplicate
+3. Log creation skipped → No record!
+Result: Money sent but not tracked!
+
+✅ New Flow (Good):
+1. Backend validation → Checks for duplicates
+2. If found → Warning shown, transaction blocked
+3. Only if safe → MetaMask transaction executes
+4. Log always created → Full tracking
+Result: Safe and tracked!
+```
+
+**Endpoint**:
+```http
+POST /api/wallet/approvals/:approvalId/validate
+
+Response:
+{
+  "valid": true/false,
+  "allAlreadyPaid": false,
+  "someAlreadyPaid": true,
+  "alreadyPaidEmployees": [
+    { "name": "John", "amount": 15, "paidAt": "..." }
+  ]
+}
+```
+
+**User Experience**:
+1. User clicks "Approve with Wallet"
+2. Frontend calls validation endpoint
+3. If all paid → Error: "Already paid today"
+4. If some paid → Warning with employee names
+5. User can Cancel or Proceed
+6. Only then MetaMask opens
+
+**Benefits**:
+- ✅ Prevents duplicate blockchain transactions
+- ✅ Saves gas fees from failed transactions
+- ✅ Clear user warnings before money is sent
+- ✅ Database consistency maintained
+
+---
+
+## 🔄 Updated User Flow (December 2025)
+
+```
+1. Employer connects wallet (MetaMask)
+   ↓
+2. Employer adds employees with Ethereum addresses
+   ↓
+3. Employer (optional): Approves batch contract for efficient transfers
+   ↓
+4. Employer clicks "Run Payroll"
+   ↓
+5. Backend: Checks if employees already paid (Layer 1)
+   - If all paid → Rejects with error
+   - If some paid → Returns warning
+   ↓
+6. Backend creates PayrollApproval in database
+   ↓
+7. Employer redirected to Dashboard
+   ↓
+8. Employer clicks "Approve with Wallet"
+   ↓
+9. Frontend: Validates with backend (Layer 2)
+   - Checks again if employees paid
+   - If duplicates → Shows warning popup
+   - User can Cancel or Proceed
+   ↓
+10. MetaMask popup shows transaction
+    - Batch mode: Single popup with total amount
+    - Individual mode: Multiple popups
+   ↓
+11. Employer signs transaction
+   ↓
+12. Transaction broadcasts to Ethereum
+   ↓
+13. Backend: Records transaction (Layer 3)
+    - Creates PayrollLog for each employee
+    - If duplicate detected → Flags but still records
+    - Returns success + any warnings
+   ↓
+14. Employees receive MNEE tokens ✅
+```
+
+---
+
+## 🆕 Updated API Endpoints
+
+### Validation Endpoint (New!)
+
+```bash
+# Validate approval before transaction
+POST /api/wallet/approvals/:approvalId/validate
+
+Response:
+{
+  "success": true,
+  "data": {
+    "approvalId": "abc-123",
+    "valid": true,
+    "allAlreadyPaid": false,
+    "someAlreadyPaid": false,
+    "totalRecipients": 5,
+    "alreadyPaidCount": 0
+  }
+}
+```
+
+### Updated Submit Endpoint
+
+```bash
+# Submit signed transaction
+POST /api/wallet/approvals/:approvalId/submit
+{ "txHash": "0xdef456..." }
+
+Response (Enhanced):
+{
+  "success": true,
+  "data": {
+    "approvalId": "abc-123",
+    "txHash": "0xdef456...",
+    "status": "approved",
+    "logsCreated": 5,      # ← NEW
+    "logsSkipped": 0,      # ← NEW
+    "createdLogs": [...],  # ← NEW
+    "skippedLogs": []      # ← NEW
+  }
+}
+```
+
+---
+
+## 📊 Updated Database Schema
+
+### PayrollLog Enhancements
+
+```prisma
+model PayrollLog {
+  id              String    @id @default(uuid())
+  idempotencyKey  String    @unique  // ← Prevents duplicates
+  metadata        Json?     // ← Enhanced with isDuplicate flag
+
+  // metadata structure:
+  // {
+  //   "approvalId": "abc-123",
+  //   "walletSigned": true,
+  //   "isDuplicate": false,  // ← NEW: Flags duplicate payments
+  //   "duplicateWarning": "Employee already paid today",  // ← NEW
+  //   "originalIdempotencyKey": "...",  // ← NEW: For duplicates
+  //   "existingLogId": "..."  // ← NEW: Reference to original
+  // }
+}
+```
+
+### Query for Duplicates
+
+```sql
+-- Find all duplicate payments
+SELECT * FROM "PayrollLog"
+WHERE metadata->>'isDuplicate' = 'true'
+ORDER BY "executedAt" DESC;
+
+-- Daily payment summary (detect doubles)
+SELECT
+  e.name,
+  COUNT(pl.id) as payment_count,
+  SUM(pl.amount) as total_paid
+FROM "PayrollLog" pl
+JOIN "Employee" e ON e.id = pl."employeeId"
+WHERE pl."executedAt" >= CURRENT_DATE
+GROUP BY e.name
+HAVING COUNT(pl.id) > 1;
+```
+
+---
+
+## ✅ Updated Summary
+
+**December 2025 System Features:**
+
+- ✅ 100% Non-Custodial (employers keep funds)
+- ✅ Batch Transfer Support (single transaction)
+- ✅ Duplicate Payment Prevention (3 layers)
+- ✅ Pre-Transaction Validation (checks before MetaMask)
+- ✅ Idempotency System (SHA256 keys)
+- ✅ Complete Audit Trail (never skips logs)
+- ✅ MetaMask Integration (with proper display)
+- ✅ Multi-Tenant Support
+- ✅ Production-Ready Architecture
+
+**The system is now ready for production deployment with enterprise-grade safety features!** 🚀
