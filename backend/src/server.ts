@@ -7,6 +7,7 @@ import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import dotenv from 'dotenv';
+import path from 'path';
 import rateLimit from 'express-rate-limit';
 import { PrismaClient } from '@prisma/client';
 import { errorHandler } from './middleware/errorHandler';
@@ -19,7 +20,15 @@ import balanceRoutes from './routes/balance';
 import walletSigningRoutes from './routes/walletSigning';
 
 // Load environment variables
-dotenv.config();
+// When using npm scripts (npm run dev), dotenv-cli loads the correct .env file automatically
+// This is a fallback for direct execution (e.g., node dist/server.js)
+const envFile = process.env.NODE_ENV === 'production'
+  ? '.env.production'
+  : '.env.development';
+dotenv.config({ path: path.resolve(__dirname, '..', envFile) });
+
+// Fallback to .env if environment-specific file doesn't exist
+dotenv.config({ path: path.resolve(__dirname, '..', '.env') });
 
 // Initialize Prisma client
 export const prisma = new PrismaClient();
