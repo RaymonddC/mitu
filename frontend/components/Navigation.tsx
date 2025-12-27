@@ -90,7 +90,17 @@ export function Navigation() {
                 onClick={() => router.push('/select-company')}
                 className="flex items-center gap-2 px-3 py-2 rounded-lg bg-gradient-to-r from-purple-50 to-pink-50 border border-purple-200 hover:border-purple-300 hover:shadow-md transition-all group"
               >
-                <Building2 className="h-4 w-4 text-purple-600" />
+                {employer.profileImage ? (
+                  <div className="w-6 h-6 rounded-full overflow-hidden border border-purple-300 flex-shrink-0">
+                    <img
+                      src={employer.profileImage}
+                      alt={employer.companyName}
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                ) : (
+                  <Building2 className="h-4 w-4 text-purple-600" />
+                )}
                 <span className="text-sm font-medium text-gray-900">{employer.companyName}</span>
                 <ChevronDown className="h-4 w-4 text-gray-400 group-hover:text-purple-600 transition-colors" />
               </button>

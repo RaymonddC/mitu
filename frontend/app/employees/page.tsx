@@ -7,7 +7,7 @@ import { employeeAPI, type Employee } from '@/lib/api'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { formatCurrency, formatWalletAddress, formatDate } from '@/lib/utils'
-import { Plus, Edit, Trash2, CheckCircle, XCircle } from 'lucide-react'
+import { Plus, Edit, Trash2, CheckCircle, XCircle, Upload, User } from 'lucide-react'
 import { toast } from '@/components/ui/toaster'
 
 export default function EmployeesPage() {
@@ -20,6 +20,7 @@ export default function EmployeesPage() {
   const [formData, setFormData] = useState({
     name: '',
     email: '',
+    profileImage: '',
     walletAddress: '',
     salaryAmount: '',
     notes: ''
@@ -50,6 +51,24 @@ export default function EmployeesPage() {
     }
   }
 
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    // Check file size (max 2MB)
+    if (file.size > 2 * 1024 * 1024) {
+      toast({ title: 'Error', description: 'Image size must be less than 2MB' })
+      return
+    }
+
+    // Convert to base64
+    const reader = new FileReader()
+    reader.onloadend = () => {
+      setFormData({ ...formData, profileImage: reader.result as string })
+    }
+    reader.readAsDataURL(file)
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
@@ -61,6 +80,7 @@ export default function EmployeesPage() {
         await employeeAPI.update(editingId, {
           name: formData.name,
           email: formData.email || undefined,
+          profileImage: formData.profileImage || undefined,
           salaryAmount: parseFloat(formData.salaryAmount),
           notes: formData.notes || undefined
         })
@@ -71,6 +91,7 @@ export default function EmployeesPage() {
           employerId: employer.id,
           name: formData.name,
           email: formData.email || undefined,
+          profileImage: formData.profileImage || undefined,
           walletAddress: formData.walletAddress,
           salaryAmount: parseFloat(formData.salaryAmount),
           notes: formData.notes || undefined
@@ -80,7 +101,7 @@ export default function EmployeesPage() {
 
       setShowAddForm(false)
       setEditingId(null)
-      setFormData({ name: '', email: '', walletAddress: '', salaryAmount: '', notes: '' })
+      setFormData({ name: '', email: '', profileImage: '', walletAddress: '', salaryAmount: '', notes: '' })
       loadEmployees()
     } catch (error: any) {
       console.error('Failed to save employee:', error)
@@ -93,6 +114,7 @@ export default function EmployeesPage() {
     setFormData({
       name: employee.name,
       email: employee.email || '',
+      profileImage: employee.profileImage || '',
       walletAddress: employee.walletAddress,
       salaryAmount: employee.salaryAmount.toString(),
       notes: employee.notes || ''
@@ -103,7 +125,7 @@ export default function EmployeesPage() {
   const handleCancelEdit = () => {
     setShowAddForm(false)
     setEditingId(null)
-    setFormData({ name: '', email: '', walletAddress: '', salaryAmount: '', notes: '' })
+    setFormData({ name: '', email: '', profileImage: '', walletAddress: '', salaryAmount: '', notes: '' })
   }
 
   const handleDelete = async (id: string, name: string) => {
@@ -141,6 +163,47 @@ export default function EmployeesPage() {
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-4">
+              {/* Profile Image Upload */}
+              <div className="flex flex-col items-center gap-3 pb-4 border-b border-gray-200">
+                <div className="relative">
+                  <div className="w-24 h-24 rounded-full overflow-hidden border-4 border-blue-200 bg-gradient-to-br from-blue-100 to-cyan-100 flex items-center justify-center">
+                    {formData.profileImage ? (
+                      <img
+                        src={formData.profileImage}
+                        alt="Employee photo"
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <User className="h-12 w-12 text-blue-400" />
+                    )}
+                  </div>
+                </div>
+                <div className="flex flex-col items-center gap-2">
+                  <label className="cursor-pointer">
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleImageUpload}
+                      className="hidden"
+                    />
+                    <div className="px-3 py-1.5 bg-white border border-blue-300 text-blue-700 rounded-lg hover:bg-blue-50 transition-all flex items-center gap-2 text-sm">
+                      <Upload className="h-3.5 w-3.5" />
+                      Upload Photo
+                    </div>
+                  </label>
+                  <p className="text-xs text-gray-500">Max 2MB</p>
+                  {formData.profileImage && (
+                    <button
+                      type="button"
+                      onClick={() => setFormData({ ...formData, profileImage: '' })}
+                      className="text-xs text-red-600 hover:text-red-700"
+                    >
+                      Remove
+                    </button>
+                  )}
+                </div>
+              </div>
+
               <div className="grid gap-4 md:grid-cols-2">
                 <div>
                   <label className="block text-sm font-medium mb-1">Full Name *</label>
@@ -250,11 +313,24 @@ export default function EmployeesPage() {
                   {employees.map((employee) => (
                     <tr key={employee.id} className="text-sm hover:bg-gray-50/50 transition-colors">
                       <td className="py-5 px-2">
-                        <div>
-                          <div className="font-medium">{employee.name}</div>
-                          {employee.email && (
-                            <div className="text-gray-500 text-xs">{employee.email}</div>
-                          )}
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-blue-200 bg-gradient-to-br from-blue-100 to-cyan-100 flex items-center justify-center flex-shrink-0">
+                            {employee.profileImage ? (
+                              <img
+                                src={employee.profileImage}
+                                alt={employee.name}
+                                className="w-full h-full object-cover"
+                              />
+                            ) : (
+                              <User className="h-5 w-5 text-blue-400" />
+                            )}
+                          </div>
+                          <div>
+                            <div className="font-medium">{employee.name}</div>
+                            {employee.email && (
+                              <div className="text-gray-500 text-xs">{employee.email}</div>
+                            )}
+                          </div>
                         </div>
                       </td>
                       <td className="py-5 px-2 font-mono text-xs">

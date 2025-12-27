@@ -17,6 +17,7 @@ model Employer {
   walletAddress     String    // Removed @unique to allow multiple companies per wallet
   companyName       String
   email             String?
+  profileImage      String?   // Company logo/profile image (URL or base64)
   payrollDay        Int       @default(28) // Day of month (1-28)
   monthlyBudget     Decimal?  @db.Decimal(20, 8) // Optional spending cap
   active            Boolean   @default(true)
@@ -47,6 +48,7 @@ model Employee {
   employerId      String
   name            String
   email           String?
+  profileImage    String?   // Employee profile picture (URL or base64)
   walletAddress   String
   salaryAmount    Decimal   @db.Decimal(20, 8)
   paymentCycle    String    @default("monthly") // "monthly" | "weekly" | "custom"

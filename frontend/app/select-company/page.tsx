@@ -160,8 +160,16 @@ export default function SelectCompanyPage() {
                   <CardHeader>
                     <div className="flex items-start justify-between">
                       <div className="flex items-center gap-3">
-                        <div className="h-12 w-12 bg-gradient-to-br from-purple-500 to-pink-500 rounded-lg flex items-center justify-center">
-                          <Building2 className="h-6 w-6 text-white" />
+                        <div className="h-12 w-12 rounded-lg overflow-hidden border-2 border-purple-200 bg-gradient-to-br from-purple-100 to-pink-100 flex items-center justify-center flex-shrink-0">
+                          {company.profileImage ? (
+                            <img
+                              src={company.profileImage}
+                              alt={company.companyName}
+                              className="w-full h-full object-cover"
+                            />
+                          ) : (
+                            <Building2 className="h-6 w-6 text-purple-400" />
+                          )}
                         </div>
                         <div>
                           <CardTitle className="text-xl">{company.companyName}</CardTitle>

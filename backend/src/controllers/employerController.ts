@@ -13,6 +13,7 @@ const createEmployerSchema = z.object({
   walletAddress: z.string().min(20),
   companyName: z.string().min(1).max(200),
   email: z.string().email().optional(),
+  profileImage: z.string().optional(),
   payrollDay: z.number().min(1).max(28).default(28),
   monthlyBudget: z.number().positive().optional()
 });
@@ -20,6 +21,7 @@ const createEmployerSchema = z.object({
 const updateEmployerSchema = z.object({
   companyName: z.string().min(1).max(200).optional(),
   email: z.string().email().optional(),
+  profileImage: z.string().optional(),
   payrollDay: z.number().min(1).max(28).optional(),
   monthlyBudget: z.number().positive().optional(),
   active: z.boolean().optional()

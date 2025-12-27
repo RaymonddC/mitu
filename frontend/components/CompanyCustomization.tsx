@@ -4,7 +4,8 @@ import { useState } from 'react';
 import { employerAPI, type Employer } from '@/lib/api';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Building2, Edit, Save, X, Calendar, Mail, DollarSign } from 'lucide-react';
+import { Building2, Edit, Save, X, Calendar, Mail, DollarSign, Upload, Image as ImageIcon } from 'lucide-react';
+import { useStore } from '@/lib/store';
 
 interface CompanyCustomizationProps {
   employer: Employer | null;
@@ -12,11 +13,14 @@ interface CompanyCustomizationProps {
 }
 
 export function CompanyCustomization({ employer, onUpdate }: CompanyCustomizationProps) {
+  const { setEmployer } = useStore();
   const [isEditing, setIsEditing] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [uploadingImage, setUploadingImage] = useState(false);
   const [formData, setFormData] = useState({
     companyName: employer?.companyName || '',
     email: employer?.email || '',
+    profileImage: employer?.profileImage || '',
     payrollDay: employer?.payrollDay || 28,
     monthlyBudget: employer?.monthlyBudget ? Number(employer.monthlyBudget) : 0,
   });
@@ -25,6 +29,7 @@ export function CompanyCustomization({ employer, onUpdate }: CompanyCustomizatio
     setFormData({
       companyName: employer?.companyName || '',
       email: employer?.email || '',
+      profileImage: employer?.profileImage || '',
       payrollDay: employer?.payrollDay || 28,
       monthlyBudget: employer?.monthlyBudget ? Number(employer.monthlyBudget) : 0,
     });
@@ -36,30 +41,110 @@ export function CompanyCustomization({ employer, onUpdate }: CompanyCustomizatio
     setFormData({
       companyName: employer?.companyName || '',
       email: employer?.email || '',
+      profileImage: employer?.profileImage || '',
       payrollDay: employer?.payrollDay || 28,
       monthlyBudget: employer?.monthlyBudget ? Number(employer.monthlyBudget) : 0,
     });
+  };
+
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    console.log('[Image Upload] Handler triggered - START');
+
+    // Prevent any default behavior
+    e.preventDefault();
+    e.stopPropagation();
+
+    const file = e.target.files?.[0];
+    if (!file) {
+      console.log('[Image Upload] No file selected');
+      return;
+    }
+
+    console.log('[Image Upload] File selected:', file.name, 'Size:', file.size, 'bytes', 'Type:', file.type);
+
+    // Check file size (max 2MB)
+    if (file.size > 2 * 1024 * 1024) {
+      console.log('[Image Upload] File too large');
+      alert('Image size must be less than 2MB');
+      return;
+    }
+
+    console.log('[Image Upload] Starting FileReader conversion...');
+    setUploadingImage(true);
+
+    // Convert to base64
+    const reader = new FileReader();
+    reader.onloadstart = () => {
+      console.log('[Image Upload] FileReader started reading...');
+    };
+    reader.onloadend = () => {
+      const base64String = reader.result as string;
+      console.log('[Image Upload] Converted to base64, length:', base64String.length);
+      console.log('[Image Upload] Setting form data...');
+      setFormData(prev => ({ ...prev, profileImage: base64String }));
+      setUploadingImage(false);
+      console.log('[Image Upload] Form data set - COMPLETE');
+    };
+    reader.onerror = (error) => {
+      console.error('[Image Upload] FileReader error:', error);
+      alert('Failed to read image file');
+      setUploadingImage(false);
+    };
+    reader.readAsDataURL(file);
+
+    console.log('[Image Upload] FileReader.readAsDataURL called');
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!employer) return;
 
+    console.log('[Save] Starting save process...');
     setSaving(true);
     try {
+      console.log('[Save] Calling API to update employer with data:', {
+        companyName: formData.companyName,
+        hasProfileImage: !!formData.profileImage,
+        profileImageLength: formData.profileImage?.length,
+        payrollDay: formData.payrollDay,
+        monthlyBudget: formData.monthlyBudget,
+      });
+
       await employerAPI.update(employer.id, {
         companyName: formData.companyName,
         email: formData.email || undefined,
+        profileImage: formData.profileImage || undefined,
         payrollDay: formData.payrollDay,
         monthlyBudget: formData.monthlyBudget > 0 ? formData.monthlyBudget : undefined,
       });
 
+      console.log('[Save] Update API call successful, fetching updated data...');
+
+      // Fetch updated employer data
+      const response = await employerAPI.get(employer.walletAddress);
+      const updatedEmployer = response.data.data;
+
+      console.log('[Save] Fetched updated employer:', {
+        hasProfileImage: !!updatedEmployer.profileImage,
+        profileImageLength: updatedEmployer.profileImage?.length,
+        companyName: updatedEmployer.companyName
+      });
+      console.log('[Save] Updating store...');
+
+      // Update the store with new employer data
+      setEmployer(updatedEmployer);
+
+      console.log('[Save] Store updated, completing save...');
+
       setIsEditing(false);
       onUpdate();
+
+      console.log('[Save] Save completed successfully!');
     } catch (error: any) {
-      console.error('Failed to update company:', error);
+      console.error('[Save] Failed to update company:', error);
       alert(error.response?.data?.message || 'Failed to update company settings');
     } finally {
+      console.log('[Save] Setting saving to false...');
       setSaving(false);
     }
   };
@@ -91,6 +176,57 @@ export function CompanyCustomization({ employer, onUpdate }: CompanyCustomizatio
       <CardContent>
         {isEditing ? (
           <form onSubmit={handleSubmit} className="space-y-6">
+            {/* Profile Image Upload */}
+            <div className="flex flex-col items-center gap-4 pb-6 border-b border-gray-200">
+              <div className="relative">
+                <div className="w-32 h-32 rounded-full overflow-hidden border-4 border-purple-200 bg-gradient-to-br from-purple-100 to-pink-100 flex items-center justify-center">
+                  {formData.profileImage ? (
+                    <img
+                      src={formData.profileImage}
+                      alt="Company logo"
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <Building2 className="h-16 w-16 text-purple-400" />
+                  )}
+                </div>
+              </div>
+              <div className="flex flex-col items-center gap-2">
+                <label className={`cursor-pointer ${uploadingImage ? 'opacity-50 pointer-events-none' : ''}`}>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleImageUpload}
+                    className="hidden"
+                    disabled={uploadingImage}
+                  />
+                  <div className="px-4 py-2 bg-white border border-purple-300 text-purple-700 rounded-lg hover:bg-purple-50 transition-all flex items-center gap-2">
+                    {uploadingImage ? (
+                      <>
+                        <div className="h-4 w-4 border-2 border-purple-600 border-t-transparent rounded-full animate-spin" />
+                        Processing...
+                      </>
+                    ) : (
+                      <>
+                        <Upload className="h-4 w-4" />
+                        Upload Logo
+                      </>
+                    )}
+                  </div>
+                </label>
+                <p className="text-xs text-gray-500">Max 2MB, JPG/PNG</p>
+                {formData.profileImage && !uploadingImage && (
+                  <button
+                    type="button"
+                    onClick={() => setFormData({ ...formData, profileImage: '' })}
+                    className="text-xs text-red-600 hover:text-red-700"
+                  >
+                    Remove Image
+                  </button>
+                )}
+              </div>
+            </div>
+
             <div className="grid gap-6 md:grid-cols-2">
               {/* Company Name */}
               <div>
@@ -163,13 +299,18 @@ export function CompanyCustomization({ employer, onUpdate }: CompanyCustomizatio
             <div className="flex gap-3 pt-4 border-t border-gray-200">
               <Button
                 type="submit"
-                disabled={saving}
+                disabled={saving || uploadingImage}
                 className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700"
               >
                 {saving ? (
                   <>
                     <div className="h-4 w-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
                     Saving...
+                  </>
+                ) : uploadingImage ? (
+                  <>
+                    <div className="h-4 w-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
+                    Processing image...
                   </>
                 ) : (
                   <>
@@ -191,6 +332,22 @@ export function CompanyCustomization({ employer, onUpdate }: CompanyCustomizatio
           </form>
         ) : (
           <div className="space-y-6">
+            {/* Profile Image Display */}
+            <div className="flex flex-col items-center gap-3 pb-6 border-b border-gray-200">
+              <div className="w-32 h-32 rounded-full overflow-hidden border-4 border-purple-200 bg-gradient-to-br from-purple-100 to-pink-100 flex items-center justify-center shadow-lg">
+                {employer.profileImage ? (
+                  <img
+                    src={employer.profileImage}
+                    alt={`${employer.companyName} logo`}
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <Building2 className="h-16 w-16 text-purple-400" />
+                )}
+              </div>
+              <p className="text-sm text-gray-500">Company Logo</p>
+            </div>
+
             <div className="grid gap-6 md:grid-cols-2">
               {/* Company Name Display */}
               <div className="bg-gradient-to-br from-purple-50/50 to-pink-50/50 rounded-lg p-4 border border-purple-100">
