@@ -10,6 +10,7 @@ import { Badge } from '@/components/ui/badge';
 import { CheckCircle, XCircle, Clock, AlertCircle, Zap, Shield, Info } from 'lucide-react';
 import { isBatchTransferAvailable, calculateGasSavings, getBatchContractAddress } from '@/lib/batchTransferABI';
 import { checkBatchApproval, approveBatchContract, revokeBatchApproval, getBatchApprovalStatus } from '@/lib/batchApproval';
+import { CompanyCustomization } from '@/components/CompanyCustomization';
 
 export default function SettingsPage() {
   const router = useRouter();
@@ -335,29 +336,8 @@ export default function SettingsPage() {
         </CardContent>
       </Card>
 
-      {/* Other Settings (Placeholder) */}
-      <Card className="shadow-2xl bg-white backdrop-blur-2xl border border-gray-200">
-        <CardHeader>
-          <CardTitle>Company Settings</CardTitle>
-          <CardDescription>Manage your company information</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            <div>
-              <label className="text-sm font-medium text-gray-700">Company Name</label>
-              <p className="text-lg font-semibold text-gray-900 mt-1">{employer?.companyName}</p>
-            </div>
-            <div>
-              <label className="text-sm font-medium text-gray-700">Payroll Day</label>
-              <p className="text-lg font-semibold text-gray-900 mt-1">{employer?.payrollDay}th of each month</p>
-            </div>
-            <div>
-              <label className="text-sm font-medium text-gray-700">Wallet Address</label>
-              <p className="text-sm font-mono text-gray-600 mt-1 break-all">{walletAddress}</p>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+      {/* Company Customization */}
+      <CompanyCustomization employer={employer} onUpdate={() => window.location.reload()} />
       </div>
     </div>
   );
