@@ -10,6 +10,7 @@ import { formatCurrency, formatDate, getSeverityColor } from '@/lib/utils';
 import { Users, DollarSign, Calendar, AlertCircle, PlayCircle } from 'lucide-react';
 import { WalletApproval } from '@/components/WalletApproval';
 import { BudgetManagement } from '@/components/BudgetManagement';
+import { PayrollAnalytics } from '@/components/PayrollAnalytics';
 import { isBatchTransferAvailable, calculateGasSavings } from '@/lib/batchTransferABI';
 import { checkBatchApproval, approveBatchContract } from '@/lib/batchApproval';
 import { useWalletClient } from 'wagmi';
@@ -321,86 +322,48 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8 pt-24 space-y-8">
-      <div>
-        <h1 className="text-3xl font-bold">Dashboard</h1>
-        <p className="text-gray-600 mt-1">Welcome back, {employer.companyName}</p>
-      </div>
-
-      {/* Pending Approvals */}
-      <WalletApproval employerId={employer.id} onApprovalComplete={loadData} />
-
-      {/* Budget Management */}
-      <BudgetManagement employerId={employer.id} />
-
-      {/* Summary Cards */}
-      <div className="grid gap-6 md:grid-cols-3">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-gray-600">Total Employees</CardTitle>
-            <Users className="h-4 w-4 text-gray-600" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-bold">{employeeCount}</div>
-            <p className="text-xs text-gray-500 mt-1">Active employees</p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-gray-600">Monthly Payroll</CardTitle>
-            <DollarSign className="h-4 w-4 text-gray-600" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-bold">{formatCurrency(totalMonthlyPayroll)}</div>
-            <p className="text-xs text-gray-500 mt-1">Total monthly cost</p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-gray-600">Next Payday</CardTitle>
-            <Calendar className="h-4 w-4 text-gray-600" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-bold">{nextPayday.getDate()}</div>
-            <p className="text-xs text-gray-500 mt-1">{formatDate(nextPayday)}</p>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Quick Actions */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Quick Actions</CardTitle>
-          <CardDescription>Manage your payroll</CardDescription>
-        </CardHeader>
-        <CardContent className="flex gap-4">
-          <Button onClick={() => router.push('/employees')}>
+    <div className="container mx-auto px-4 py-8 pt-24 space-y-6">
+      {/* Header Section */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-4xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
+            Dashboard
+          </h1>
+          <p className="text-gray-600 mt-2 text-lg">Welcome back, {employer.companyName}</p>
+        </div>
+        <div className="flex gap-3">
+          <Button
+            onClick={() => router.push('/employees')}
+            className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 shadow-lg hover:shadow-xl transition-all"
+          >
             <Users className="mr-2 h-4 w-4" />
             Add Employee
           </Button>
-          <Button onClick={() => router.push('/payroll')} variant="outline">
+          <Button
+            onClick={() => router.push('/payroll')}
+            variant="outline"
+            className="border-purple-300 text-purple-700 hover:bg-purple-50 shadow-md hover:shadow-lg transition-all"
+          >
             <PlayCircle className="mr-2 h-4 w-4" />
             Run Payroll
           </Button>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
 
-      {/* Alerts */}
+      {/* Alerts - Show at top if urgent */}
       {alerts.length > 0 && (
-        <Card>
+        <Card className="shadow-xl bg-gradient-to-br from-amber-50 to-orange-50 border-2 border-amber-200">
           <CardHeader>
-            <CardTitle className="flex items-center">
-              <AlertCircle className="mr-2 h-5 w-5" />
+            <CardTitle className="flex items-center text-amber-900">
+              <AlertCircle className="mr-2 h-5 w-5 text-amber-600" />
               Alerts & Recommendations
             </CardTitle>
-            <CardDescription>AI agent suggestions and warnings</CardDescription>
+            <CardDescription className="text-amber-700">Action items requiring your attention</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
               {alerts.map((alert) => (
-                <div key={alert.id} className="flex items-start justify-between rounded-lg border p-4">
+                <div key={alert.id} className="flex items-start justify-between rounded-lg border border-amber-200 bg-white p-4 shadow-sm">
                   <div className="flex-1">
                     <div className="flex items-center gap-2">
                       <span className={`px-2 py-1 rounded text-xs font-medium ${getSeverityColor(alert.severity)}`}>{alert.severity}</span>
@@ -425,6 +388,73 @@ export default function DashboardPage() {
           </CardContent>
         </Card>
       )}
+
+      {/* Pending Approvals - High priority */}
+      <WalletApproval employerId={employer.id} onApprovalComplete={loadData} />
+
+      {/* Summary Cards */}
+      <div className="grid gap-6 md:grid-cols-3">
+        <Card className="shadow-xl bg-gradient-to-br from-blue-50 to-cyan-50 border-2 border-blue-200 hover:shadow-2xl transition-all">
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-sm font-medium text-blue-900">Total Employees</CardTitle>
+            <div className="h-12 w-12 rounded-full bg-gradient-to-br from-blue-400 to-cyan-400 flex items-center justify-center shadow-lg">
+              <Users className="h-6 w-6 text-white" />
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="text-4xl font-bold text-blue-900">{employeeCount}</div>
+            <p className="text-sm text-blue-700 mt-2 font-medium">Active employees</p>
+          </CardContent>
+        </Card>
+
+        <Card className="shadow-xl bg-gradient-to-br from-green-50 to-emerald-50 border-2 border-green-200 hover:shadow-2xl transition-all">
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-sm font-medium text-green-900">Monthly Payroll</CardTitle>
+            <div className="h-12 w-12 rounded-full bg-gradient-to-br from-green-400 to-emerald-400 flex items-center justify-center shadow-lg">
+              <DollarSign className="h-6 w-6 text-white" />
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="text-4xl font-bold text-green-900">{formatCurrency(totalMonthlyPayroll)}</div>
+            <p className="text-sm text-green-700 mt-2 font-medium">Total monthly cost</p>
+          </CardContent>
+        </Card>
+
+        <Card className="shadow-xl bg-gradient-to-br from-purple-50 to-pink-50 border-2 border-purple-200 hover:shadow-2xl transition-all">
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-sm font-medium text-purple-900">Next Payday</CardTitle>
+            <div className="h-12 w-12 rounded-full bg-gradient-to-br from-purple-400 to-pink-400 flex items-center justify-center shadow-lg">
+              <Calendar className="h-6 w-6 text-white" />
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="text-4xl font-bold text-purple-900">{nextPayday.getDate()}</div>
+            <p className="text-sm text-purple-700 mt-2 font-medium">{formatDate(nextPayday)}</p>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Payroll Analytics - Visual insights */}
+      <div>
+        <div className="mb-4">
+          <h2 className="text-2xl font-bold text-gray-900">Payroll Analytics</h2>
+          <p className="text-gray-600 mt-1">Insights and trends from your payroll data</p>
+        </div>
+        <PayrollAnalytics
+          totalMonthlyPayroll={totalMonthlyPayroll}
+          employeeCount={employeeCount}
+          employees={employer.employees || []}
+        />
+      </div>
+
+      {/* Budget Management - Settings/Configuration */}
+      <div>
+        <div className="mb-4">
+          <h2 className="text-2xl font-bold text-gray-900">Budget & Automation</h2>
+          <p className="text-gray-600 mt-1">Configure pre-authorized budgets for autonomous payroll</p>
+        </div>
+        <BudgetManagement employerId={employer.id} />
+      </div>
     </div>
   );
 }
