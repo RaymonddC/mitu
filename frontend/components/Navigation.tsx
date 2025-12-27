@@ -95,10 +95,88 @@ export function Navigation() {
                 <ChevronDown className="h-4 w-4 text-gray-400 group-hover:text-purple-600 transition-colors" />
               </button>
             )}
-            <ConnectButton
-              chainStatus="icon"
-              showBalance={false}
-            />
+            <ConnectButton.Custom>
+              {({
+                account,
+                chain,
+                openAccountModal,
+                openChainModal,
+                openConnectModal,
+                mounted,
+              }) => {
+                const ready = mounted;
+                const connected = ready && account && chain;
+
+                return (
+                  <div
+                    {...(!ready && {
+                      'aria-hidden': true,
+                      'style': {
+                        opacity: 0,
+                        pointerEvents: 'none',
+                        userSelect: 'none',
+                      },
+                    })}
+                  >
+                    {(() => {
+                      if (!connected) {
+                        return (
+                          <button
+                            onClick={openConnectModal}
+                            type="button"
+                            className="px-4 py-2 bg-white/50 backdrop-blur-sm rounded-lg hover:bg-white/70 transition-all border border-purple-200 hover:border-purple-300 font-medium text-gray-900 hover:shadow-md"
+                          >
+                            Connect Wallet
+                          </button>
+                        );
+                      }
+
+                      if (chain.unsupported) {
+                        return (
+                          <button
+                            onClick={openChainModal}
+                            type="button"
+                            className="px-3 py-1.5 text-sm bg-red-100 text-red-600 rounded-lg hover:bg-red-200 transition-all"
+                          >
+                            Wrong network
+                          </button>
+                        );
+                      }
+
+                      return (
+                        <div className="flex items-center gap-2">
+                          <button
+                            onClick={openChainModal}
+                            type="button"
+                            className="px-2 py-1.5 bg-white/50 backdrop-blur-sm rounded-lg hover:bg-white/70 transition-all border border-gray-200"
+                          >
+                            {chain.hasIcon && (
+                              <div className="w-4 h-4">
+                                {chain.iconUrl && (
+                                  <img
+                                    alt={chain.name ?? 'Chain icon'}
+                                    src={chain.iconUrl}
+                                    className="w-4 h-4"
+                                  />
+                                )}
+                              </div>
+                            )}
+                          </button>
+
+                          <button
+                            onClick={openAccountModal}
+                            type="button"
+                            className="px-3 py-1.5 text-sm bg-white/50 backdrop-blur-sm rounded-lg hover:bg-white/70 transition-all border border-gray-200 font-medium text-gray-900"
+                          >
+                            {account.displayName}
+                          </button>
+                        </div>
+                      );
+                    })()}
+                  </div>
+                );
+              }}
+            </ConnectButton.Custom>
           </div>
         </div>
       </div>
