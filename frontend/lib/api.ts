@@ -109,6 +109,7 @@ export interface PlatformStats {
 
 // Employer API
 export const employerAPI = {
+  list: () => api.get<{ data: Employer[] }>('/employers'),
   create: (data: Partial<Employer>) => api.post('/employers', data),
   get: (walletAddress: string) => api.get<{ data: Employer }>(`/employers/${walletAddress}`),
   update: (id: string, data: Partial<Employer>) => api.put(`/employers/${id}`, data),

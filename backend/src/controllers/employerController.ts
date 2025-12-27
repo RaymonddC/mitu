@@ -32,13 +32,22 @@ export async function createEmployer(req: Request, res: Response, next: NextFunc
   try {
     const data = createEmployerSchema.parse(req.body);
 
-    // Check if employer already exists
-    const existing = await prisma.employer.findUnique({
-      where: { walletAddress: data.walletAddress }
+    // Check if company name already exists for this wallet (since wallet can have multiple companies)
+    const existing = await prisma.employer.findFirst({
+      where: {
+        walletAddress: {
+          equals: data.walletAddress,
+          mode: 'insensitive'
+        },
+        companyName: {
+          equals: data.companyName,
+          mode: 'insensitive'
+        }
+      }
     });
 
     if (existing) {
-      throw new CustomError('Employer with this wallet address already exists', 409);
+      throw new CustomError('A company with this name already exists for your wallet', 409);
     }
 
     const employer = await prisma.employer.create({
@@ -134,6 +143,42 @@ export async function updateEmployer(req: Request, res: Response, next: NextFunc
     res.json({
       success: true,
       data: employer
+    });
+  } catch (error) {
+    next(error);
+  }
+}
+
+/**
+ * List all employers
+ * GET /api/employers
+ */
+export async function listEmployers(req: Request, res: Response, next: NextFunction) {
+  try {
+    const employers = await prisma.employer.findMany({
+      where: { active: true },
+      include: {
+        employees: {
+          where: { active: true }
+        }
+      },
+      orderBy: {
+        createdAt: 'desc'
+      }
+    });
+
+    // Calculate total monthly payroll for each employer
+    const employersWithPayroll = employers.map(employer => ({
+      ...employer,
+      totalMonthlyPayroll: employer.employees.reduce(
+        (sum, emp) => sum + Number(emp.salaryAmount),
+        0
+      )
+    }));
+
+    res.json({
+      success: true,
+      data: employersWithPayroll
     });
   } catch (error) {
     next(error);

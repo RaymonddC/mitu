@@ -3,9 +3,16 @@
  */
 
 import { Router } from 'express';
-import { createEmployer, getEmployer, updateEmployer } from '../controllers/employerController';
+import { createEmployer, getEmployer, updateEmployer, listEmployers } from '../controllers/employerController';
 
 const router = Router();
+
+/**
+ * GET /api/employers
+ * List all employers
+ * Note: This must come before /:walletAddress route to avoid conflicts
+ */
+router.get('/', listEmployers);
 
 /**
  * POST /api/employers

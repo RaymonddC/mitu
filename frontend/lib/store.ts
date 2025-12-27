@@ -5,6 +5,7 @@
  */
 
 import { create } from 'zustand';
+import { persist, createJSONStorage } from 'zustand/middleware';
 import { Employer } from './api';
 
 // Validate Ethereum address format (0x + 40 hex characters)
@@ -24,27 +25,36 @@ interface AppState {
   setEmployer: (employer: Employer | null) => void;
 }
 
-export const useStore = create<AppState>((set) => ({
-  // Wallet state
-  walletAddress: null,
-  isConnected: false,
+export const useStore = create<AppState>()(
+  persist(
+    (set) => ({
+      // Wallet state
+      walletAddress: null,
+      isConnected: false,
 
-  connectWallet: (address: string) => {
-    // Validate Ethereum address format
-    if (!isValidEthereumAddress(address)) {
-      console.error('Invalid Ethereum address format:', address);
-      return;
+      connectWallet: (address: string) => {
+        // Validate Ethereum address format
+        if (!isValidEthereumAddress(address)) {
+          console.error('Invalid Ethereum address format:', address);
+          return;
+        }
+        set({ walletAddress: address, isConnected: true });
+      },
+
+      disconnectWallet: () => set({
+        walletAddress: null,
+        isConnected: false,
+        employer: null
+      }),
+
+      // Employer state
+      employer: null,
+      setEmployer: (employer: Employer | null) => set({ employer }),
+    }),
+    {
+      name: 'mnee-payroll-storage', // unique name for localStorage key
+      storage: createJSONStorage(() => localStorage),
+      partialPersist: true, // Only persist specified keys
     }
-    set({ walletAddress: address, isConnected: true });
-  },
-
-  disconnectWallet: () => set({
-    walletAddress: null,
-    isConnected: false,
-    employer: null
-  }),
-
-  // Employer state
-  employer: null,
-  setEmployer: (employer: Employer | null) => set({ employer }),
-}));
+  )
+);

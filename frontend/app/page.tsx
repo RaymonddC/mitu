@@ -21,10 +21,10 @@ export default function Home() {
     }
   }, [isWalletConnected, address, connectWallet]);
 
-  // Redirect to dashboard when connected
+  // Redirect to company selection when connected
   useEffect(() => {
     if (isConnected && address) {
-      router.push('/dashboard');
+      router.push('/select-company');
     }
   }, [isConnected, address, router]);
 

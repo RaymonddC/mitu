@@ -36,28 +36,25 @@ export default function DashboardPage() {
       return;
     }
 
+    // Redirect to company selection if no employer selected
+    if (!employer && !loading) {
+      router.push('/select-company');
+      return;
+    }
+
     // Load dashboard data
     loadData();
-  }, [isConnected, walletAddress, router]);
+  }, [isConnected, walletAddress, employer, loading, router]);
 
   const loadData = async () => {
-    if (!walletAddress) return;
+    if (!walletAddress || !employer) return;
 
     try {
-      // Load employer data
-      const empRes = await employerAPI.get(walletAddress);
-      setEmployer(empRes.data.data);
-
-      // Load alerts
-      const alertRes = await alertAPI.list(empRes.data.data.id, { resolved: false });
+      // Load alerts for the selected company
+      const alertRes = await alertAPI.list(employer.id, { resolved: false });
       setAlerts(alertRes.data.data);
     } catch (error: any) {
       console.error('Failed to load dashboard data:', error);
-
-      // If employer not found (404), clear employer state to show onboarding
-      if (error.response?.status === 404) {
-        setEmployer(null);
-      }
     } finally {
       setLoading(false);
     }

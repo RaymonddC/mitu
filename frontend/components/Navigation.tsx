@@ -1,15 +1,16 @@
 'use client'
 
 import Link from 'next/link'
-import { usePathname } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 import { useStore } from '@/lib/store'
 import { ConnectButton } from '@rainbow-me/rainbowkit'
 import { useAccount } from 'wagmi'
 import { useEffect, useState } from 'react'
-import { Wallet, Users, DollarSign, Settings, BarChart3 } from 'lucide-react'
+import { Wallet, Users, DollarSign, Settings, BarChart3, Building2, ChevronDown } from 'lucide-react'
 
 export function Navigation() {
   const pathname = usePathname()
+  const router = useRouter()
   const { walletAddress, isConnected, connectWallet, disconnectWallet, employer } = useStore()
   const [scrolled, setScrolled] = useState(false)
 
@@ -85,9 +86,14 @@ export function Navigation() {
 
           <div className="flex items-center space-x-4">
             {employer && isConnected && (
-              <div className="text-sm text-foreground">
-                <span className="font-medium">{employer.companyName}</span>
-              </div>
+              <button
+                onClick={() => router.push('/select-company')}
+                className="flex items-center gap-2 px-3 py-2 rounded-lg bg-gradient-to-r from-purple-50 to-pink-50 border border-purple-200 hover:border-purple-300 hover:shadow-md transition-all group"
+              >
+                <Building2 className="h-4 w-4 text-purple-600" />
+                <span className="text-sm font-medium text-gray-900">{employer.companyName}</span>
+                <ChevronDown className="h-4 w-4 text-gray-400 group-hover:text-purple-600 transition-colors" />
+              </button>
             )}
             <ConnectButton
               chainStatus="icon"

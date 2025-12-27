@@ -14,7 +14,7 @@ datasource db {
 // Employer account
 model Employer {
   id                String    @id @default(uuid())
-  walletAddress     String    @unique
+  walletAddress     String    // Removed @unique to allow multiple companies per wallet
   companyName       String
   email             String?
   payrollDay        Int       @default(28) // Day of month (1-28)
@@ -37,6 +37,7 @@ model Employer {
   payrollApprovals  PayrollApproval[]
   payrollBudgets    PayrollBudget[]
 
+  @@index([walletAddress]) // Add index for querying by wallet address
   @@map("employers")
 }
 
