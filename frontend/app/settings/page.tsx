@@ -203,7 +203,7 @@ export default function SettingsPage() {
               </div>
 
               {/* Cost Comparison */}
-              <div className="bg-gradient-to-br from-blue-100/60 via-purple-100/60 to-pink-100/60 border-2 border-purple-300/60 rounded-xl p-4 space-y-3 backdrop-blur-sm shadow-lg">
+              <div className="bg-gradient-to-br from-blue-100/60 via-purple-100/60 to-pink-100/60 border-2 border-purple-300/60 rounded-xl p-5 space-y-3 backdrop-blur-sm shadow-lg">
                 <button
                   onClick={() => setShowCostComparison(!showCostComparison)}
                   className="flex items-center justify-between w-full text-left"
@@ -218,27 +218,27 @@ export default function SettingsPage() {
                 </button>
 
                 {showCostComparison && (
-                  <div className="bg-white rounded-lg border border-purple-200 p-4 space-y-3">
-                    <p className="text-sm text-gray-700">
+                  <div className="bg-white rounded-lg border border-purple-200 p-5 space-y-4">
+                    <p className="text-sm text-gray-700 font-medium">
                       Based on {employeeCount} employees per payroll:
                     </p>
                     <div className="grid grid-cols-2 gap-4">
-                      <div className="bg-gray-50 rounded-lg p-3">
-                        <p className="text-xs text-gray-600 mb-1">Individual Transfers:</p>
-                        <p className="text-2xl font-bold text-gray-900">${costData.individual.costUSD}</p>
-                        <p className="text-xs text-gray-500 mt-1">{employeeCount} transactions</p>
+                      <div className="bg-gray-50 rounded-lg p-4">
+                        <p className="text-sm text-gray-600 mb-2">Individual Transfers:</p>
+                        <p className="text-xl font-bold text-gray-900">${costData.individual.costUSD}</p>
+                        <p className="text-sm text-gray-500 mt-1.5">{employeeCount} transactions</p>
                       </div>
-                      <div className="bg-purple-50 rounded-lg p-3">
-                        <p className="text-xs text-purple-700 mb-1">Batch Transfer:</p>
-                        <p className="text-2xl font-bold text-purple-900">${costData.batch.costUSD}</p>
-                        <p className="text-xs text-purple-600 mt-1">1 transaction</p>
+                      <div className="bg-purple-50 rounded-lg p-4">
+                        <p className="text-sm text-purple-700 mb-2">Batch Transfer:</p>
+                        <p className="text-xl font-bold text-purple-900">${costData.batch.costUSD}</p>
+                        <p className="text-sm text-purple-600 mt-1.5">1 transaction</p>
                       </div>
                     </div>
-                    <div className="flex items-center justify-between pt-3 border-t border-purple-100">
-                      <span className="text-sm font-medium text-gray-700">You save per payroll:</span>
+                    <div className="flex items-center justify-between pt-4 border-t border-purple-100">
+                      <span className="text-sm font-semibold text-gray-700">You save per payroll:</span>
                       <div className="text-right">
-                        <p className="text-xl font-bold text-green-600">${costData.savings.costUSD}</p>
-                        <p className="text-xs text-green-700">{costData.savings.percent}% cheaper</p>
+                        <p className="text-lg font-bold text-green-600">${costData.savings.costUSD}</p>
+                        <p className="text-sm text-green-700">{costData.savings.percent}% cheaper</p>
                       </div>
                     </div>
                   </div>

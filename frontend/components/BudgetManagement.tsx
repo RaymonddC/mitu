@@ -182,66 +182,78 @@ export function BudgetManagement({ employerId }: BudgetManagementProps) {
                   Create Budget
                 </Button>
               </DialogTrigger>
-              <DialogContent>
+              <DialogContent className="max-w-md">
                 <DialogHeader>
-                  <DialogTitle>Create Pre-Authorized Budget</DialogTitle>
-                  <DialogDescription>
+                  <DialogTitle className="text-xl">Create Pre-Authorized Budget</DialogTitle>
+                  <DialogDescription className="text-base">
                     Set limits for autonomous payroll execution within your wallet
                   </DialogDescription>
                 </DialogHeader>
-                <div className="space-y-4">
+                <div className="px-6 pb-6 space-y-5">
                   <div>
-                    <label className="text-sm font-medium">Monthly Limit (MNEE) *</label>
+                    <label className="block text-sm font-semibold text-gray-900 mb-2">
+                      Monthly Limit (MNEE) *
+                    </label>
                     <Input
                       type="number"
                       placeholder="50000"
                       value={monthlyLimit}
                       onChange={(e) => setMonthlyLimit(e.target.value)}
                       disabled={loading}
+                      className="text-base h-11"
                     />
-                    <p className="text-xs text-gray-500 mt-1">
+                    <p className="text-sm text-gray-600 mt-1.5">
                       Maximum MNEE that can be spent per month
                     </p>
                   </div>
 
                   <div>
-                    <label className="text-sm font-medium">Per Employee Limit (MNEE) (Optional)</label>
+                    <label className="block text-sm font-semibold text-gray-900 mb-2">
+                      Per Employee Limit (MNEE) (Optional)
+                    </label>
                     <Input
                       type="number"
                       placeholder="10000"
                       value={perEmployeeLimit}
                       onChange={(e) => setPerEmployeeLimit(e.target.value)}
                       disabled={loading}
+                      className="text-base h-11"
                     />
-                    <p className="text-xs text-gray-500 mt-1">
+                    <p className="text-sm text-gray-600 mt-1.5">
                       Maximum payment per employee (leave empty for no limit)
                     </p>
                   </div>
 
                   <div>
-                    <label className="text-sm font-medium">Start Date *</label>
+                    <label className="block text-sm font-semibold text-gray-900 mb-2">
+                      Start Date *
+                    </label>
                     <Input
                       type="date"
                       value={startDate}
                       onChange={(e) => setStartDate(e.target.value)}
                       disabled={loading}
+                      className="text-base h-11"
                     />
                   </div>
 
                   <div>
-                    <label className="text-sm font-medium">End Date *</label>
+                    <label className="block text-sm font-semibold text-gray-900 mb-2">
+                      End Date *
+                    </label>
                     <Input
                       type="date"
                       value={endDate}
                       onChange={(e) => setEndDate(e.target.value)}
                       disabled={loading}
+                      className="text-base h-11"
                     />
                   </div>
 
                   <Button
                     onClick={handleCreateBudget}
                     disabled={loading}
-                    className="w-full bg-primary hover:bg-primary/90"
+                    className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 h-11 text-base font-semibold"
                   >
                     {loading ? 'Creating...' : 'Create Budget'}
                   </Button>
