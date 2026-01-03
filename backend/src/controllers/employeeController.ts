@@ -18,12 +18,14 @@ const createEmployeeSchema = z.object({
   salaryAmount: z.number().positive(),
   paymentCycle: z.enum(['monthly', 'weekly', 'custom']).default('monthly'),
   customPayDay: z.number().min(1).max(28).optional(),
+  profileImage: z.string().optional(),
   notes: z.string().max(1000).optional()
 });
 
 const updateEmployeeSchema = z.object({
   name: z.string().min(1).max(200).optional(),
   email: z.string().email().optional(),
+  profileImage: z.string().optional(),
   walletAddress: z.string().min(20).optional(),
   salaryAmount: z.number().positive().optional(),
   paymentCycle: z.enum(['monthly', 'weekly', 'custom']).optional(),
@@ -81,6 +83,7 @@ export async function createEmployee(req: Request, res: Response, next: NextFunc
         employerId: data.employerId,
         name: data.name,
         email: data.email,
+        profileImage: data.profileImage,
         walletAddress: data.walletAddress,
         salaryAmount: data.salaryAmount,
         paymentCycle: data.paymentCycle,
