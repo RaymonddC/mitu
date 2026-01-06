@@ -16,7 +16,7 @@ import { ReactNode } from 'react';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 
 // Get WalletConnect Project ID from environment
-const projectId = process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID;
+const projectId = process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID || "";
 
 // Configure wallets with WalletConnect enabled
 const connectors = connectorsForWallets(
