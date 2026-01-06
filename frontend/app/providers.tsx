@@ -8,28 +8,27 @@
 
 import '@rainbow-me/rainbowkit/styles.css';
 import { RainbowKitProvider, connectorsForWallets } from '@rainbow-me/rainbowkit';
-import { metaMaskWallet, coinbaseWallet, injectedWallet } from '@rainbow-me/rainbowkit/wallets';
+import { metaMaskWallet, coinbaseWallet, walletConnectWallet, injectedWallet } from '@rainbow-me/rainbowkit/wallets';
 import { WagmiProvider, createConfig, http } from 'wagmi';
 import { sepolia, mainnet } from 'wagmi/chains';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ReactNode } from 'react';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 
-// Configure wallets WITHOUT WalletConnect (removes the error)
+// Get WalletConnect Project ID from environment
+const projectId = process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID;
+
+// Configure wallets with WalletConnect enabled
 const connectors = connectorsForWallets(
   [
     {
       groupName: 'Recommended',
-      wallets: [
-        metaMaskWallet,
-        coinbaseWallet,
-        injectedWallet,
-      ],
+      wallets: [metaMaskWallet, coinbaseWallet, walletConnectWallet, injectedWallet],
     },
   ],
   {
     appName: 'MNEE Autonomous Payroll',
-    projectId: 'disabled', // Disable WalletConnect to prevent errors
+    projectId,
   }
 );
 
@@ -56,10 +55,7 @@ export function Providers({ children }: { children: ReactNode }) {
   return (
     <WagmiProvider config={config}>
       <QueryClientProvider client={queryClient}>
-        <RainbowKitProvider
-          modalSize="compact"
-          showRecentTransactions={true}
-        >
+        <RainbowKitProvider modalSize="compact" showRecentTransactions={true}>
           {children}
         </RainbowKitProvider>
       </QueryClientProvider>
