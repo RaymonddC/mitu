@@ -34,6 +34,7 @@ export interface Employee {
   employerId: string;
   name: string;
   email?: string;
+  profileImage?: string;
   walletAddress: string;
   salaryAmount: number;
   paymentCycle: string;
