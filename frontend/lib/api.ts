@@ -127,7 +127,7 @@ export const employeeAPI = {
 
 // Payroll API
 export const payrollAPI = {
-  run: (data: { employerId: string; employeeIds?: string[]; testMode?: boolean }) =>
+  run: (data: { employerId: string; employeeIds?: string[]; testMode?: boolean; useWalletSigning?: boolean }) =>
     api.post('/payroll/run', data),
   history: (employerId: string) =>
     api.get<{ data: PayrollLog[] }>(`/payroll/history?employerId=${employerId}`),
