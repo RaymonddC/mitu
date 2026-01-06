@@ -26,14 +26,15 @@ export function errorHandler(
   });
 
   // Handle Prisma errors
-  if (err instanceof Prisma.PrismaClientKnownRequestError) {
-    if (err.code === 'P2002') {
+  if (err.name === 'PrismaClientKnownRequestError') {
+    const prismaError = err as any;
+    if (prismaError.code === 'P2002') {
       return res.status(409).json({
         error: 'Conflict',
         message: 'A record with this unique field already exists'
       });
     }
-    if (err.code === 'P2025') {
+    if (prismaError.code === 'P2025') {
       return res.status(404).json({
         error: 'Not Found',
         message: 'The requested resource was not found'
