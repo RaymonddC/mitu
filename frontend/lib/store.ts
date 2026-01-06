@@ -41,11 +41,12 @@ export const useStore = create<AppState>()(
         set({ walletAddress: address, isConnected: true });
       },
 
-      disconnectWallet: () => set({
-        walletAddress: null,
-        isConnected: false,
-        employer: null
-      }),
+      disconnectWallet: () =>
+        set({
+          walletAddress: null,
+          isConnected: false,
+          employer: null,
+        }),
 
       // Employer state
       employer: null,
@@ -54,7 +55,11 @@ export const useStore = create<AppState>()(
     {
       name: 'mnee-payroll-storage', // unique name for localStorage key
       storage: createJSONStorage(() => localStorage),
-      partialPersist: true, // Only persist specified keys
+      partialize: (state) => ({
+        walletAddress: state.walletAddress,
+        isConnected: state.isConnected,
+        employer: state.employer,
+      }), // Only persist specified keys
     }
   )
 );
