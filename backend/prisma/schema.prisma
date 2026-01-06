@@ -1,0 +1,258 @@
+// Prisma Schema for MNEE Autonomous Payroll Agent
+// Database: PostgreSQL
+
+generator client {
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "windows", "debian-openssl-3.0.x"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Employer account
+model Employer {
+  id                String    @id @default(uuid())
+  walletAddress     String    // Removed @unique to allow multiple companies per wallet
+  companyName       String
+  email             String?
+  profileImage      String?   // Company logo/profile image (URL or base64)
+  payrollDay        Int       @default(28) // Day of month (1-28)
+  monthlyBudget     Decimal?  @db.Decimal(20, 8) // Optional spending cap
+  active            Boolean   @default(true)
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  // Virtual balance fields (Week 1: Multi-employer custodial)
+  virtualBalance    Decimal   @default(0) @db.Decimal(20, 8) // Current MNEE balance
+  totalDeposited    Decimal   @default(0) @db.Decimal(20, 8) // Lifetime deposits
+  totalWithdrawn    Decimal   @default(0) @db.Decimal(20, 8) // Lifetime withdrawals
+  depositAddress    String?   @unique // Unique deposit address (optional)
+  balanceUpdatedAt  DateTime? // Last balance change timestamp
+
+  employees         Employee[]
+  payrollLogs       PayrollLog[]
+  alerts            Alert[]
+  balanceTransactions BalanceTransaction[]
+  payrollApprovals  PayrollApproval[]
+  payrollBudgets    PayrollBudget[]
+  riskScreenings    RiskScreening[]
+
+  @@index([walletAddress]) // Add index for querying by wallet address
+  @@map("employers")
+}
+
+// Employee records
+model Employee {
+  id              String    @id @default(uuid())
+  employerId      String
+  name            String
+  email           String?
+  profileImage    String?   // Employee profile picture (URL or base64)
+  walletAddress   String
+  salaryAmount    Decimal   @db.Decimal(20, 8)
+  paymentCycle    String    @default("monthly") // "monthly" | "weekly" | "custom"
+  customPayDay    Int?      // Override employer default (1-28)
+  active          Boolean   @default(true)
+  notes           String?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  employer        Employer  @relation(fields: [employerId], references: [id], onDelete: Cascade)
+  payrollLogs     PayrollLog[]
+  riskScreenings    RiskScreening[]
+
+  @@index([employerId])
+  @@index([walletAddress])
+  @@map("employees")
+}
+
+// Payroll execution logs
+model PayrollLog {
+  id              String    @id @default(uuid())
+  employerId      String
+  employeeId      String
+  amount          Decimal   @db.Decimal(20, 8)
+  txHash          String?   // MNEE transaction hash
+  status          String    // "pending" | "completed" | "failed" | "retrying"
+  failureReason   String?
+  idempotencyKey  String    @unique // Prevent duplicate payments
+  executedAt      DateTime  @default(now())
+  confirmedAt     DateTime?
+  retryCount      Int       @default(0)
+  metadata        Json?     // Additional context (agent version, gas used, etc.)
+
+  employer        Employer  @relation(fields: [employerId], references: [id], onDelete: Cascade)
+  employee        Employee  @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+
+  @@index([employerId])
+  @@index([employeeId])
+  @@index([status])
+  @@index([executedAt])
+  @@index([idempotencyKey])
+  @@map("payroll_logs")
+}
+
+// AI Agent alerts and recommendations
+model Alert {
+  id              String    @id @default(uuid())
+  employerId      String
+  severity        String    // "info" | "warning" | "critical"
+  category        String    // "insufficient_funds" | "invalid_wallet" | "suspicious_change" | "optimization"
+  title           String
+  message         String
+  resolved        Boolean   @default(false)
+  metadata        Json?
+  createdAt       DateTime  @default(now())
+  resolvedAt      DateTime?
+
+  employer        Employer  @relation(fields: [employerId], references: [id], onDelete: Cascade)
+
+  @@index([employerId])
+  @@index([severity])
+  @@index([resolved])
+  @@map("alerts")
+}
+
+// System configuration (singleton)
+model SystemConfig {
+  id              String    @id @default("system")
+  agentEnabled    Boolean   @default(true)
+  lastAgentRun    DateTime?
+  minSalaryAmount Decimal   @default(0) @db.Decimal(20, 8)
+  maxSalaryAmount Decimal   @default(1000000) @db.Decimal(20, 8)
+  settings        Json?
+  updatedAt       DateTime  @updatedAt
+
+  @@map("system_config")
+}
+
+// Balance transaction ledger (Week 1: Virtual balance tracking)
+model BalanceTransaction {
+  id              String    @id @default(uuid())
+  employerId      String
+  employer        Employer  @relation(fields: [employerId], references: [id], onDelete: Cascade)
+
+  type            String    // "deposit" | "withdrawal" | "payroll_deduction" | "refund"
+  amount          Decimal   @db.Decimal(20, 8) // Amount of change (positive or negative)
+  balanceBefore   Decimal   @db.Decimal(20, 8) // Balance before transaction
+  balanceAfter    Decimal   @db.Decimal(20, 8) // Balance after transaction
+
+  description     String?   // Human-readable description
+  txHash          String?   // Blockchain transaction hash (for deposits/withdrawals)
+  referenceId     String?   // Reference to PayrollLog or other entity
+
+  metadata        Json?     // Additional data
+  createdAt       DateTime  @default(now())
+
+  @@index([employerId, createdAt])
+  @@index([type])
+  @@map("balance_transactions")
+}
+
+// Platform-wide statistics (Week 1: Multi-employer platform)
+model PlatformStats {
+  id                String    @id @default("platform")
+  totalDeposits     Decimal   @default(0) @db.Decimal(20, 8)
+  totalWithdrawals  Decimal   @default(0) @db.Decimal(20, 8)
+  totalPayrollPaid  Decimal   @default(0) @db.Decimal(20, 8)
+  totalEmployers    Int       @default(0)
+  totalEmployees    Int       @default(0)
+  updatedAt         DateTime  @updatedAt
+
+  @@map("platform_stats")
+}
+
+// Week 2: Non-Custodial Wallet Signing Models
+
+// Pending transaction approvals (for wallet signing)
+model PayrollApproval {
+  id              String    @id @default(uuid())
+  employerId      String
+  employer        Employer  @relation(fields: [employerId], references: [id], onDelete: Cascade)
+
+  status          String    // 'pending', 'approved', 'rejected', 'expired'
+  unsignedTx      String?   @db.Text  // Raw unsigned transaction data (JSON)
+  signedTx        String?   @db.Text  // Signed transaction (after approval)
+
+  // Transaction details
+  totalAmount     Decimal   @db.Decimal(20, 8)  // Total MNEE being sent
+  recipientCount  Int                           // Number of employees
+  recipients      Json                          // Array of {employeeId, address, amount, name}
+
+  // Timing
+  createdAt       DateTime  @default(now())
+  expiresAt       DateTime                      // Unsigned TX expires after 15 minutes
+  approvedAt      DateTime?
+  broadcastedAt   DateTime?
+
+  // Transaction result
+  txHash          String?                       // After broadcasting
+  ticketId        String?                       // MNEE SDK ticket ID
+
+  // Metadata
+  description     String?
+  metadata        Json?
+
+  @@index([employerId, status])
+  @@index([status, expiresAt])
+  @@map("payroll_approvals")
+}
+
+// Pre-authorized payroll budgets (for autonomous execution within limits)
+model PayrollBudget {
+  id                String    @id @default(uuid())
+  employerId        String
+  employer          Employer  @relation(fields: [employerId], references: [id], onDelete: Cascade)
+
+  // Budget limits
+  monthlyLimit      Decimal   @db.Decimal(20, 8)  // Max amount per month
+  perEmployeeLimit  Decimal?  @db.Decimal(20, 8)  // Max per employee (optional)
+
+  // Validity period
+  startDate         DateTime
+  endDate           DateTime
+
+  // Tracking
+  usedThisMonth     Decimal   @default(0) @db.Decimal(20, 8)
+  lastResetAt       DateTime  @default(now())
+
+  // Status
+  isActive          Boolean   @default(true)
+
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  @@index([employerId, isActive])
+  @@map("payroll_budgets")
+}
+
+// Risk Screening Model
+model RiskScreening {
+  id              String    @id @default(uuid())
+  walletAddress   String
+  riskScore       Int
+  riskLevel       String
+  action          String
+  blocked         Boolean   @default(false)
+  reason          String?
+  breakdown       Json?
+  summary         String?
+  recommendations Json?
+  createdAt       DateTime  @default(now())
+
+  employeeId      String?
+  employee        Employee? @relation(fields: [employeeId], references: [id], onDelete: SetNull)
+
+  employerId      String?
+  employer        Employer? @relation(fields: [employerId], references: [id], onDelete: Cascade)
+
+  @@index([walletAddress])
+  @@index([riskScore])
+  @@index([riskLevel])
+  @@index([blocked])
+  @@index([createdAt])
+  @@index([employerId])
+  @@map("risk_screenings")
+}

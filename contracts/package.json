@@ -1,0 +1,16 @@
+{
+  "name": "mnee-payroll-contracts",
+  "version": "1.0.0",
+  "description": "MNEE Flow Contracts for Autonomous Payroll",
+  "scripts": {
+    "compile": "echo 'Compiling MNEE Flow contracts...' && echo 'Note: Replace with actual MNEE Flow SDK compile command'",
+    "deploy": "tsx deploy.ts",
+    "test": "vitest run"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "typescript": "^5.3.3",
+    "tsx": "^4.7.0",
+    "vitest": "^1.0.4"
+  }
+}

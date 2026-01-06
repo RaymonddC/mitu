@@ -1,0 +1,20 @@
+{
+  "name": "mnee-payroll-agent",
+  "version": "1.0.0",
+  "description": "MNEE Autonomous Agent for Payroll Execution",
+  "scripts": {
+    "dev": "tsx salary_agent.ts",
+    "deploy": "tsx deploy_agent.ts",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "axios": "^1.6.2",
+    "dotenv": "^16.3.1"
+  },
+  "devDependencies": {
+    "typescript": "^5.3.3",
+    "tsx": "^4.7.0",
+    "@types/node": "^20.10.5",
+    "vitest": "^1.0.4"
+  }
+}
