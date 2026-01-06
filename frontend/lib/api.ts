@@ -27,6 +27,7 @@ export interface Employer {
   updatedAt: string;
   employees?: Employee[];
   totalMonthlyPayroll?: number;
+  profileImage?: string;
 }
 
 export interface Employee {
@@ -127,10 +128,8 @@ export const employeeAPI = {
 
 // Payroll API
 export const payrollAPI = {
-  run: (data: { employerId: string; employeeIds?: string[]; testMode?: boolean; useWalletSigning?: boolean }) =>
-    api.post('/payroll/run', data),
-  history: (employerId: string) =>
-    api.get<{ data: PayrollLog[] }>(`/payroll/history?employerId=${employerId}`),
+  run: (data: { employerId: string; employeeIds?: string[]; testMode?: boolean; useWalletSigning?: boolean }) => api.post('/payroll/run', data),
+  history: (employerId: string) => api.get<{ data: PayrollLog[] }>(`/payroll/history?employerId=${employerId}`),
   get: (logId: string) => api.get<{ data: PayrollLog }>(`/payroll/${logId}`),
   retry: (logId: string) => api.post(`/payroll/${logId}/retry`),
 };
@@ -150,48 +149,29 @@ export const alertAPI = {
 
 // Balance API (Week 1: Virtual balance system)
 export const balanceAPI = {
-  deposit: (employerId: string, data: { amount: number; txHash?: string; description?: string }) =>
-    api.post(`/balance/employers/${employerId}/deposit`, data),
-  withdraw: (employerId: string, data: { amount: number; destinationAddress: string; description?: string }) =>
-    api.post(`/balance/employers/${employerId}/withdraw`, data),
-  getBalance: (employerId: string) =>
-    api.get<{ data: BalanceInfo }>(`/balance/employers/${employerId}/balance`),
+  deposit: (employerId: string, data: { amount: number; txHash?: string; description?: string }) => api.post(`/balance/employers/${employerId}/deposit`, data),
+  withdraw: (employerId: string, data: { amount: number; destinationAddress: string; description?: string }) => api.post(`/balance/employers/${employerId}/withdraw`, data),
+  getBalance: (employerId: string) => api.get<{ data: BalanceInfo }>(`/balance/employers/${employerId}/balance`),
   getTransactionHistory: (employerId: string, params?: { limit?: number; offset?: number }) => {
     const query = new URLSearchParams({
       ...(params?.limit && { limit: String(params.limit) }),
       ...(params?.offset && { offset: String(params.offset) }),
     });
-    return api.get<{ data: { transactions: BalanceTransaction[]; pagination: any } }>(
-      `/balance/employers/${employerId}/transactions?${query}`
-    );
+    return api.get<{ data: { transactions: BalanceTransaction[]; pagination: any } }>(`/balance/employers/${employerId}/transactions?${query}`);
   },
-  getPlatformStats: () =>
-    api.get<{ data: PlatformStats }>('/balance/platform/stats'),
+  getPlatformStats: () => api.get<{ data: PlatformStats }>('/balance/platform/stats'),
 };
 
 // Wallet Signing API (Week 2: Non-custodial wallet signing)
 export const walletSigningAPI = {
-  createApproval: (data: { employerId: string; employees: any[] }) =>
-    api.post('/wallet/approvals/create', data),
-  getApproval: (approvalId: string) =>
-    api.get(`/wallet/approvals/${approvalId}`),
-  listApprovals: (employerId: string, status?: string) =>
-    api.get(`/wallet/approvals?employerId=${employerId}${status ? `&status=${status}` : ''}`),
-  submitSignedTransaction: (approvalId: string, data: { txHash: string }) =>
-    api.post(`/wallet/approvals/${approvalId}/submit`, data),
-  rejectApproval: (approvalId: string, reason?: string) =>
-    api.post(`/wallet/approvals/${approvalId}/reject`, { reason }),
-  createBudget: (data: {
-    employerId: string;
-    monthlyLimit: number;
-    startDate: string;
-    endDate: string;
-    perEmployeeLimit?: number;
-  }) => api.post('/wallet/budgets', data),
-  getEmployerBudgets: (employerId: string) =>
-    api.get(`/wallet/budgets/${employerId}`),
-  checkBudgetAuthorization: (employerId: string, amount: number) =>
-    api.post(`/wallet/budgets/${employerId}/check`, { amount }),
+  createApproval: (data: { employerId: string; employees: any[] }) => api.post('/wallet/approvals/create', data),
+  getApproval: (approvalId: string) => api.get(`/wallet/approvals/${approvalId}`),
+  listApprovals: (employerId: string, status?: string) => api.get(`/wallet/approvals?employerId=${employerId}${status ? `&status=${status}` : ''}`),
+  submitSignedTransaction: (approvalId: string, data: { txHash: string }) => api.post(`/wallet/approvals/${approvalId}/submit`, data),
+  rejectApproval: (approvalId: string, reason?: string) => api.post(`/wallet/approvals/${approvalId}/reject`, { reason }),
+  createBudget: (data: { employerId: string; monthlyLimit: number; startDate: string; endDate: string; perEmployeeLimit?: number }) => api.post('/wallet/budgets', data),
+  getEmployerBudgets: (employerId: string) => api.get(`/wallet/budgets/${employerId}`),
+  checkBudgetAuthorization: (employerId: string, amount: number) => api.post(`/wallet/budgets/${employerId}/check`, { amount }),
 };
 
 export default api;
