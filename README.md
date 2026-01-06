@@ -115,10 +115,13 @@ flowchart TB
 ### Core MVP Features
 
 - ✅ **Employer Onboarding**: Connect MetaMask wallet via RainbowKit, automatic profile creation
-- ✅ **Employee Management**: Add/edit/deactivate employees with Ethereum addresses
+- ✅ **Multi-Company Support**: Single wallet can manage multiple companies with separate employee rosters
+- ✅ **Company Customization**: Upload company logo, set company name, customize branding
+- ✅ **Employee Management**: Add/edit/deactivate employees with Ethereum addresses and profile images
 - ✅ **Batch Payroll Execution**: "Run Payroll" sends MNEE tokens to all employees in one transaction
 - ✅ **Smart Contract Integration**: SimpleBatchTransfer.sol for gas-efficient batch ERC-20 transfers
 - ✅ **Batch Approval System**: Pre-approve contract to eliminate per-transaction approvals
+- ✅ **Budget Management**: Set monthly spending limits with visual budget tracking and warnings
 - ✅ **Non-Custodial**: Employers keep funds in their own wallets, sign all transactions
 - ✅ **Three-Layer Duplicate Prevention**:
   - Pre-approval check before creating transaction
@@ -131,6 +134,7 @@ flowchart TB
   - Budget tracking and warnings
 - ✅ **Audit Trail**: Full PayrollLog history with Etherscan transaction links
 - ✅ **Real-time Updates**: Auto-refresh payroll history, approval status detection
+- ✅ **Settings Dashboard**: Comprehensive settings for company info, payment methods, and budgets
 
 ### Security Features
 
@@ -209,18 +213,19 @@ npm install
 npx tsx scripts/generate-eth-wallets.ts
 # Copy the output addresses
 
-# 4. Copy environment template
-cp .env.example backend/.env
+# 4. Copy environment templates
+cp .env.example backend/.env.development
+cp .env.example backend/.env.production
 
-# 5. Edit backend/.env and add:
+# 5. Edit backend/.env.development and add:
 #    - Your Infura API key
-#    - Generated platform wallet address & private key
-#    - MNEE token address (already filled)
-nano backend/.env
+#    - MNEE token address (already filled for Sepolia)
+#    - WalletConnect Project ID
+nano backend/.env.development
 
 # 6. Create frontend env file
-cp .env.example frontend/.env.local
-# Add your WalletConnect Project ID
+cp frontend/.env.local.example frontend/.env.local
+# Add your WalletConnect Project ID and other settings
 nano frontend/.env.local
 
 # 7. Start PostgreSQL (via Docker)
@@ -251,9 +256,9 @@ cd mnee-autonomous-payroll
 npx tsx scripts/generate-eth-wallets.ts
 
 # 3. Copy and edit environment files
-cp .env.example backend/.env
-cp .env.example frontend/.env.local
-# Edit both files with your API keys and wallet info
+cp .env.example backend/.env.development
+cp frontend/.env.local.example frontend/.env.local
+# Edit both files with your API keys and WalletConnect Project ID
 
 # 4. Start all services
 docker-compose up
@@ -270,25 +275,27 @@ docker-compose up
 
 ### Step 1: Environment Configuration
 
-**Backend (.env):**
+**Backend (.env.development):**
 
 ```env
 # Database
 DATABASE_URL="postgresql://postgres:postgres@localhost:5432/mnee_payroll"
 
-# Ethereum Configuration
+# Ethereum Configuration - Sepolia Testnet
 ETHEREUM_RPC_URL="https://sepolia.infura.io/v3/YOUR_INFURA_KEY"
 ETHEREUM_CHAIN_ID=11155111  # Sepolia testnet
 
-# MNEE Token (ERC-20)
-MNEE_TOKEN_ADDRESS="0x8ccedbAe4916b79da7F3F612EfB2EB93A2bFD6cF"
+# MNEE Token (ERC-20) - Test token
+MNEE_TOKEN_ADDRESS="0x41557BA6e63f431788a6Ea1989C3FeF390c8Ab76"
 
-# Platform Wallet (custodial)
-PLATFORM_WALLET_ADDRESS="0xYourGeneratedPlatformAddress"
-PLATFORM_PRIVATE_KEY="0xYourGeneratedPrivateKey"
+# Batch Transfer Contract (Optional - deploy from contracts/)
+BATCH_TRANSFER_CONTRACT_ADDRESS=""
 
-# For mock mode (development without real transactions)
-# Simply leave PLATFORM_PRIVATE_KEY empty
+# Backend Configuration
+PORT=3001
+NODE_ENV="development"
+JWT_SECRET="dev-jwt-secret-change-in-production"
+SESSION_SECRET="dev-session-secret-change-in-production"
 ```
 
 **Frontend (.env.local):**
@@ -296,7 +303,8 @@ PLATFORM_PRIVATE_KEY="0xYourGeneratedPrivateKey"
 ```env
 NEXT_PUBLIC_API_URL="http://localhost:3001"
 NEXT_PUBLIC_ETHEREUM_CHAIN_ID=11155111
-NEXT_PUBLIC_MNEE_TOKEN_ADDRESS="0x8ccedbAe4916b79da7F3F612EfB2EB93A2bFD6cF"
+NEXT_PUBLIC_MNEE_TOKEN_ADDRESS="0x41557BA6e63f431788a6Ea1989C3FeF390c8Ab76"
+NEXT_PUBLIC_BATCH_TRANSFER_CONTRACT_ADDRESS=""
 NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID="your_project_id_here"
 ```
 
@@ -393,6 +401,19 @@ chmod +x demo.sh
 
 ## 🚢 Deployment
 
+### Prerequisites for Production
+
+1. **Deploy Smart Contracts** (if using batch transfers):
+   - Follow `contracts/DEPLOY_V2_GUIDE.md` to deploy SimpleBatchTransfer.sol to Ethereum mainnet
+   - Save the deployed contract address
+
+2. **Get Production API Keys**:
+   - Infura or Alchemy (mainnet RPC)
+   - WalletConnect Project ID
+   - Strong JWT and Session secrets
+
+3. **Database**: Set up production PostgreSQL (Railway, Supabase, Render, etc.)
+
 ### Frontend (Vercel)
 
 ```bash
@@ -403,16 +424,18 @@ npm run build
 
 # Deploy to Vercel
 vercel --prod
-
-# Set environment variables in Vercel dashboard:
-# - NEXT_PUBLIC_API_URL
-# - NEXT_PUBLIC_ETHEREUM_CHAIN_ID
-# - NEXT_PUBLIC_MNEE_TOKEN_ADDRESS
-# - NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID
 ```
 
-### Backend (Railway / Render)
+**Set environment variables in Vercel dashboard:**
+- `NEXT_PUBLIC_API_URL` - Your backend API URL
+- `NEXT_PUBLIC_ETHEREUM_CHAIN_ID` - `1` for mainnet, `11155111` for Sepolia
+- `NEXT_PUBLIC_MNEE_TOKEN_ADDRESS` - `0x8ccedbAe4916b79da7F3F612EfB2EB93A2bFD6cF` (mainnet)
+- `NEXT_PUBLIC_BATCH_TRANSFER_CONTRACT_ADDRESS` - Your deployed contract (optional)
+- `NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID` - Your WalletConnect Project ID
 
+### Backend (Railway / Render / Fly.io)
+
+**Option 1: Railway CLI**
 ```bash
 cd backend
 
@@ -421,9 +444,29 @@ npm run build
 
 # Deploy via Railway CLI
 railway up
+```
 
-# Or push to GitHub and connect Railway/Render
-# Set environment variables in dashboard
+**Option 2: GitHub Integration**
+1. Push to GitHub
+2. Connect Railway/Render to your repository
+3. Set build command: `npm run build`
+4. Set start command: `npm start`
+
+**Set environment variables in hosting dashboard:**
+- `DATABASE_URL` - Your PostgreSQL connection string
+- `ETHEREUM_RPC_URL` - Mainnet RPC (e.g., `https://mainnet.infura.io/v3/YOUR_KEY`)
+- `ETHEREUM_CHAIN_ID` - `1` for mainnet
+- `MNEE_TOKEN_ADDRESS` - `0x8ccedbAe4916b79da7F3F612EfB2EB93A2bFD6cF`
+- `BATCH_TRANSFER_CONTRACT_ADDRESS` - Your deployed contract (optional)
+- `JWT_SECRET` - Generate with `openssl rand -base64 32`
+- `SESSION_SECRET` - Generate with `openssl rand -base64 32`
+- `PORT` - `3001` (or provided by platform)
+- `NODE_ENV` - `production`
+
+**Run Database Migrations:**
+```bash
+# On Railway/Render, add this to build command:
+npm run db:migrate:prod && npm run build
 ```
 
 ### Agent (MNEE Agent Runtime)

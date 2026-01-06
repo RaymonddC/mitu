@@ -18,6 +18,55 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+
+  # Backend API
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: mnee-payroll-backend
+    environment:
+      - NODE_ENV=development
+      - PORT=3001
+      - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/mnee_payroll?schema=public
+      - ETHEREUM_RPC_URL=${ETHEREUM_RPC_URL}
+      - ETHEREUM_CHAIN_ID=${ETHEREUM_CHAIN_ID}
+      - MNEE_TOKEN_ADDRESS=${MNEE_TOKEN_ADDRESS}
+      - BATCH_TRANSFER_CONTRACT_ADDRESS=${BATCH_TRANSFER_CONTRACT_ADDRESS}
+      - JWT_SECRET=${JWT_SECRET}
+      - SESSION_SECRET=${SESSION_SECRET}
+    ports:
+      - "3001:3001"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - ./backend:/app
+      - /app/node_modules
+    command: npm run dev
+
+  # Frontend
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: mnee-payroll-frontend
+    environment:
+      - NEXT_PUBLIC_API_URL=http://localhost:3001
+      - NEXT_PUBLIC_ETHEREUM_CHAIN_ID=${ETHEREUM_CHAIN_ID}
+      - NEXT_PUBLIC_MNEE_TOKEN_ADDRESS=${MNEE_TOKEN_ADDRESS}
+      - NEXT_PUBLIC_BATCH_TRANSFER_CONTRACT_ADDRESS=${BATCH_TRANSFER_CONTRACT_ADDRESS}
+      - NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID=${WALLETCONNECT_PROJECT_ID}
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+      - /app/.next
+    command: npm run dev
+
 volumes:
   postgres-data:
     driver: local
