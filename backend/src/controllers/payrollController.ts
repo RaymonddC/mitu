@@ -12,6 +12,7 @@ import { ethereumService } from '../services/ethereumService';
 import { balanceService } from '../services/balanceService';
 import { walletSigningService } from '../services/walletSigningService';
 import crypto from 'crypto';
+import {prePayrollScreening} from "../services/riskIntegration";
 
 // Using ethereumService for MNEE ERC-20 token on Ethereum (hackathon pivot)
 
@@ -30,19 +31,32 @@ const runPayrollSchema = z.object({
 export async function runPayroll(req: Request, res: Response, next: NextFunction) {
   try {
     const data = runPayrollSchema.parse(req.body);
+    const screening = await prePayrollScreening(data.employerId);
 
-    // Get employer
-    const employer = await prisma.employer.findUnique({
-      where: { id: data.employerId },
-      include: {
-        employees: {
-          where: {
-            active: true,
-            ...(data.employeeIds && { id: { in: data.employeeIds } })
-          }
-        }
+      if (screening.blockedEmployees.length > 0) {
+          return res.status(400).json({
+              success: false,
+              error: 'Payroll Blocked',
+              message: screening.message,
+              blockedEmployees: screening.blockedEmployees
+          });
       }
-    });
+
+      const safeIds = screening.safeEmployees.map(e => e.id);
+
+      // Get employer
+      const employer = await prisma.employer.findUnique({
+          where: { id: data.employerId },
+          include: {
+              employees: {
+                  where: {
+                      id: { in: safeIds },
+                      active: true,
+                      ...(data.employeeIds && { id: { in: data.employeeIds } })
+                  }
+              }
+          }
+      });
 
     if (!employer) {
       throw new CustomError('Employer not found', 404);

@@ -44,5 +44,8 @@
     "salary"
   ],
   "author": "MNEE Hackathon Team",
-  "license": "MIT"
+  "license": "MIT",
+  "dependencies": {
+    "node-cache": "^5.1.2"
+  }
 }
