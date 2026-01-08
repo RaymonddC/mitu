@@ -273,7 +273,7 @@ export default function PayrollPage() {
                       <Button
                         size="sm"
                         variant="ghost"
-                        onClick={() => window.open(getEtherscanTxUrl(log.txHash, Number(process.env.NEXT_PUBLIC_ETHEREUM_CHAIN_ID) || 1), '_blank')}
+                        onClick={() => window.open(getEtherscanTxUrl(log.txHash!, Number(process.env.NEXT_PUBLIC_ETHEREUM_CHAIN_ID) || 1), '_blank')}
                       >
                         <ExternalLink className="h-4 w-4" />
                       </Button>
