@@ -304,8 +304,8 @@ export default function Home() {
             <div className="grid md:grid-cols-3 gap-8 text-center md:text-left">
               <div>
                 <h3 className="text-white font-semibold mb-2">Network</h3>
-                <p className="text-gray-400 text-sm">Sepolia Testnet</p>
-                <p className="text-gray-400 text-sm">Chain ID: 11155111</p>
+                <p className="text-gray-400 text-sm">{process.env.NEXT_PUBLIC_ETHEREUM_CHAIN_ID === '1' ? 'Ethereum Mainnet' : 'Sepolia Testnet'}</p>
+                <p className="text-gray-400 text-sm">Chain ID: {process.env.NEXT_PUBLIC_ETHEREUM_CHAIN_ID || '1'}</p>
               </div>
               <div>
                 <h3 className="text-white font-semibold mb-2">Token</h3>

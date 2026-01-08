@@ -6,7 +6,7 @@ import { useStore } from '@/lib/store'
 import { payrollAPI, employeeAPI, type PayrollLog, type Employee } from '@/lib/api'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { formatCurrency, formatWalletAddress, formatDateTime, getStatusColor } from '@/lib/utils'
+import { formatCurrency, formatWalletAddress, formatDateTime, getStatusColor, getEtherscanTxUrl } from '@/lib/utils'
 import { PlayCircle, Clock, CheckCircle, XCircle, ExternalLink, RefreshCw } from 'lucide-react'
 import { toast } from '@/components/ui/toaster'
 
@@ -273,7 +273,7 @@ export default function PayrollPage() {
                       <Button
                         size="sm"
                         variant="ghost"
-                        onClick={() => window.open(`https://sepolia.etherscan.io/tx/${log.txHash}`, '_blank')}
+                        onClick={() => window.open(getEtherscanTxUrl(log.txHash, Number(process.env.NEXT_PUBLIC_ETHEREUM_CHAIN_ID) || 1), '_blank')}
                       >
                         <ExternalLink className="h-4 w-4" />
                       </Button>

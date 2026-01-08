@@ -69,3 +69,11 @@ export function getSeverityColor(severity: string): string {
   };
   return colors[severity] || 'text-gray-600 bg-gray-50';
 }
+
+/**
+ * Get Etherscan transaction URL based on chain ID
+ */
+export function getEtherscanTxUrl(txHash: string, chainId: number = 1): string {
+  const baseUrl = chainId === 1 ? 'https://etherscan.io' : 'https://sepolia.etherscan.io';
+  return `${baseUrl}/tx/${txHash}`;
+}
