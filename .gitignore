@@ -52,7 +52,7 @@ Thumbs.db
 postgres-data/
 
 # Prisma
-backend/prisma/migrations/**/migration.sql
+# Migration SQL files should be committed to version control
 
 # Keys (NEVER commit)
 *.key
