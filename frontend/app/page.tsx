@@ -229,7 +229,7 @@ export default function Home() {
                     Connect Your Wallet
                   </h3>
                   <p className="text-gray-400 text-lg">
-                    Connect MetaMask or any Web3 wallet to access the platform. Switch to Sepolia testnet for development.
+                    Connect MetaMask or any Web3 wallet to access the platform. Make sure your wallet is on the correct network.
                   </p>
                 </div>
               </div>
