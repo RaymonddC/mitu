@@ -13,10 +13,11 @@ import { WagmiProvider, createConfig, http } from 'wagmi';
 import { sepolia, mainnet } from 'wagmi/chains';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ReactNode } from 'react';
-import { ErrorBoundary } from '@/components/ErrorBoundary';
 
 // Get WalletConnect Project ID from environment
 const projectId = process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID || "";
+// Get the correct chain based on environment variable
+const chain = process.env.NEXT_PUBLIC_ETHEREUM_CHAIN_ID === '1' ? mainnet : sepolia;
 
 // Configure wallets with WalletConnect enabled
 const connectors = connectorsForWallets(
@@ -35,9 +36,9 @@ const connectors = connectorsForWallets(
 // Create config without WalletConnect
 const config = createConfig({
   connectors,
-  chains: [sepolia],
+  chains: [chain],
   transports: {
-    [sepolia.id]: http(),
+    [chain.id]: http(),
   },
   ssr: true,
 });
