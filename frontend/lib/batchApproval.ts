@@ -1,5 +1,5 @@
 import { encodeFunctionData, erc20Abi, parseEther, createPublicClient, http } from 'viem';
-import { sepolia } from 'viem/chains';
+import { sepolia, mainnet } from 'viem/chains';
 import { getBatchContractAddress } from './batchTransferABI';
 
 const MAX_UINT256 = BigInt('115792089237316195423570985008687907853269984665640564039457584007913129639935');
@@ -11,9 +11,14 @@ export interface BatchApprovalStatus {
 }
 
 // Create public client for read operations
+// Get the correct chain based on environment variable
+const getChain = () => {
+  const chainId = process.env.NEXT_PUBLIC_ETHEREUM_CHAIN_ID;
+  return chainId === '1' ? mainnet : sepolia;
+};
 const getPublicClient = () => {
   return createPublicClient({
-    chain: sepolia,
+    chain: getChain(),
     transport: http()
   });
 };
