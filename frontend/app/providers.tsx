@@ -33,12 +33,13 @@ const connectors = connectorsForWallets(
   }
 );
 
-// Create config without WalletConnect
+// Create wagmi config with dynamic chain
 const config = createConfig({
   connectors,
   chains: [chain],
   transports: {
-    [chain.id]: http(),
+    [mainnet.id]: http(),
+    [sepolia.id]: http(),
   },
   ssr: true,
 });

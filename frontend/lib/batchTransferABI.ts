@@ -58,7 +58,7 @@ export function isBatchTransferAvailable(): boolean {
  * @returns Object with individual cost, batch cost, and savings
  */
 export function calculateGasSavings(employeeCount: number) {
-  const GAS_PRICE_GWEI = 20; // Average Sepolia gas price
+  const GAS_PRICE_GWEI = 20; // Average gas price
   const ETH_PRICE_USD = 2000; // Approximate ETH price
 
   // Individual transfer costs
