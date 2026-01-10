@@ -19,6 +19,7 @@ import alertRoutes from './routes/alert';
 import balanceRoutes from './routes/balance';
 import walletSigningRoutes from './routes/walletSigning';
 import riskRoutes from './routes/risk';
+import { transactionMonitorService } from './services/transactionMonitorService';
 
 // Load environment variables
 // When using npm scripts (npm run dev), dotenv-cli loads the correct .env file automatically
@@ -127,6 +128,9 @@ app.listen(PORT, () => {
   logger.info(`🚀 MNEE Payroll Backend running on port ${PORT}`);
   logger.info(`📊 Environment: ${process.env.NODE_ENV || 'development'}`);
   logger.info(`🌐 Ethereum Network: ${process.env.ETHEREUM_CHAIN_ID === '1' ? 'mainnet' : 'sepolia testnet'}`);
+
+  // Start transaction monitor service
+  transactionMonitorService.start();
 });
 
 export default app;

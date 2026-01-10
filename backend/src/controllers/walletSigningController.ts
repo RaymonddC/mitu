@@ -224,6 +224,43 @@ export class WalletSigningController {
   }
 
   /**
+   * Confirm transaction after blockchain confirmation
+   * PATCH /api/wallet/approvals/:approvalId/confirm
+   */
+  async confirmTransaction(req: Request, res: Response) {
+    try {
+      const { approvalId } = req.params;
+      const { txHash, status, blockNumber } = req.body;
+
+      if (!txHash || !status) {
+        return res.status(400).json({
+          error: 'Missing required fields',
+          message: 'txHash and status are required'
+        });
+      }
+
+      const result = await walletSigningService.confirmTransaction(
+        approvalId,
+        txHash,
+        status,
+        blockNumber
+      );
+
+      res.json({
+        success: true,
+        data: result,
+        message: `Transaction ${status}`
+      });
+    } catch (error: any) {
+      logger.error('Confirm transaction endpoint error', { error: error.message });
+      res.status(500).json({
+        error: 'Failed to confirm transaction',
+        message: error.message
+      });
+    }
+  }
+
+  /**
    * Reject an approval
    * POST /api/wallet/approvals/:approvalId/reject
    */
