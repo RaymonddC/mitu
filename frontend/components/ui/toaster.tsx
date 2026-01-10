@@ -52,9 +52,9 @@ function escapeHtml(text: string): string {
   return div.innerHTML
 }
 
-export function toast(options: ToastOptions | string) {
+export function toast(options: ToastOptions | string): (() => void) {
   const container = document.getElementById('toast-container')
-  if (!container) return
+  if (!container) return () => {} // Return no-op function
 
   // Handle string shorthand
   const opts: ToastOptions = typeof options === 'string'
