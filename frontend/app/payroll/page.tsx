@@ -143,21 +143,17 @@ export default function PayrollPage() {
       if (summary.blocked > 0) {
         toast({
           title: '🚨 Blocked Wallets',
-          description: `${summary.blocked} employee(s) blocked. Check details below.`,
-          variant: 'destructive',
-          duration: 5000
+          description: `${summary.blocked} employee(s) blocked. Check details below.`
         })
       } else if (summary.risky > 0) {
         toast({
           title: '⚠️ Review Required',
-          description: `${summary.risky} employee(s) need review.`,
-          duration: 5000
+          description: `${summary.risky} employee(s) need review.`
         })
       } else {
         toast({
           title: '✅ All Clear',
-          description: `All ${summary.safe} employees passed screening.`,
-          duration: 3000
+          description: `All ${summary.safe} employees passed screening.`
         })
       }
     } catch (error: any) {
