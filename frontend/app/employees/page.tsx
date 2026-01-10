@@ -49,7 +49,7 @@ export default function EmployeesPage() {
       setEmployees(res.data.data)
     } catch (error) {
       console.error('Failed to load employees:', error)
-      toast({ title: 'Error', description: 'Failed to load employees' })
+      toast.error('Failed to Load Employees', 'Please refresh the page')
     } finally {
       setLoading(false)
     }
@@ -61,7 +61,7 @@ export default function EmployeesPage() {
 
     // Check file size (max 2MB)
     if (file.size > 2 * 1024 * 1024) {
-      toast({ title: 'Error', description: 'Image size must be less than 2MB' })
+      toast.error('Image Too Large', 'Image size must be less than 2MB')
       return
     }
 
@@ -85,15 +85,9 @@ export default function EmployeesPage() {
         setWalletRisk(res.data.data)
 
         if (res.data.data.action === 'block') {
-          toast({
-            title: '🚨 High Risk Wallet Detected',
-            description: res.data.data.summary
-          })
+          toast.error('High Risk Wallet Detected', res.data.data.summary)
         } else if (res.data.data.action === 'warn') {
-          toast({
-            title: 'Risky Wallet',
-            description: res.data.data.summary
-          })
+          toast.warning('Risky Wallet', res.data.data.summary)
         }
       } catch (error) {
         console.error('Risk check failed:', error)
@@ -118,7 +112,7 @@ export default function EmployeesPage() {
           salaryAmount: parseFloat(formData.salaryAmount),
           notes: formData.notes || undefined
         })
-        toast({ title: 'Success', description: 'Employee updated successfully' })
+        toast.success('Employee Updated', `${formData.name} was updated successfully`)
       } else {
         // Create new employee
         await employeeAPI.create({
@@ -130,7 +124,7 @@ export default function EmployeesPage() {
           salaryAmount: parseFloat(formData.salaryAmount),
           notes: formData.notes || undefined
         })
-        toast({ title: 'Success', description: 'Employee added successfully' })
+        toast.success('Employee Added', `${formData.name} has been added to payroll`)
       }
 
       setShowAddForm(false)
@@ -139,7 +133,7 @@ export default function EmployeesPage() {
       loadEmployees()
     } catch (error: any) {
       console.error('Failed to save employee:', error)
-      toast({ title: 'Error', description: error.response?.data?.message || 'Failed to save employee' })
+      toast.error('Failed to Save Employee', error.response?.data?.message || 'Please try again')
     }
   }
 
@@ -169,11 +163,11 @@ export default function EmployeesPage() {
 
     try {
       await employeeAPI.delete(id)
-      toast({ title: 'Success', description: 'Employee deactivated' })
+      toast.success('Employee Deactivated', 'Employee has been removed from active payroll')
       loadEmployees()
     } catch (error) {
       console.error('Failed to delete employee:', error)
-      toast({ title: 'Error', description: 'Failed to deactivate employee' })
+      toast.error('Failed to Deactivate', 'Could not remove employee from payroll')
     }
   }
 
