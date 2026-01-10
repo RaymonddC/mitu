@@ -182,3 +182,90 @@ body {
   background-color: rgba(59, 130, 246, 0.3);
   color: white;
 }
+
+/* Web3 Toast Animations */
+@keyframes progress {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+.animate-progress {
+  animation: progress linear;
+}
+
+/* Enhanced toast animations for smooth entry/exit */
+@keyframes slide-in-from-right {
+  from {
+    transform: translateX(calc(100% + 2rem));
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes slide-out-to-right {
+  from {
+    transform: translateX(0);
+    opacity: 1;
+  }
+  to {
+    transform: translateX(calc(100% + 2rem));
+    opacity: 0;
+  }
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes fade-out {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+.animate-in {
+  animation: slide-in-from-right 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.slide-in-from-right-full {
+  animation-name: slide-in-from-right;
+}
+
+.animate-out {
+  animation: slide-out-to-right 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.slide-out-to-right-full {
+  animation-name: slide-out-to-right;
+}
+
+.fade-in {
+  animation-name: fade-in;
+}
+
+.fade-out {
+  animation-name: fade-out;
+}
+
+/* Glass morphism effect for toasts */
+@supports (backdrop-filter: blur(12px)) or (-webkit-backdrop-filter: blur(12px)) {
+  .backdrop-blur-sm {
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+  }
+}

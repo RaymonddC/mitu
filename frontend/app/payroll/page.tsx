@@ -59,7 +59,7 @@ export default function PayrollPage() {
       setPayrollHistory(histRes.data.data)
     } catch (error) {
       console.error('Failed to load data:', error)
-      toast({ title: 'Error', description: 'Failed to load payroll data' })
+      toast.error('Failed to Load', 'Could not load payroll data')
     } finally {
       setLoading(false)
     }
@@ -81,10 +81,7 @@ export default function PayrollPage() {
       })
 
       // Always expects approval (non-custodial mode only)
-      toast({
-        title: 'Approval Created',
-        description: 'Redirecting to dashboard to approve with your wallet...'
-      })
+      toast.success('Approval Created', 'Redirecting to dashboard to approve with your wallet...')
 
       // Redirect to dashboard after 1 second
       setTimeout(() => {
@@ -93,10 +90,7 @@ export default function PayrollPage() {
 
     } catch (error: any) {
       console.error('Failed to create approval:', error)
-      toast({
-        title: 'Failed to Create Approval',
-        description: error.response?.data?.message || 'Failed to create payroll approval'
-      })
+      toast.error('Failed to Create Approval', error.response?.data?.message || 'Failed to create payroll approval')
     } finally {
       setRunning(false)
     }
@@ -106,12 +100,9 @@ export default function PayrollPage() {
     setRefreshing(true)
     try {
       await loadData()
-      toast({ title: 'Success', description: 'Payroll history refreshed' })
+      toast.success('Refreshed', 'Payroll history updated')
     } catch (error: any) {
-      toast({
-        title: 'Error',
-        description: error.response?.data?.message || 'Failed to refresh data'
-      })
+      toast.error('Refresh Failed', error.response?.data?.message || 'Failed to refresh data')
     } finally {
       setRefreshing(false)
     }
@@ -120,13 +111,10 @@ export default function PayrollPage() {
   const handleRetry = async (logId: string) => {
     try {
       await payrollAPI.retry(logId)
-      toast({ title: 'Success', description: 'Payroll retry initiated' })
+      toast.success('Retry Initiated', 'Payroll payment will be retried')
       await loadData()
     } catch (error: any) {
-      toast({
-        title: 'Retry Failed',
-        description: error.response?.data?.message || 'Failed to retry payroll'
-      })
+      toast.error('Retry Failed', error.response?.data?.message || 'Failed to retry payroll')
     }
   }
 
@@ -141,26 +129,14 @@ export default function PayrollPage() {
 
       const summary = res.data.data.summary
       if (summary.blocked > 0) {
-        toast({
-          title: '🚨 Blocked Wallets',
-          description: `${summary.blocked} employee(s) blocked. Check details below.`
-        })
+        toast.warning('Blocked Wallets', `${summary.blocked} employee(s) blocked. Check details below.`)
       } else if (summary.risky > 0) {
-        toast({
-          title: '⚠️ Review Required',
-          description: `${summary.risky} employee(s) need review.`
-        })
+        toast.warning('Review Required', `${summary.risky} employee(s) need review.`)
       } else {
-        toast({
-          title: '✅ All Clear',
-          description: `All ${summary.safe} employees passed screening.`
-        })
+        toast.success('All Clear', `All ${summary.safe} employees passed screening.`)
       }
     } catch (error: any) {
-      toast({
-        title: 'Screening Failed',
-        description: error.response?.data?.message || 'Failed to screen employees'
-      })
+      toast.error('Screening Failed', error.response?.data?.message || 'Failed to screen employees')
     } finally {
       setScreeningRisk(false)
     }
