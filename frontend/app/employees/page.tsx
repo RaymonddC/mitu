@@ -86,9 +86,8 @@ export default function EmployeesPage() {
 
         if (res.data.data.action === 'block') {
           toast({
-            title: 'High Risk Wallet Detected',
-            description: res.data.data.summary,
-            variant: 'destructive'
+            title: '🚨 High Risk Wallet Detected',
+            description: res.data.data.summary
           })
         } else if (res.data.data.action === 'warn') {
           toast({
