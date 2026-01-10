@@ -46,36 +46,56 @@ export class RiskScreeningService {
         const startTime = Date.now();
 
         try {
-            // Run all checks in parallel
+            // Run all checks in parallel - ENHANCED with 5 new analyses
             const [
                 walletAge,
                 transactionHistory,
                 sanctions,
                 contractInteractions,
-                balancePattern
+                balancePattern,
+                tokenTransfers,
+                internalTransactions,
+                gasPatterns,
+                timingPatterns,
+                fundingSources
             ] = await Promise.all([
                 blockchainAnalyzer.analyzeWalletAge(address),
                 blockchainAnalyzer.analyzeTransactionHistory(address),
                 sanctionsChecker.checkSanctions(address),
                 this.analyzeContractInteractions(address),
-                blockchainAnalyzer.analyzeBalancePattern(address)
+                blockchainAnalyzer.analyzeBalancePattern(address),
+                blockchainAnalyzer.analyzeTokenTransfers(address),
+                blockchainAnalyzer.analyzeInternalTransactions(address),
+                blockchainAnalyzer.analyzeGasPatterns(address),
+                blockchainAnalyzer.analyzeTimingPatterns(address),
+                blockchainAnalyzer.analyzeFundingSources(address)
             ]);
 
-            // Calculate weighted final risk score
+            // Calculate weighted final risk score with enhanced analyses
             const finalScore = this.calculateFinalScore({
                 walletAge,
                 transactionHistory,
                 sanctions,
                 contractInteractions,
-                balancePattern
+                balancePattern,
+                tokenTransfers,
+                internalTransactions,
+                gasPatterns,
+                timingPatterns,
+                fundingSources
             });
 
             // Determine risk level and action
-            const riskLevel = this.determineRiskLevel(finalScore);
+            // CRITICAL: If sanctioned, ALWAYS set to CRITICAL regardless of score
+            const riskLevel = sanctions.isSanctioned
+                ? RiskLevel.CRITICAL
+                : this.determineRiskLevel(finalScore);
             const action = this.determineAction(finalScore, sanctions.isSanctioned);
 
             // Generate summary and recommendations
-            const summary = this.generateSummary(finalScore, riskLevel, {
+            // Use sanctions risk score (100) if sanctioned, otherwise use weighted score
+            const displayScore = sanctions.isSanctioned ? 100 : finalScore;
+            const summary = this.generateSummary(displayScore, riskLevel, {
                 walletAge,
                 transactionHistory,
                 sanctions,
@@ -93,7 +113,7 @@ export class RiskScreeningService {
 
             const result: RiskScreeningResult = {
                 address: normalizedAddress,
-                finalScore,
+                finalScore: displayScore, // Use 100 if sanctioned, otherwise weighted score
                 riskLevel,
                 action,
                 breakdown: {
@@ -101,7 +121,12 @@ export class RiskScreeningService {
                     transactionHistory,
                     sanctions,
                     contractInteractions,
-                    balancePattern
+                    balancePattern,
+                    tokenTransfers,
+                    internalTransactions,
+                    gasPatterns,
+                    timingPatterns,
+                    fundingSources
                 },
                 summary,
                 recommendations,
@@ -192,7 +217,7 @@ export class RiskScreeningService {
     }
 
     /**
-     * Calculate weighted final risk score
+     * Calculate weighted final risk score - ENHANCED with 5 new analyses
      */
     private calculateFinalScore(breakdown: RiskBreakdown): number {
         const score =
@@ -200,7 +225,12 @@ export class RiskScreeningService {
             breakdown.transactionHistory.riskScore * RISK_WEIGHTS.transactionHistory +
             breakdown.sanctions.riskScore * RISK_WEIGHTS.sanctions +
             breakdown.contractInteractions.riskScore * RISK_WEIGHTS.contractInteractions +
-            breakdown.balancePattern.riskScore * RISK_WEIGHTS.balancePattern;
+            breakdown.balancePattern.riskScore * RISK_WEIGHTS.balancePattern +
+            (breakdown.tokenTransfers?.riskScore || 0) * RISK_WEIGHTS.tokenTransfers +
+            (breakdown.internalTransactions?.riskScore || 0) * RISK_WEIGHTS.internalTransactions +
+            (breakdown.gasPatterns?.riskScore || 0) * RISK_WEIGHTS.gasPatterns +
+            (breakdown.timingPatterns?.riskScore || 0) * RISK_WEIGHTS.timingPatterns +
+            (breakdown.fundingSources?.riskScore || 0) * RISK_WEIGHTS.fundingSources;
 
         return Math.round(Math.min(score, 100));
     }

@@ -3,12 +3,14 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useStore } from '@/lib/store'
-import { employeeAPI, type Employee } from '@/lib/api'
+import { employeeAPI, riskAPI, type Employee, type RiskScreeningResult } from '@/lib/api'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { formatCurrency, formatWalletAddress, formatDate } from '@/lib/utils'
-import { Plus, Edit, Trash2, CheckCircle, XCircle, Upload, User } from 'lucide-react'
+import { Plus, Edit, Trash2, CheckCircle, XCircle, Upload, User, Shield, AlertTriangle, Info } from 'lucide-react'
 import { toast } from '@/components/ui/toaster'
+import { RiskBadge, RiskIndicator } from '@/components/RiskBadge'
+import { InfoTooltip } from '@/components/InfoTooltip'
 
 export default function EmployeesPage() {
   const router = useRouter()
@@ -25,6 +27,8 @@ export default function EmployeesPage() {
     salaryAmount: '',
     notes: ''
   })
+  const [walletRisk, setWalletRisk] = useState<RiskScreeningResult | null>(null)
+  const [checkingRisk, setCheckingRisk] = useState(false)
 
   useEffect(() => {
     if (!isConnected) {
@@ -67,6 +71,37 @@ export default function EmployeesPage() {
       setFormData({ ...formData, profileImage: reader.result as string })
     }
     reader.readAsDataURL(file)
+  }
+
+  const handleWalletAddressChange = async (address: string) => {
+    setFormData({ ...formData, walletAddress: address })
+    setWalletRisk(null)
+
+    // Auto-check risk if valid Ethereum address
+    if (/^0x[a-fA-F0-9]{40}$/.test(address)) {
+      setCheckingRisk(true)
+      try {
+        const res = await riskAPI.screenWallet(address)
+        setWalletRisk(res.data.data)
+
+        if (res.data.data.action === 'block') {
+          toast({
+            title: 'High Risk Wallet Detected',
+            description: res.data.data.summary,
+            variant: 'destructive'
+          })
+        } else if (res.data.data.action === 'warn') {
+          toast({
+            title: 'Risky Wallet',
+            description: res.data.data.summary
+          })
+        }
+      } catch (error) {
+        console.error('Risk check failed:', error)
+      } finally {
+        setCheckingRisk(false)
+      }
+    }
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -126,6 +161,8 @@ export default function EmployeesPage() {
     setShowAddForm(false)
     setEditingId(null)
     setFormData({ name: '', email: '', profileImage: '', walletAddress: '', salaryAmount: '', notes: '' })
+    setWalletRisk(null)
+    setCheckingRisk(false)
   }
 
   const handleDelete = async (id: string, name: string) => {
@@ -162,6 +199,20 @@ export default function EmployeesPage() {
             <CardDescription>{editingId ? 'Update employee details' : 'Enter employee details'}</CardDescription>
           </CardHeader>
           <CardContent>
+            {!editingId && (
+              <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                <div className="flex items-start gap-3">
+                  <Shield className="h-5 w-5 text-blue-600 flex-shrink-0 mt-0.5" />
+                  <div>
+                    <p className="text-sm font-semibold text-blue-900 mb-1">Automatic Security Screening</p>
+                    <p className="text-xs text-blue-700 leading-relaxed">
+                      When you enter a wallet address, we'll automatically check it against sanctions lists,
+                      transaction patterns, and known scams to ensure safe payments.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
             <form onSubmit={handleSubmit} className="space-y-4">
               {/* Profile Image Upload */}
               <div className="flex flex-col items-center gap-3 pb-4 border-b border-gray-200">
@@ -224,23 +275,93 @@ export default function EmployeesPage() {
                     onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                   />
                 </div>
-                <div>
-                  <label className="block text-sm font-medium mb-1">Wallet Address *</label>
+                <div className="md:col-span-2">
+                  <label className="block text-sm font-medium mb-1 flex items-center gap-2">
+                    <span>Wallet Address *</span>
+                    <InfoTooltip content="The Ethereum wallet address where salary will be sent. We automatically screen all wallets for sanctions, scams, and suspicious activity." />
+                    {checkingRisk && (
+                      <span className="flex items-center gap-1 text-xs text-blue-600">
+                        <Shield className="h-4 w-4 animate-pulse" />
+                        Checking security...
+                      </span>
+                    )}
+                  </label>
                   <input
                     type="text"
                     required
                     disabled={!!editingId}
-                    className={`w-full rounded-md border px-3 py-2 font-mono text-sm ${editingId ? 'bg-gray-100 cursor-not-allowed' : 'border-gray-300'}`}
+                    className={`w-full rounded-md border px-3 py-2 font-mono text-sm transition-all ${
+                      editingId
+                        ? 'bg-gray-100 cursor-not-allowed'
+                        : walletRisk?.action === 'block'
+                        ? 'border-red-300 bg-red-50'
+                        : walletRisk?.action === 'warn'
+                        ? 'border-yellow-300 bg-yellow-50'
+                        : walletRisk?.action === 'proceed'
+                        ? 'border-green-300 bg-green-50'
+                        : 'border-gray-300'
+                    }`}
                     value={formData.walletAddress}
-                    onChange={(e) => setFormData({ ...formData, walletAddress: e.target.value })}
-                    placeholder="0x..."
+                    onChange={(e) => handleWalletAddressChange(e.target.value)}
+                    placeholder="0x1234567890abcdef..."
                   />
+                  {!editingId && !checkingRisk && !walletRisk && formData.walletAddress && (
+                    <p className="text-xs text-gray-500 mt-1 flex items-center gap-1">
+                      <Shield className="h-3 w-3" />
+                      Enter a complete wallet address to check security
+                    </p>
+                  )}
                   {editingId && (
-                    <p className="text-xs text-gray-500 mt-1">Wallet address cannot be changed</p>
+                    <p className="text-xs text-gray-500 mt-1">Wallet address cannot be changed for security reasons</p>
+                  )}
+                  {!editingId && checkingRisk && (
+                    <div className="mt-3">
+                      <RiskBadge riskLevel="loading" compact={false} />
+                    </div>
+                  )}
+                  {!editingId && walletRisk && (
+                    <div className="mt-3 space-y-2">
+                      <RiskBadge
+                        riskLevel={walletRisk.riskLevel}
+                        riskScore={walletRisk.finalScore}
+                        summary={walletRisk.summary}
+                        action={walletRisk.action}
+                        compact={false}
+                        showDetails={true}
+                      />
+                      {walletRisk.action === 'block' && (
+                        <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
+                          <p className="text-sm font-semibold text-red-800 mb-1">⚠️ Cannot Add Employee</p>
+                          <p className="text-xs text-red-700">
+                            This wallet has been flagged as high-risk and cannot receive payments.
+                            Please use a different wallet address.
+                          </p>
+                        </div>
+                      )}
+                      {walletRisk.action === 'warn' && (
+                        <div className="p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+                          <p className="text-sm font-semibold text-yellow-800 mb-1">⚠️ Proceed with Caution</p>
+                          <p className="text-xs text-yellow-700">
+                            This wallet shows some risk indicators. You can add them, but payments will require extra review.
+                          </p>
+                        </div>
+                      )}
+                      {walletRisk.action === 'proceed' && (
+                        <div className="p-3 bg-green-50 border border-green-200 rounded-lg">
+                          <p className="text-sm font-semibold text-green-800 mb-1">✓ Wallet Verified</p>
+                          <p className="text-xs text-green-700">
+                            This wallet appears safe and can be added to your payroll.
+                          </p>
+                        </div>
+                      )}
+                    </div>
                   )}
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-1">Monthly Salary (MNEE) *</label>
+                  <label className="block text-sm font-medium mb-1 flex items-center gap-2">
+                    <span>Monthly Salary (MNEE) *</span>
+                    <InfoTooltip content="The monthly salary amount in MNEE tokens. This will be automatically paid on your configured payroll day." />
+                  </label>
                   <input
                     type="number"
                     required
@@ -262,13 +383,23 @@ export default function EmployeesPage() {
                 />
               </div>
               <div className="flex gap-3">
-                <Button type="submit">
+                <Button
+                  type="submit"
+                  disabled={!editingId && walletRisk?.action === 'block'}
+                  className={walletRisk?.action === 'block' ? 'opacity-50 cursor-not-allowed' : ''}
+                >
                   {editingId ? 'Update Employee' : 'Add Employee'}
                 </Button>
                 <Button type="button" variant="outline" onClick={handleCancelEdit}>
                   Cancel
                 </Button>
               </div>
+              {!editingId && walletRisk?.action === 'block' && (
+                <p className="text-xs text-red-600 flex items-center gap-1">
+                  <AlertTriangle className="h-3 w-3" />
+                  Cannot add employee with high-risk wallet address
+                </p>
+              )}
             </form>
           </CardContent>
         </Card>
@@ -311,7 +442,7 @@ export default function EmployeesPage() {
                 </thead>
                 <tbody className="divide-y divide-gray-100">
                   {employees.map((employee) => (
-                    <tr key={employee.id} className="text-sm hover:bg-gray-50/50 transition-colors">
+                    <tr key={employee.id} className="text-sm hover:bg-blue-50/30 transition-all duration-200 hover:shadow-sm">
                       <td className="py-5 px-2">
                         <div className="flex items-center gap-3">
                           <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-blue-200 bg-gradient-to-br from-blue-100 to-cyan-100 flex items-center justify-center flex-shrink-0">
@@ -362,6 +493,7 @@ export default function EmployeesPage() {
                             variant="ghost"
                             onClick={() => handleEdit(employee)}
                             title="Edit employee"
+                            className="hover:bg-blue-50 hover:text-blue-600 transition-all duration-200"
                           >
                             <Edit className="h-4 w-4" />
                           </Button>
@@ -370,8 +502,9 @@ export default function EmployeesPage() {
                             variant="ghost"
                             onClick={() => handleDelete(employee.id, employee.name)}
                             title="Deactivate employee"
+                            className="hover:bg-red-50 transition-all duration-200"
                           >
-                            <Trash2 className="h-4 w-4 text-red-600" />
+                            <Trash2 className="h-4 w-4 text-red-600 hover:scale-110 transition-transform" />
                           </Button>
                         </div>
                       </td>

@@ -18,6 +18,7 @@ import payrollRoutes from './routes/payroll';
 import alertRoutes from './routes/alert';
 import balanceRoutes from './routes/balance';
 import walletSigningRoutes from './routes/walletSigning';
+import riskRoutes from './routes/risk';
 
 // Load environment variables
 // When using npm scripts (npm run dev), dotenv-cli loads the correct .env file automatically
@@ -95,6 +96,7 @@ app.use('/api/payroll', payrollRoutes);
 app.use('/api/alerts', alertRoutes);
 app.use('/api/balance', balanceRoutes);
 app.use('/api/wallet', walletSigningRoutes);
+app.use('/api/risk', riskRoutes);
 
 // 404 handler
 app.use((req, res) => {
