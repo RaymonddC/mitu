@@ -109,6 +109,56 @@ export interface PlatformStats {
   lastUpdated: string;
 }
 
+export interface RiskScreeningResult {
+  address: string;
+  finalScore: number;
+  riskLevel: 'low' | 'medium' | 'high' | 'critical';
+  action: 'proceed' | 'warn' | 'block';
+  breakdown: {
+    walletAge: {
+      ageInDays: number;
+      riskScore: number;
+      reason: string;
+    };
+    transactionHistory: {
+      totalTxCount: number;
+      riskScore: number;
+      redFlags: string[];
+    };
+    sanctions: {
+      isSanctioned: boolean;
+      riskScore: number;
+      reason: string;
+    };
+    contractInteractions: {
+      totalContractInteractions: number;
+      riskScore: number;
+      warnings: string[];
+    };
+    balancePattern: {
+      currentBalance: number;
+      riskScore: number;
+      flags: string[];
+    };
+  };
+  summary: string;
+  recommendations: string[];
+  timestamp: string;
+  cached: boolean;
+}
+
+export interface EmployeeRiskResult {
+  employeeId: string;
+  employeeName: string;
+  walletAddress: string;
+  salaryAmount: number;
+  riskScore: number;
+  riskLevel: string;
+  action: string;
+  summary: string;
+  canPayroll: boolean;
+}
+
 // Employer API
 export const employerAPI = {
   list: () => api.get<{ data: Employer[] }>('/employers'),
@@ -172,6 +222,34 @@ export const walletSigningAPI = {
   createBudget: (data: { employerId: string; monthlyLimit: number; startDate: string; endDate: string; perEmployeeLimit?: number }) => api.post('/wallet/budgets', data),
   getEmployerBudgets: (employerId: string) => api.get(`/wallet/budgets/${employerId}`),
   checkBudgetAuthorization: (employerId: string, amount: number) => api.post(`/wallet/budgets/${employerId}/check`, { amount }),
+};
+
+// Risk Screening API
+export const riskAPI = {
+  screenWallet: (address: string, skipCache = false) =>
+    api.post<{ success: boolean; data: RiskScreeningResult }>('/risk/screen', { address, skipCache }),
+  screenEmployees: (employerId: string) =>
+    api.post<{
+      success: boolean;
+      data: {
+        results: EmployeeRiskResult[];
+        summary: {
+          total: number;
+          safe: number;
+          risky: number;
+          blocked: number;
+          totalSalary: number;
+          blockedSalary: number;
+        }
+      };
+      message: string;
+    }>('/risk/screen-employees', { employerId }),
+  checkSanctions: (address: string) =>
+    api.get<{ success: boolean; data: any }>(`/risk/sanctions/${address}`),
+  getStats: () =>
+    api.get<{ success: boolean; data: any }>('/risk/stats'),
+  clearCache: (address?: string) =>
+    api.post('/risk/cache/clear', address ? { address } : {}),
 };
 
 export default api;

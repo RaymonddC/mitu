@@ -281,9 +281,9 @@ export class WalletSigningService {
               employeeId: recipient.employeeId,
               amount: Number(recipient.amount), // Ensure it's a number
               txHash: employeeTxHash,
-              status: 'completed',
+              status: 'confirming', // Start as confirming, not completed
               idempotencyKey: finalIdempotencyKey, // Use modified key for duplicates
-              confirmedAt: new Date(),
+              confirmedAt: null, // Will be set when blockchain confirms
               metadata: {
                 approvalId,
                 walletSigned: true,
@@ -387,6 +387,74 @@ export class WalletSigningService {
       logger.error('Failed to submit signed transaction', {
         error: error.message,
         approvalId
+      });
+      throw error;
+    }
+  }
+
+  /**
+   * Confirm transaction after blockchain confirmation
+   * Updates payment logs status based on transaction receipt
+   */
+  async confirmTransaction(
+    approvalId: string,
+    txHash: string,
+    status: 'completed' | 'failed' | 'confirming' | 'timeout_monitoring',
+    blockNumber?: string
+  ) {
+    try {
+      const approval = await prisma.payrollApproval.findUnique({
+        where: { id: approvalId }
+      });
+
+      if (!approval) {
+        throw new Error('Approval not found');
+      }
+
+      logger.info('Confirming transaction', {
+        approvalId,
+        txHash,
+        status,
+        blockNumber
+      });
+
+      // Update all PayrollLog records with this txHash
+      const updateResult = await prisma.payrollLog.updateMany({
+        where: {
+          txHash: txHash,
+          employerId: approval.employerId
+        },
+        data: {
+          status,
+          confirmedAt: status === 'completed' ? new Date() : null,
+          failureReason: status === 'failed' ? 'Transaction failed on blockchain' : null,
+          metadata: {
+            approvalId,
+            walletSigned: true,
+            blockNumber,
+            confirmedAt: new Date().toISOString()
+          }
+        }
+      });
+
+      logger.info('Transaction confirmation updated', {
+        approvalId,
+        txHash,
+        status,
+        logsUpdated: updateResult.count
+      });
+
+      return {
+        approvalId,
+        txHash,
+        status,
+        logsUpdated: updateResult.count
+      };
+    } catch (error: any) {
+      logger.error('Failed to confirm transaction', {
+        error: error.message,
+        approvalId,
+        txHash
       });
       throw error;
     }

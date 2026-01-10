@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { CheckCircle, XCircle, Clock, AlertCircle, Users, Wallet, Zap, Info, Lock, ArrowRight } from 'lucide-react';
-import { useAccount, useWalletClient } from 'wagmi';
+import { useAccount, useWalletClient, usePublicClient } from 'wagmi';
 import { parseEther, encodeFunctionData, erc20Abi, formatEther } from 'viem';
 import axios from 'axios';
 import { BATCH_TRANSFER_ABI, getBatchContractAddress, isBatchTransferAvailable, calculateGasSavings } from '@/lib/batchTransferABI';
@@ -55,8 +55,10 @@ export function WalletApproval({ employerId, onApprovalComplete }: WalletApprova
   const [approvingBatch, setApprovingBatch] = useState(false);
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
   const [pendingApproval, setPendingApproval] = useState<PendingApproval | null>(null);
+  const [confirmingTxs, setConfirmingTxs] = useState<Set<string>>(new Set()); // Track confirming transactions
   const { address } = useAccount();
   const { data: walletClient } = useWalletClient();
+  const publicClient = usePublicClient();
 
   const batchAvailable = isBatchTransferAvailable();
 
@@ -229,7 +231,13 @@ export function WalletApproval({ employerId, onApprovalComplete }: WalletApprova
 
         txHashes.push(hash);
 
-        alert(`✅ Batch payroll approved! Paid ${approval.recipientCount} employees in 1 transaction!`);
+        // Don't show success alert yet - wait for confirmation
+
+      // Start monitoring transaction in background (non-blocking)
+      monitorTransactionInBackground(hash, approval.id, approval.recipientCount);
+
+      // Show "Confirming..." message immediately
+      alert(`🔄 Transaction submitted! Confirming on blockchain...\n\nHash: ${hash.slice(0, 10)}...\n\nYou can close this page - we'll update the status in the background.`);
       }
       // Individual mode: Send separate transaction for each employee
       else {
@@ -255,33 +263,22 @@ export function WalletApproval({ employerId, onApprovalComplete }: WalletApprova
           txHashes.push(hash);
         }
 
-        alert(`✅ Payroll approved! Paid ${approval.recipientCount} employees in ${txHashes.length} transactions.`);
+        // Monitor individual transactions (for simplicity, only monitor the first one)
+        // In batch mode, we only have 1 transaction anyway
+        if (txHashes.length > 0) {
+          monitorTransactionInBackground(txHashes[0], approval.id, approval.recipientCount);
+        }
+
+        alert(`🔄 ${txHashes.length} transaction(s) submitted! Confirming on blockchain...\n\nYou can close this page - we'll update the status in the background.`);
       }
 
-      // Submit the transaction hashes to backend
+      // Create pending payment logs in database (BEFORE waiting for confirmation)
       const submitResponse = await axios.post(`${API_URL}/api/wallet/approvals/${approval.id}/submit`, {
-        txHash: txHashes.join(',') // Store multiple hashes comma-separated
+        txHash: txHashes.join(','), // Store multiple hashes comma-separated
+        status: 'confirming' // Mark as confirming, not completed yet
       });
 
-      // Check for duplicate payments
-      const result = submitResponse.data?.data;
-
-      // Check if any logs are marked as duplicates
-      const duplicateLogs = result?.createdLogs?.filter((log: any) => log.isDuplicate) || [];
-      if (duplicateLogs.length > 0) {
-        const duplicateNames = duplicateLogs.map((log: any) => log.employeeName).join(', ');
-        alert(
-          `🚨 DUPLICATE PAYMENT DETECTED!\n\n` +
-          `${duplicateNames} were already paid today, but you just sent another payment on the blockchain.\n\n` +
-          `These employees have now received DOUBLE payment. Please check your accounting records.`
-        );
-      } else if (result?.logsSkipped > 0) {
-        // This should not happen anymore, but keep as fallback
-        const skippedNames = result.skippedLogs?.map((s: any) => s.employeeName).join(', ') || 'some employees';
-        alert(`⚠️ Warning: ${skippedNames} - payment status unclear.`);
-      }
-
-      // Refresh approvals
+      // Refresh approvals list (approval should be marked as processing)
       await fetchPendingApprovals();
 
       if (onApprovalComplete) {
@@ -293,6 +290,79 @@ export function WalletApproval({ employerId, onApprovalComplete }: WalletApprova
     } finally {
       setLoading(false);
       setProcessingId(null);
+    }
+  };
+
+  /**
+   * Monitor transaction confirmation in background (non-blocking)
+   * Uses KISS principle: Simple, reliable, user-friendly
+   */
+  const monitorTransactionInBackground = async (
+    txHash: string,
+    approvalId: string,
+    recipientCount: number
+  ) => {
+    if (!publicClient) {
+      console.error('Public client not available for monitoring');
+      return;
+    }
+
+    // Add to confirming set
+    setConfirmingTxs(prev => new Set(prev).add(txHash));
+
+    try {
+      console.log(`[TX Monitor] Started monitoring ${txHash.slice(0, 10)}...`);
+
+      // Wait for 1 confirmation with 2 minute timeout
+      const receipt = await publicClient.waitForTransactionReceipt({
+        hash: txHash as `0x${string}`,
+        confirmations: 1,
+        timeout: 120_000 // 2 minutes
+      });
+
+      console.log(`[TX Monitor] Transaction confirmed!`, receipt);
+
+      // Update backend: transaction confirmed
+      await axios.patch(`${API_URL}/api/wallet/approvals/${approvalId}/confirm`, {
+        txHash,
+        status: receipt.status === 'success' ? 'completed' : 'failed',
+        blockNumber: receipt.blockNumber.toString()
+      });
+
+      // Show success notification
+      if (receipt.status === 'success') {
+        alert(`✅ Payment confirmed!\n\nPaid ${recipientCount} employee(s) successfully.\n\nTransaction: ${txHash.slice(0, 10)}...`);
+      } else {
+        alert(`❌ Transaction failed on blockchain!\n\nPlease contact support.\n\nTransaction: ${txHash.slice(0, 10)}...`);
+      }
+
+      // Refresh the list
+      await fetchPendingApprovals();
+
+    } catch (error: any) {
+      console.error('[TX Monitor] Timeout or error:', error);
+
+      // On timeout: Mark as "timeout_monitoring" - backend will continue monitoring
+      try {
+        await axios.patch(`${API_URL}/api/wallet/approvals/${approvalId}/confirm`, {
+          txHash,
+          status: 'timeout_monitoring' // Backend will pick this up
+        });
+
+        console.log(`[TX Monitor] Handed off to backend monitoring`);
+      } catch (backendError) {
+        console.error('[TX Monitor] Failed to notify backend:', backendError);
+      }
+
+      // Don't show error to user - just inform them backend is monitoring
+      // (User already knows from the initial "Confirming..." message)
+    } finally {
+      // Remove from confirming set
+      setConfirmingTxs(prev => {
+        const next = new Set(prev);
+        next.delete(txHash);
+        return next;
+      });
     }
   };
 

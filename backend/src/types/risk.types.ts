@@ -55,12 +55,57 @@ export interface BalancePatternAnalysis {
     flags: string[];
 }
 
+export interface TokenTransferAnalysis {
+    totalTokenTransfers: number;
+    uniqueTokens: number;
+    suspiciousTokens: number;
+    riskScore: number;
+    flags: string[];
+}
+
+export interface InternalTransactionAnalysis {
+    totalInternalTxs: number;
+    contractCreations: number;
+    failedTxs: number;
+    riskScore: number;
+    warnings: string[];
+}
+
+export interface GasPatternAnalysis {
+    averageGasPrice: number;
+    totalGasSpent: number;
+    highPriorityTxCount: number;
+    riskScore: number;
+    insights: string[];
+}
+
+export interface TimingPatternAnalysis {
+    averageTimeBetweenTxs: number;
+    suspiciousTimingCount: number;
+    nighttimeActivityRate: number;
+    riskScore: number;
+    patterns: string[];
+}
+
+export interface FundingSourceAnalysis {
+    totalFundingAddresses: number;
+    exchangeDepositCount: number;
+    mixerInteractionCount: number;
+    riskScore: number;
+    sources: string[];
+}
+
 export interface RiskBreakdown {
     walletAge: WalletAgeAnalysis;
     transactionHistory: TransactionHistoryAnalysis;
     sanctions: SanctionsCheckResult;
     contractInteractions: ContractInteractionAnalysis;
     balancePattern: BalancePatternAnalysis;
+    tokenTransfers?: TokenTransferAnalysis;
+    internalTransactions?: InternalTransactionAnalysis;
+    gasPatterns?: GasPatternAnalysis;
+    timingPatterns?: TimingPatternAnalysis;
+    fundingSources?: FundingSourceAnalysis;
 }
 
 export interface RiskScreeningResult {
@@ -105,11 +150,16 @@ export interface ContractInfo {
 
 // Risk scoring weights
 export const RISK_WEIGHTS = {
-    walletAge: 0.15,        // 15%
-    transactionHistory: 0.20, // 20%
-    sanctions: 0.40,         // 40% - MOST CRITICAL
-    contractInteractions: 0.15, // 15%
-    balancePattern: 0.10    // 10%
+    walletAge: 0.10,             // 10%
+    transactionHistory: 0.12,     // 12%
+    sanctions: 0.35,              // 35% - MOST CRITICAL
+    contractInteractions: 0.10,   // 10%
+    balancePattern: 0.08,         // 8%
+    tokenTransfers: 0.10,         // 10% - NEW: Detects scam tokens
+    internalTransactions: 0.05,   // 5% - NEW: Contract creation activity
+    gasPatterns: 0.05,            // 5% - NEW: Bot detection
+    timingPatterns: 0.03,         // 3% - NEW: Automated behavior
+    fundingSources: 0.02          // 2% - NEW: Mixer/suspicious funding
 } as const;
 
 // Risk thresholds

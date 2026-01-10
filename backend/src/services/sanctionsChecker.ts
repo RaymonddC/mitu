@@ -102,7 +102,21 @@ export class SanctionsChecker {
         }
 
         try {
-            // 1. Check OFAC Sanctions List
+            // 1. Check if address IS a Tornado Cash contract (direct match)
+            if (TORNADO_CASH_ADDRESSES.includes(normalizedAddress)) {
+                const result: SanctionsCheckResult = {
+                    isSanctioned: true,
+                    source: 'Tornado Cash Protocol',
+                    details: 'This is a Tornado Cash smart contract address',
+                    riskScore: 100,
+                    reason: 'CRITICAL: Tornado Cash protocol address - BLOCKED by OFAC'
+                };
+                this.cache.set(cacheKey, result);
+                logger.warn('Tornado Cash protocol address detected', { address });
+                return result;
+            }
+
+            // 2. Check OFAC Sanctions List
             if (this.ofacList.has(normalizedAddress)) {
                 const result: SanctionsCheckResult = {
                     isSanctioned: true,
@@ -116,7 +130,7 @@ export class SanctionsChecker {
                 return result;
             }
 
-            // 2. Check Tornado Cash interactions
+            // 3. Check Tornado Cash interactions (used Tornado Cash)
             const hasTornadoCashInteraction = await blockchainAnalyzer.hasInteractedWith(
                 address,
                 TORNADO_CASH_ADDRESSES
@@ -125,10 +139,10 @@ export class SanctionsChecker {
             if (hasTornadoCashInteraction) {
                 const result: SanctionsCheckResult = {
                     isSanctioned: true,
-                    source: 'Tornado Cash',
+                    source: 'Tornado Cash Interaction',
                     details: 'Wallet has interacted with Tornado Cash mixer service',
-                    riskScore: 90,
-                    reason: 'HIGH RISK: Tornado Cash interaction detected (privacy mixer)'
+                    riskScore: 100,
+                    reason: 'CRITICAL: Tornado Cash interaction detected - attempting to hide funds source'
                 };
                 this.cache.set(cacheKey, result);
                 logger.warn('Tornado Cash interaction detected', { address });
