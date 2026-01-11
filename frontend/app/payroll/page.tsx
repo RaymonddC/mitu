@@ -30,10 +30,16 @@ export default function PayrollPage() {
       return
     }
 
+    // Redirect to company selection if no employer selected
+    if (!employer && !loading) {
+      router.push('/select-company')
+      return
+    }
+
     if (employer) {
       loadData()
     }
-  }, [isConnected, employer])
+  }, [isConnected, employer, loading])
 
   // Auto-refresh when page becomes visible
   useEffect(() => {

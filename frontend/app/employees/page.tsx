@@ -29,6 +29,8 @@ export default function EmployeesPage() {
   })
   const [walletRisk, setWalletRisk] = useState<RiskScreeningResult | null>(null)
   const [checkingRisk, setCheckingRisk] = useState(false)
+  const [employeeRisks, setEmployeeRisks] = useState<Record<string, RiskScreeningResult>>({})
+  const [loadingRisks, setLoadingRisks] = useState(false)
 
   useEffect(() => {
     if (!isConnected) {
@@ -36,23 +38,50 @@ export default function EmployeesPage() {
       return
     }
 
+    // Redirect to company selection if no employer selected
+    if (!employer && !loading) {
+      router.push('/select-company')
+      return
+    }
+
     if (employer) {
       loadEmployees()
     }
-  }, [isConnected, employer])
+  }, [isConnected, employer, loading])
 
   const loadEmployees = async () => {
     if (!employer) return
 
     try {
       const res = await employeeAPI.list(employer.id)
-      setEmployees(res.data.data)
+      const employeeList = res.data.data
+      setEmployees(employeeList)
+
+      // Load risk status for all employees
+      loadEmployeeRisks(employeeList)
     } catch (error) {
       console.error('Failed to load employees:', error)
       toast.error('Failed to Load Employees', 'Please refresh the page')
     } finally {
       setLoading(false)
     }
+  }
+
+  const loadEmployeeRisks = async (employeeList: Employee[]) => {
+    setLoadingRisks(true)
+    const risks: Record<string, RiskScreeningResult> = {}
+
+    for (const employee of employeeList) {
+      try {
+        const res = await riskAPI.screenWallet(employee.walletAddress)
+        risks[employee.id] = res.data.data
+      } catch (error) {
+        console.error(`Failed to load risk for ${employee.name}:`, error)
+      }
+    }
+
+    setEmployeeRisks(risks)
+    setLoadingRisks(false)
   }
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -113,6 +142,19 @@ export default function EmployeesPage() {
           notes: formData.notes || undefined
         })
         toast.success('Employee Updated', `${formData.name} was updated successfully`)
+
+        // Update only this employee in the list
+        setEmployees(employees.map(emp =>
+          emp.id === editingId
+            ? { ...emp,
+                name: formData.name,
+                email: formData.email || undefined,
+                profileImage: formData.profileImage || undefined,
+                salaryAmount: parseFloat(formData.salaryAmount),
+                notes: formData.notes || undefined
+              }
+            : emp
+        ))
       } else {
         // Create new employee
         await employeeAPI.create({
@@ -125,12 +167,15 @@ export default function EmployeesPage() {
           notes: formData.notes || undefined
         })
         toast.success('Employee Added', `${formData.name} has been added to payroll`)
+
+        // Reload all employees when adding new one
+        loadEmployees()
       }
 
       setShowAddForm(false)
       setEditingId(null)
       setFormData({ name: '', email: '', profileImage: '', walletAddress: '', salaryAmount: '', notes: '' })
-      loadEmployees()
+      setWalletRisk(null)
     } catch (error: any) {
       console.error('Failed to save employee:', error)
       toast.error('Failed to Save Employee', error.response?.data?.message || 'Please try again')
@@ -375,7 +420,7 @@ export default function EmployeesPage() {
                   onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
                 />
               </div>
-              <div className="flex gap-3">
+              <div className="flex gap-3 items-center">
                 <Button
                   type="submit"
                   disabled={!editingId && walletRisk?.action === 'block'}
@@ -386,6 +431,22 @@ export default function EmployeesPage() {
                 <Button type="button" variant="outline" onClick={handleCancelEdit}>
                   Cancel
                 </Button>
+                {editingId && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => {
+                      const employee = employees.find(e => e.id === editingId)
+                      if (employee) {
+                        handleDelete(editingId, employee.name)
+                      }
+                    }}
+                    className="ml-auto bg-red-50 text-red-600 border-red-200 hover:bg-red-100 hover:text-red-700 hover:border-red-300"
+                  >
+                    <Trash2 className="h-4 w-4 mr-2" />
+                    Delete Employee
+                  </Button>
+                )}
               </div>
               {!editingId && walletRisk?.action === 'block' && (
                 <p className="text-xs text-red-600 flex items-center gap-1">
@@ -404,7 +465,7 @@ export default function EmployeesPage() {
           <div className="flex justify-between items-center">
             <div>
               <CardTitle>Team Members ({employees.length})</CardTitle>
-              <CardDescription>Active employees on payroll</CardDescription>
+              <CardDescription>Active employees on payroll with real-time risk monitoring</CardDescription>
             </div>
             <Button
               onClick={() => setShowAddForm(!showAddForm)}
@@ -421,13 +482,51 @@ export default function EmployeesPage() {
               No employees yet. Add your first team member!
             </div>
           ) : (
-            <div className="overflow-x-auto -mx-6 px-6">
+            <>
+              {/* Risk Status Info Banner */}
+              <div className="mb-6 p-4 bg-gradient-to-r from-blue-50 to-cyan-50 border border-blue-200 rounded-lg">
+                <div className="flex items-start gap-3">
+                  <div className="flex-shrink-0 mt-0.5">
+                    <Shield className="h-5 w-5 text-blue-600" />
+                  </div>
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2 mb-2">
+                      <h3 className="text-sm font-semibold text-blue-900">Automatic Security Monitoring</h3>
+                      <span className="text-xs px-2 py-0.5 bg-blue-100 text-blue-700 rounded-full font-medium">Live</span>
+                    </div>
+                    <p className="text-xs text-blue-700 leading-relaxed mb-3">
+                      All employee wallets are automatically screened for sanctions, scams, and suspicious activity.
+                      Hover over any risk status badge to see detailed security analysis.
+                    </p>
+                    <div className="flex flex-wrap gap-2">
+                      <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-green-50 border border-green-200">
+                        <CheckCircle className="h-3 w-3 text-green-600" />
+                        <span className="text-xs font-medium text-green-700">SAFE</span>
+                        <span className="text-[10px] text-green-600">= No issues detected</span>
+                      </div>
+                      <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-yellow-50 border border-yellow-200">
+                        <AlertTriangle className="h-3 w-3 text-yellow-600" />
+                        <span className="text-xs font-medium text-yellow-700">RISKY</span>
+                        <span className="text-[10px] text-yellow-600">= Review recommended</span>
+                      </div>
+                      <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-red-50 border border-red-200">
+                        <XCircle className="h-3 w-3 text-red-600" />
+                        <span className="text-xs font-medium text-red-700">BLOCKED</span>
+                        <span className="text-[10px] text-red-600">= Payment blocked</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="overflow-x-auto -mx-6 px-6">
               <table className="w-full">
                 <thead className="border-b border-gray-200">
                   <tr className="text-left text-sm text-gray-600">
                     <th className="pb-4 pt-2 px-2 font-semibold">Name</th>
                     <th className="pb-4 pt-2 px-2 font-semibold">Wallet Address</th>
                     <th className="pb-4 pt-2 px-2 font-semibold">Salary</th>
+                    <th className="pb-4 pt-2 px-2 font-semibold">Risk Status</th>
                     <th className="pb-4 pt-2 px-2 font-semibold">Status</th>
                     <th className="pb-4 pt-2 px-2 font-semibold">Added</th>
                     <th className="pb-4 pt-2 px-2 font-semibold text-right">Actions</th>
@@ -462,6 +561,71 @@ export default function EmployeesPage() {
                       </td>
                       <td className="py-5 px-2 font-medium">
                         {formatCurrency(Number(employee.salaryAmount))}
+                      </td>
+                      <td className="py-5 px-2">
+                        {loadingRisks ? (
+                          <div className="flex items-center gap-2 text-blue-500">
+                            <Shield className="h-4 w-4 animate-pulse" />
+                            <span className="text-xs font-medium">Scanning...</span>
+                          </div>
+                        ) : employeeRisks[employee.id] ? (
+                          <div className="group relative">
+                            {/* Risk Badge with enhanced styling */}
+                            {employeeRisks[employee.id].action === 'block' ? (
+                              <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-red-50 border border-red-200 text-red-700 hover:bg-red-100 transition-all cursor-help">
+                                <XCircle className="h-3.5 w-3.5" />
+                                <span className="text-xs font-semibold">BLOCKED</span>
+                                <span className="text-[10px] font-mono bg-red-100 px-1.5 py-0.5 rounded">
+                                  {employeeRisks[employee.id].finalScore}
+                                </span>
+                              </div>
+                            ) : employeeRisks[employee.id].action === 'warn' ? (
+                              <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-yellow-50 border border-yellow-200 text-yellow-700 hover:bg-yellow-100 transition-all cursor-help">
+                                <AlertTriangle className="h-3.5 w-3.5" />
+                                <span className="text-xs font-semibold">RISKY</span>
+                                <span className="text-[10px] font-mono bg-yellow-100 px-1.5 py-0.5 rounded">
+                                  {employeeRisks[employee.id].finalScore}
+                                </span>
+                              </div>
+                            ) : (
+                              <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-green-50 border border-green-200 text-green-700 hover:bg-green-100 transition-all cursor-help">
+                                <CheckCircle className="h-3.5 w-3.5" />
+                                <span className="text-xs font-semibold">SAFE</span>
+                                <span className="text-[10px] font-mono bg-green-100 px-1.5 py-0.5 rounded">
+                                  {employeeRisks[employee.id].finalScore}
+                                </span>
+                              </div>
+                            )}
+
+                            {/* Simplified Tooltip - Shows Above */}
+                            <div className="absolute left-0 bottom-full mb-2 w-64 bg-white border-2 border-gray-200 p-3 rounded-lg shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
+                              <div className="space-y-2">
+                                <div className="flex items-center justify-between">
+                                  <span className="text-xs font-semibold text-gray-700">
+                                    {employeeRisks[employee.id].riskLevel.toUpperCase()} RISK
+                                  </span>
+                                  <span className={`text-sm font-bold ${
+                                    employeeRisks[employee.id].action === 'block' ? 'text-red-600' :
+                                    employeeRisks[employee.id].action === 'warn' ? 'text-yellow-600' :
+                                    'text-green-600'
+                                  }`}>
+                                    Score: {employeeRisks[employee.id].finalScore}
+                                  </span>
+                                </div>
+                                <p className="text-xs text-gray-600 leading-relaxed">
+                                  {employeeRisks[employee.id].summary}
+                                </p>
+                              </div>
+                              {/* Tooltip arrow pointing down */}
+                              <div className="absolute left-4 top-full w-0 h-0 border-l-8 border-r-8 border-t-8 border-l-transparent border-r-transparent border-t-gray-200"></div>
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-gray-50 border border-gray-200 text-gray-500">
+                            <Info className="h-3.5 w-3.5" />
+                            <span className="text-xs font-medium">Not screened</span>
+                          </div>
+                        )}
                       </td>
                       <td className="py-5 px-2">
                         {employee.active ? (
@@ -506,6 +670,7 @@ export default function EmployeesPage() {
                 </tbody>
               </table>
             </div>
+            </>
           )}
         </CardContent>
       </Card>

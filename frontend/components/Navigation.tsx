@@ -65,10 +65,12 @@ export function Navigation() {
                 {navItems.map((item) => {
                   const Icon = item.icon
                   const isActive = pathname === item.href
+                  const targetHref = employer ? item.href : '/select-company'
+
                   return (
                     <Link
                       key={item.href}
-                      href={item.href}
+                      href={targetHref}
                       className={`flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
                         isActive
                           ? 'bg-primary text-white'

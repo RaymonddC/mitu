@@ -37,14 +37,14 @@ export default function SettingsPage() {
       return;
     }
 
-    // Redirect to dashboard if employer not set
-    if (!employer) {
-      router.push('/dashboard');
+    // Redirect to company selection if no employer selected
+    if (!employer && !loading) {
+      router.push('/select-company');
       return;
     }
 
     setLoading(false);
-  }, [isConnected, walletAddress, employer, router]);
+  }, [isConnected, walletAddress, employer, loading, router]);
 
   useEffect(() => {
     if (batchAvailable && walletClient && address) {
