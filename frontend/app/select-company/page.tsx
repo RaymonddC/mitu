@@ -7,6 +7,7 @@ import { employerAPI, type Employer } from '@/lib/api';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Building2, Plus, Users, ArrowRight, Calendar, Search } from 'lucide-react';
+import { formatOrdinal } from '@/lib/utils';
 
 export default function SelectCompanyPage() {
   const router = useRouter();
@@ -244,23 +245,117 @@ export default function SelectCompanyPage() {
                 />
               </div>
 
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Payroll Day of Month</label>
-                <select
-                  value={payrollDay}
-                  onChange={(e) => setPayrollDay(Number(e.target.value))}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
-                  disabled={creating}
-                >
-                  {Array.from({ length: 28 }, (_, i) => i + 1).map((day) => (
-                    <option key={day} value={day}>
-                      {day}{day === 1 ? 'st' : day === 2 ? 'nd' : day === 3 ? 'rd' : 'th'} of each month
-                    </option>
-                  ))}
-                </select>
-                <p className="text-xs text-gray-500">
-                  When should employees receive their monthly salary?
+              <div className="space-y-3">
+                <label className="text-sm font-medium flex items-center gap-2">
+                  <Calendar className="h-4 w-4 text-purple-600" />
+                  Payroll Day of Month
+                </label>
+                <p className="text-xs text-gray-500 -mt-1">
+                  Select the day when employees receive their monthly salary
                 </p>
+
+                {/* Calendar Grid for Day Selection */}
+                <div className="bg-gradient-to-br from-purple-50 to-pink-50 border-2 border-purple-300 rounded-lg p-5 shadow-sm">
+                  {/* Info Banner */}
+                  <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                    <p className="text-xs text-blue-800 leading-relaxed">
+                      <span className="font-semibold">Safe for all months:</span> Days 1-28 are available in every month.
+                      Avoid 29-31 as some months (February, April, June, September, November) don't have these days.
+                    </p>
+                  </div>
+
+                  {/* Days 1-14 */}
+                  <div className="mb-4">
+                    <div className="text-xs font-semibold text-gray-600 mb-2 px-1">Early Month (1-14)</div>
+                    <div className="grid grid-cols-7 gap-2 p-3 bg-white/50 rounded-lg border border-purple-200/50">
+                      {Array.from({ length: 14 }, (_, i) => i + 1).map((day) => {
+                        const isSelected = payrollDay === day;
+                        const isPopular = [1, 15].includes(day);
+
+                        return (
+                          <button
+                            key={day}
+                            type="button"
+                            onClick={() => setPayrollDay(day)}
+                            disabled={creating}
+                            className={`
+                              relative h-10 rounded-lg font-medium text-sm transition-all
+                              ${isSelected
+                                ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-lg scale-105 ring-2 ring-purple-400'
+                                : isPopular
+                                  ? 'bg-white text-purple-700 border-2 border-purple-400 hover:border-purple-600 hover:bg-purple-50 shadow-sm'
+                                  : 'bg-white text-gray-700 border border-gray-300 hover:border-purple-400 hover:bg-purple-50'
+                              }
+                              ${creating ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}
+                            `}
+                          >
+                            {day}
+                            {isPopular && !isSelected && (
+                              <span className="absolute -top-1 -right-1 flex h-3 w-3">
+                                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-purple-400 opacity-75"></span>
+                                <span className="relative inline-flex rounded-full h-3 w-3 bg-purple-500"></span>
+                              </span>
+                            )}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  {/* Days 15-28 */}
+                  <div>
+                    <div className="text-xs font-semibold text-gray-600 mb-2 px-1">Mid to Late Month (15-28)</div>
+                    <div className="grid grid-cols-7 gap-2 p-3 bg-white/50 rounded-lg border border-purple-200/50">
+                      {Array.from({ length: 14 }, (_, i) => i + 15).map((day) => {
+                        const isSelected = payrollDay === day;
+                        const isPopular = [15, 28].includes(day);
+
+                        return (
+                          <button
+                            key={day}
+                            type="button"
+                            onClick={() => setPayrollDay(day)}
+                            disabled={creating}
+                            className={`
+                              relative h-10 rounded-lg font-medium text-sm transition-all
+                              ${isSelected
+                                ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-lg scale-105 ring-2 ring-purple-400'
+                                : isPopular
+                                  ? 'bg-white text-purple-700 border-2 border-purple-400 hover:border-purple-600 hover:bg-purple-50 shadow-sm'
+                                  : 'bg-white text-gray-700 border border-gray-300 hover:border-purple-400 hover:bg-purple-50'
+                              }
+                              ${creating ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}
+                            `}
+                          >
+                            {day}
+                            {isPopular && !isSelected && (
+                              <span className="absolute -top-1 -right-1 flex h-3 w-3">
+                                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-purple-400 opacity-75"></span>
+                                <span className="relative inline-flex rounded-full h-3 w-3 bg-purple-500"></span>
+                              </span>
+                            )}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  {/* Selected Day Display */}
+                  <div className="mt-5 pt-4 border-t-2 border-purple-300">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-gray-600 font-medium">Selected Day:</span>
+                      <span className="text-lg font-bold text-purple-700">
+                        {formatOrdinal(payrollDay)} of each month
+                      </span>
+                    </div>
+                    {[1, 15, 28].includes(payrollDay) && (
+                      <p className="text-xs text-purple-600 mt-2 flex items-center gap-1.5 bg-purple-100/50 px-2 py-1.5 rounded">
+                        <span className="inline-block h-2 w-2 rounded-full bg-purple-500"></span>
+                        Popular choice - commonly used by many companies
+                      </p>
+                    )}
+                  </div>
+                </div>
               </div>
 
               <div className="bg-gradient-to-br from-blue-50 to-purple-50 border border-blue-200 rounded-lg p-4">

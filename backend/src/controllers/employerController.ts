@@ -90,7 +90,8 @@ export async function getEmployer(req: Request, res: Response, next: NextFunctio
         walletAddress: {
           equals: normalizedAddress,
           mode: 'insensitive'
-        }
+        },
+        isDeleted: false
       },
       include: {
         employees: {
@@ -158,7 +159,10 @@ export async function updateEmployer(req: Request, res: Response, next: NextFunc
 export async function listEmployers(req: Request, res: Response, next: NextFunction) {
   try {
     const employers = await prisma.employer.findMany({
-      where: { active: true },
+      where: {
+        active: true,
+        isDeleted: false
+      },
       include: {
         employees: {
           where: { active: true }
@@ -181,6 +185,47 @@ export async function listEmployers(req: Request, res: Response, next: NextFunct
     res.json({
       success: true,
       data: employersWithPayroll
+    });
+  } catch (error) {
+    next(error);
+  }
+}
+
+/**
+ * Delete employer (soft delete)
+ * DELETE /api/employers/:id
+ */
+export async function deleteEmployer(req: Request, res: Response, next: NextFunction) {
+  try {
+    const { id } = req.params;
+
+    // Verify employer exists and is not already deleted
+    const employer = await prisma.employer.findUnique({
+      where: { id }
+    });
+
+    if (!employer) {
+      throw new CustomError('Employer not found', 404);
+    }
+
+    if (employer.isDeleted) {
+      throw new CustomError('Employer is already deleted', 400);
+    }
+
+    // Soft delete by setting isDeleted flag
+    const deletedEmployer = await prisma.employer.update({
+      where: { id },
+      data: {
+        isDeleted: true,
+        deletedAt: new Date(),
+        active: false
+      }
+    });
+
+    res.json({
+      success: true,
+      message: 'Company deleted successfully',
+      data: deletedEmployer
     });
   } catch (error) {
     next(error);

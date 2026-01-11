@@ -1,11 +1,14 @@
 'use client';
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { employerAPI, type Employer } from '@/lib/api';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Building2, Edit, Save, X, Calendar, Mail, DollarSign, Upload, Image as ImageIcon } from 'lucide-react';
+import { Building2, Edit, Save, X, Calendar, Mail, DollarSign, Upload, Image as ImageIcon, Trash2 } from 'lucide-react';
 import { useStore } from '@/lib/store';
+import { toast } from '@/components/ui/toaster';
+import { formatOrdinal } from '@/lib/utils';
 
 interface CompanyCustomizationProps {
   employer: Employer | null;
@@ -13,9 +16,11 @@ interface CompanyCustomizationProps {
 }
 
 export function CompanyCustomization({ employer, onUpdate }: CompanyCustomizationProps) {
+  const router = useRouter();
   const { setEmployer } = useStore();
   const [isEditing, setIsEditing] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   const [uploadingImage, setUploadingImage] = useState(false);
   const [formData, setFormData] = useState({
     companyName: employer?.companyName || '',
@@ -149,6 +154,33 @@ export function CompanyCustomization({ employer, onUpdate }: CompanyCustomizatio
     }
   };
 
+  const handleDeleteCompany = async () => {
+    if (!employer) return;
+
+    const confirmed = window.confirm(
+      `Are you sure you want to delete "${employer.companyName}"?\n\n` +
+      'This action cannot be undone. The company will be permanently disabled and cannot be accessed again.'
+    );
+
+    if (!confirmed) return;
+
+    setDeleting(true);
+    try {
+      await employerAPI.delete(employer.id);
+
+      toast.success('Company Deleted', `${employer.companyName} has been successfully deleted.`);
+
+      // Clear employer from store and redirect to company selection
+      setEmployer(null);
+      router.push('/select-company');
+    } catch (error: any) {
+      console.error('[Delete] Failed to delete company:', error);
+      toast.error('Delete Failed', error.response?.data?.message || 'Failed to delete company. Please try again.');
+    } finally {
+      setDeleting(false);
+    }
+  };
+
   if (!employer) return null;
 
   return (
@@ -227,7 +259,7 @@ export function CompanyCustomization({ employer, onUpdate }: CompanyCustomizatio
               </div>
             </div>
 
-            <div className="grid gap-6 md:grid-cols-2">
+            <div className="space-y-6">
               {/* Company Name */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -258,22 +290,116 @@ export function CompanyCustomization({ employer, onUpdate }: CompanyCustomizatio
                 />
               </div>
 
-              {/* Payroll Day */}
+              {/* Payroll Day - Calendar Style */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   <Calendar className="h-4 w-4 inline mr-1" />
-                  Payroll Day (Day of Month) *
+                  Payroll Day of Month *
                 </label>
-                <input
-                  type="number"
-                  required
-                  min="1"
-                  max="28"
-                  className="w-full rounded-lg border border-gray-300 px-4 py-2.5 focus:border-purple-500 focus:ring-2 focus:ring-purple-200 transition-all"
-                  value={formData.payrollDay}
-                  onChange={(e) => setFormData({ ...formData, payrollDay: parseInt(e.target.value) })}
-                />
-                <p className="text-xs text-gray-500 mt-1">Day of month when payroll is processed (1-28)</p>
+                <p className="text-xs text-gray-500 mb-3">
+                  Select the day when employees receive their monthly salary
+                </p>
+
+                {/* Calendar Grid for Day Selection */}
+                <div className="bg-gradient-to-br from-purple-50 to-pink-50 border-2 border-purple-300 rounded-lg p-5 shadow-sm">
+                  {/* Info Banner */}
+                  <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                    <p className="text-xs text-blue-800 leading-relaxed">
+                      <span className="font-semibold">Safe for all months:</span> Days 1-28 are available in every month.
+                      Avoid 29-31 as some months (February, April, June, September, November) don't have these days.
+                    </p>
+                  </div>
+
+                  {/* Days 1-14 */}
+                  <div className="mb-4">
+                    <div className="text-xs font-semibold text-gray-600 mb-2 px-1">Early Month (1-14)</div>
+                    <div className="grid grid-cols-7 gap-2 p-3 bg-white/50 rounded-lg border border-purple-200/50">
+                      {Array.from({ length: 14 }, (_, i) => i + 1).map((day) => {
+                        const isSelected = formData.payrollDay === day;
+                        const isPopular = [1, 15].includes(day);
+
+                        return (
+                          <button
+                            key={day}
+                            type="button"
+                            onClick={() => setFormData({ ...formData, payrollDay: day })}
+                            className={`
+                              relative h-10 rounded-lg font-medium text-sm transition-all
+                              ${isSelected
+                                ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-lg scale-105 ring-2 ring-purple-400'
+                                : isPopular
+                                  ? 'bg-white text-purple-700 border-2 border-purple-400 hover:border-purple-600 hover:bg-purple-50 shadow-sm'
+                                  : 'bg-white text-gray-700 border border-gray-300 hover:border-purple-400 hover:bg-purple-50'
+                              }
+                              cursor-pointer
+                            `}
+                          >
+                            {day}
+                            {isPopular && !isSelected && (
+                              <span className="absolute -top-1 -right-1 flex h-3 w-3">
+                                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-purple-400 opacity-75"></span>
+                                <span className="relative inline-flex rounded-full h-3 w-3 bg-purple-500"></span>
+                              </span>
+                            )}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  {/* Days 15-28 */}
+                  <div>
+                    <div className="text-xs font-semibold text-gray-600 mb-2 px-1">Mid to Late Month (15-28)</div>
+                    <div className="grid grid-cols-7 gap-2 p-3 bg-white/50 rounded-lg border border-purple-200/50">
+                      {Array.from({ length: 14 }, (_, i) => i + 15).map((day) => {
+                        const isSelected = formData.payrollDay === day;
+                        const isPopular = [15, 28].includes(day);
+
+                        return (
+                          <button
+                            key={day}
+                            type="button"
+                            onClick={() => setFormData({ ...formData, payrollDay: day })}
+                            className={`
+                              relative h-10 rounded-lg font-medium text-sm transition-all
+                              ${isSelected
+                                ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-lg scale-105 ring-2 ring-purple-400'
+                                : isPopular
+                                  ? 'bg-white text-purple-700 border-2 border-purple-400 hover:border-purple-600 hover:bg-purple-50 shadow-sm'
+                                  : 'bg-white text-gray-700 border border-gray-300 hover:border-purple-400 hover:bg-purple-50'
+                              }
+                              cursor-pointer
+                            `}
+                          >
+                            {day}
+                            {isPopular && !isSelected && (
+                              <span className="absolute -top-1 -right-1 flex h-3 w-3">
+                                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-purple-400 opacity-75"></span>
+                                <span className="relative inline-flex rounded-full h-3 w-3 bg-purple-500"></span>
+                              </span>
+                            )}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  {/* Selected Day Display */}
+                  <div className="mt-5 pt-4 border-t-2 border-purple-300">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-gray-600 font-medium">Selected Day:</span>
+                      <span className="text-lg font-bold text-purple-700">
+                        {formatOrdinal(formData.payrollDay)} of each month
+                      </span>
+                    </div>
+                    {[1, 15, 28].includes(formData.payrollDay) && (
+                      <p className="text-xs text-purple-600 mt-2 flex items-center gap-1.5 bg-purple-100/50 px-2 py-1.5 rounded">
+                        <span className="inline-block h-2 w-2 rounded-full bg-purple-500"></span>
+                        Popular choice - commonly used by many companies
+                      </p>
+                    )}
+                  </div>
+                </div>
               </div>
 
               {/* Monthly Budget */}
@@ -401,6 +527,39 @@ export function CompanyCustomization({ employer, onUpdate }: CompanyCustomizatio
                 {employer.walletAddress}
               </p>
               <p className="text-xs text-gray-500 mt-2">This is your company's unique wallet identifier</p>
+            </div>
+
+            {/* Danger Zone - Delete Company */}
+            <div className="mt-8 pt-6 border-t border-red-200">
+              <div className="bg-red-50 border border-red-200 rounded-lg p-6">
+                <div className="flex items-start gap-3">
+                  <Trash2 className="h-5 w-5 text-red-600 mt-0.5 flex-shrink-0" />
+                  <div className="flex-1">
+                    <h3 className="text-sm font-semibold text-red-900 mb-1">Delete Company</h3>
+                    <p className="text-sm text-red-700 mb-4">
+                      Once you delete this company, it will be permanently disabled and cannot be recovered. All associated data will remain in the database but the company will no longer be accessible.
+                    </p>
+                    <Button
+                      onClick={handleDeleteCompany}
+                      disabled={deleting}
+                      variant="outline"
+                      className="bg-red-600 text-white border-red-600 hover:bg-red-700 hover:border-red-700 hover:text-white"
+                    >
+                      {deleting ? (
+                        <>
+                          <div className="h-4 w-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
+                          Deleting...
+                        </>
+                      ) : (
+                        <>
+                          <Trash2 className="h-4 w-4 mr-2" />
+                          Delete This Company
+                        </>
+                      )}
+                    </Button>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         )}

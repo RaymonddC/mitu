@@ -21,6 +21,8 @@ model Employer {
   payrollDay        Int       @default(28) // Day of month (1-28)
   monthlyBudget     Decimal?  @db.Decimal(20, 8) // Optional spending cap
   active            Boolean   @default(true)
+  isDeleted         Boolean   @default(false) // Soft delete flag
+  deletedAt         DateTime? // When the company was deleted
   createdAt         DateTime  @default(now())
   updatedAt         DateTime  @updatedAt
 

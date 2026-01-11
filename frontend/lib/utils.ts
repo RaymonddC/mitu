@@ -77,3 +77,35 @@ export function getEtherscanTxUrl(txHash: string, chainId: number = 1): string {
   const baseUrl = chainId === 1 ? 'https://etherscan.io' : 'https://sepolia.etherscan.io';
   return `${baseUrl}/tx/${txHash}`;
 }
+
+/**
+ * Get ordinal suffix for a number (1st, 2nd, 3rd, 4th, etc.)
+ */
+export function getOrdinalSuffix(num: number): string {
+  const lastDigit = num % 10;
+  const lastTwoDigits = num % 100;
+
+  // Special cases for 11th, 12th, 13th
+  if (lastTwoDigits >= 11 && lastTwoDigits <= 13) {
+    return 'th';
+  }
+
+  // Regular cases
+  switch (lastDigit) {
+    case 1:
+      return 'st';
+    case 2:
+      return 'nd';
+    case 3:
+      return 'rd';
+    default:
+      return 'th';
+  }
+}
+
+/**
+ * Format a number with its ordinal suffix (1 => "1st", 2 => "2nd", etc.)
+ */
+export function formatOrdinal(num: number): string {
+  return `${num}${getOrdinalSuffix(num)}`;
+}

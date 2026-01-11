@@ -7,13 +7,15 @@ import { employerAPI, employeeAPI, alertAPI, type Alert } from '@/lib/api';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { formatCurrency, formatDate, getSeverityColor } from '@/lib/utils';
-import { Users, DollarSign, Calendar, AlertCircle, PlayCircle } from 'lucide-react';
+import { Users, DollarSign, Calendar, AlertCircle, PlayCircle, BarChart3, Settings, Wallet } from 'lucide-react';
 import { WalletApproval } from '@/components/WalletApproval';
 import { BudgetManagement } from '@/components/BudgetManagement';
 import { PayrollAnalytics } from '@/components/PayrollAnalytics';
 import { isBatchTransferAvailable, calculateGasSavings } from '@/lib/batchTransferABI';
 import { checkBatchApproval, approveBatchContract } from '@/lib/batchApproval';
 import { useWalletClient } from 'wagmi';
+
+type TabType = 'overview' | 'approvals' | 'analytics' | 'budget';
 
 export default function DashboardPage() {
   const router = useRouter();
@@ -27,6 +29,7 @@ export default function DashboardPage() {
   const [enableBatchTransfer, setEnableBatchTransfer] = useState(false);
   const [approvingBatch, setApprovingBatch] = useState(false);
   const { data: walletClient } = useWalletClient();
+  const [activeTab, setActiveTab] = useState<TabType>('overview');
 
   const batchAvailable = isBatchTransferAvailable();
 
@@ -321,6 +324,13 @@ export default function DashboardPage() {
     nextPayday.setMonth(nextPayday.getMonth() + 1);
   }
 
+  const tabs = [
+    { id: 'overview' as TabType, label: 'Overview', icon: BarChart3 },
+    { id: 'approvals' as TabType, label: 'Pending Approvals', icon: Wallet },
+    { id: 'analytics' as TabType, label: 'Analytics', icon: BarChart3 },
+    { id: 'budget' as TabType, label: 'Budget & Automation', icon: Settings },
+  ];
+
   return (
     <div className="container mx-auto px-4 py-8 pt-24 space-y-6">
       {/* Header Section */}
@@ -389,71 +399,126 @@ export default function DashboardPage() {
         </Card>
       )}
 
-      {/* Pending Approvals - High priority */}
-      <WalletApproval employerId={employer.id} onApprovalComplete={loadData} />
-
-      {/* Summary Cards */}
-      <div className="grid gap-6 md:grid-cols-3">
-        <Card className="shadow-xl bg-gradient-to-br from-blue-50 to-cyan-50 border-2 border-blue-200 hover:shadow-2xl transition-all">
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-blue-900">Total Employees</CardTitle>
-            <div className="h-12 w-12 rounded-full bg-gradient-to-br from-blue-400 to-cyan-400 flex items-center justify-center shadow-lg">
-              <Users className="h-6 w-6 text-white" />
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="text-4xl font-bold text-blue-900">{employeeCount}</div>
-            <p className="text-sm text-blue-700 mt-2 font-medium">Active employees</p>
-          </CardContent>
-        </Card>
-
-        <Card className="shadow-xl bg-gradient-to-br from-green-50 to-emerald-50 border-2 border-green-200 hover:shadow-2xl transition-all">
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-green-900">Monthly Payroll</CardTitle>
-            <div className="h-12 w-12 rounded-full bg-gradient-to-br from-green-400 to-emerald-400 flex items-center justify-center shadow-lg">
-              <DollarSign className="h-6 w-6 text-white" />
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="text-4xl font-bold text-green-900">{formatCurrency(totalMonthlyPayroll)}</div>
-            <p className="text-sm text-green-700 mt-2 font-medium">Total monthly cost</p>
-          </CardContent>
-        </Card>
-
-        <Card className="shadow-xl bg-gradient-to-br from-purple-50 to-pink-50 border-2 border-purple-200 hover:shadow-2xl transition-all">
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-purple-900">Next Payday</CardTitle>
-            <div className="h-12 w-12 rounded-full bg-gradient-to-br from-purple-400 to-pink-400 flex items-center justify-center shadow-lg">
-              <Calendar className="h-6 w-6 text-white" />
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="text-4xl font-bold text-purple-900">{nextPayday.getDate()}</div>
-            <p className="text-sm text-purple-700 mt-2 font-medium">{formatDate(nextPayday)}</p>
-          </CardContent>
-        </Card>
+      {/* Tabs Navigation */}
+      <div className="border-b border-gray-200">
+        <div className="flex space-x-8">
+          {tabs.map((tab) => {
+            const Icon = tab.icon;
+            return (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                className={`flex items-center gap-2 pb-4 px-1 border-b-2 font-medium transition-colors ${
+                  activeTab === tab.id
+                    ? 'border-purple-600 text-purple-600'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                }`}
+              >
+                <Icon className="h-5 w-5" />
+                {tab.label}
+              </button>
+            );
+          })}
+        </div>
       </div>
 
-      {/* Payroll Analytics - Visual insights */}
-      <div>
-        <div className="mb-4">
-          <h2 className="text-2xl font-bold text-gray-900">Payroll Analytics</h2>
-          <p className="text-gray-600 mt-1">Insights and trends from your payroll data</p>
-        </div>
-        <PayrollAnalytics
-          totalMonthlyPayroll={totalMonthlyPayroll}
-          employeeCount={employeeCount}
-          employees={employer.employees || []}
-        />
-      </div>
+      {/* Tab Content */}
+      <div className="space-y-6">
+        {/* Overview Tab */}
+        {activeTab === 'overview' && (
+          <div className="grid gap-6 md:grid-cols-3">
+            <Card className="shadow-lg bg-gradient-to-br from-blue-50 to-cyan-50 border-2 border-blue-200">
+              <CardHeader className="flex flex-row items-center justify-between pb-2">
+                <CardTitle className="text-sm font-medium text-blue-900">Total Employees</CardTitle>
+                <div className="h-12 w-12 rounded-full bg-gradient-to-br from-blue-400 to-cyan-400 flex items-center justify-center shadow-lg">
+                  <Users className="h-6 w-6 text-white" />
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="text-4xl font-bold text-blue-900">{employeeCount}</div>
+                <p className="text-sm text-blue-700 mt-2 font-medium">Active employees</p>
+              </CardContent>
+            </Card>
 
-      {/* Budget Management - Settings/Configuration */}
-      <div>
-        <div className="mb-4">
-          <h2 className="text-2xl font-bold text-gray-900">Budget & Automation</h2>
-          <p className="text-gray-600 mt-1">Configure pre-authorized budgets for autonomous payroll</p>
-        </div>
-        <BudgetManagement employerId={employer.id} />
+            <Card className="shadow-lg bg-gradient-to-br from-green-50 to-emerald-50 border-2 border-green-200">
+              <CardHeader className="flex flex-row items-center justify-between pb-2">
+                <CardTitle className="text-sm font-medium text-green-900">Monthly Payroll</CardTitle>
+                <div className="h-12 w-12 rounded-full bg-gradient-to-br from-green-400 to-emerald-400 flex items-center justify-center shadow-lg">
+                  <DollarSign className="h-6 w-6 text-white" />
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="text-4xl font-bold text-green-900">{formatCurrency(totalMonthlyPayroll)}</div>
+                <p className="text-sm text-green-700 mt-2 font-medium">Total monthly cost</p>
+              </CardContent>
+            </Card>
+
+            <Card className="shadow-lg bg-gradient-to-br from-purple-50 to-pink-50 border-2 border-purple-200">
+              <CardHeader className="flex flex-row items-center justify-between pb-2">
+                <CardTitle className="text-sm font-medium text-purple-900">Next Payday</CardTitle>
+                <div className="h-12 w-12 rounded-full bg-gradient-to-br from-purple-400 to-pink-400 flex items-center justify-center shadow-lg">
+                  <Calendar className="h-6 w-6 text-white" />
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="text-4xl font-bold text-purple-900">{nextPayday.getDate()}</div>
+                <p className="text-sm text-purple-700 mt-2 font-medium">{formatDate(nextPayday)}</p>
+              </CardContent>
+            </Card>
+          </div>
+        )}
+
+        {/* Pending Approvals Tab */}
+        {activeTab === 'approvals' && (
+          <Card className="shadow-xl bg-white border-2 border-gray-200">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Wallet className="h-5 w-5 text-purple-600" />
+                Pending Approvals
+              </CardTitle>
+              <CardDescription>Transactions waiting for your signature</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <WalletApproval employerId={employer.id} onApprovalComplete={loadData} />
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Analytics Tab */}
+        {activeTab === 'analytics' && (
+          <Card className="shadow-xl bg-white border-2 border-gray-200">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <BarChart3 className="h-5 w-5 text-green-600" />
+                Payroll Analytics
+              </CardTitle>
+              <CardDescription>Insights and trends from your payroll data</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <PayrollAnalytics
+                totalMonthlyPayroll={totalMonthlyPayroll}
+                employeeCount={employeeCount}
+                employees={employer.employees || []}
+              />
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Budget & Automation Tab */}
+        {activeTab === 'budget' && (
+          <Card className="shadow-xl bg-white border-2 border-gray-200">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Settings className="h-5 w-5 text-orange-600" />
+                Budget & Automation
+              </CardTitle>
+              <CardDescription>Configure pre-authorized budgets for autonomous payroll</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <BudgetManagement employerId={employer.id} />
+            </CardContent>
+          </Card>
+        )}
       </div>
     </div>
   );
