@@ -380,26 +380,26 @@ export default function EmployeesPage() {
                         showDetails={true}
                       />
                       {walletRisk.action === 'block' && (
-                        <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
-                          <p className="text-sm font-semibold text-red-800 mb-1">⚠️ Cannot Add Employee</p>
-                          <p className="text-xs text-red-700">
+                        <div className="p-3 bg-red-500/20 border border-red-400/30 rounded-lg">
+                          <p className="text-sm font-semibold text-red-300 mb-1">⚠️ Cannot Add Employee</p>
+                          <p className="text-xs text-red-200">
                             This wallet has been flagged as high-risk and cannot receive payments.
                             Please use a different wallet address.
                           </p>
                         </div>
                       )}
                       {walletRisk.action === 'warn' && (
-                        <div className="p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
-                          <p className="text-sm font-semibold text-yellow-800 mb-1">⚠️ Proceed with Caution</p>
-                          <p className="text-xs text-yellow-700">
+                        <div className="p-3 bg-yellow-500/20 border border-yellow-400/30 rounded-lg">
+                          <p className="text-sm font-semibold text-yellow-300 mb-1">⚠️ Proceed with Caution</p>
+                          <p className="text-xs text-yellow-200">
                             This wallet shows some risk indicators. You can add them, but payments will require extra review.
                           </p>
                         </div>
                       )}
                       {walletRisk.action === 'proceed' && (
-                        <div className="p-3 bg-green-50 border border-green-200 rounded-lg">
-                          <p className="text-sm font-semibold text-green-800 mb-1">✓ Wallet Verified</p>
-                          <p className="text-xs text-green-700">
+                        <div className="p-3 bg-green-500/20 border border-green-400/30 rounded-lg">
+                          <p className="text-sm font-semibold text-green-300 mb-1">✓ Wallet Verified</p>
+                          <p className="text-xs text-green-200">
                             This wallet appears safe and can be added to your payroll.
                           </p>
                         </div>
@@ -574,7 +574,7 @@ export default function EmployeesPage() {
                       <td className="py-5 px-2 font-medium text-white">
                         {formatCurrency(Number(employee.salaryAmount))}
                       </td>
-                      <td className="py-5 px-2">
+                      <td className="py-5 px-2 relative">
                         {loadingRisks ? (
                           <div className="flex items-center gap-2 text-blue-500">
                             <Shield className="h-4 w-4 animate-pulse" />
@@ -584,33 +584,33 @@ export default function EmployeesPage() {
                           <div className="group relative">
                             {/* Risk Badge with enhanced styling */}
                             {employeeRisks[employee.id].action === 'block' ? (
-                              <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-red-50 border border-red-200 text-red-700 hover:bg-red-100 transition-all cursor-help">
+                              <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-red-500/20 border border-red-400/30 text-red-300 hover:bg-red-500/30 transition-all cursor-help">
                                 <XCircle className="h-3.5 w-3.5" />
                                 <span className="text-xs font-semibold">BLOCKED</span>
-                                <span className="text-[10px] font-mono bg-red-100 px-1.5 py-0.5 rounded">
+                                <span className="text-[10px] font-mono bg-red-500/30 px-1.5 py-0.5 rounded">
                                   {employeeRisks[employee.id].finalScore}
                                 </span>
                               </div>
                             ) : employeeRisks[employee.id].action === 'warn' ? (
-                              <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-yellow-50 border border-yellow-200 text-yellow-700 hover:bg-yellow-100 transition-all cursor-help">
+                              <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-yellow-500/20 border border-yellow-400/30 text-yellow-300 hover:bg-yellow-500/30 transition-all cursor-help">
                                 <AlertTriangle className="h-3.5 w-3.5" />
                                 <span className="text-xs font-semibold">RISKY</span>
-                                <span className="text-[10px] font-mono bg-yellow-100 px-1.5 py-0.5 rounded">
+                                <span className="text-[10px] font-mono bg-yellow-500/30 px-1.5 py-0.5 rounded">
                                   {employeeRisks[employee.id].finalScore}
                                 </span>
                               </div>
                             ) : (
-                              <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-green-50 border border-green-200 text-green-700 hover:bg-green-100 transition-all cursor-help">
+                              <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-green-500/20 border border-green-400/30 text-green-300 hover:bg-green-500/30 transition-all cursor-help">
                                 <CheckCircle className="h-3.5 w-3.5" />
                                 <span className="text-xs font-semibold">SAFE</span>
-                                <span className="text-[10px] font-mono bg-green-100 px-1.5 py-0.5 rounded">
+                                <span className="text-[10px] font-mono bg-green-500/30 px-1.5 py-0.5 rounded">
                                   {employeeRisks[employee.id].finalScore}
                                 </span>
                               </div>
                             )}
 
                             {/* Simplified Tooltip - Shows Above */}
-                            <div className="absolute left-0 bottom-full mb-2 w-64 bg-slate-800 border-2 border-white/20 p-3 rounded-lg shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-[100]">
+                            <div className="absolute left-0 bottom-full mb-2 w-64 bg-slate-800 border-2 border-white/20 p-3 rounded-lg shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-[9999]">
                               <div className="space-y-2">
                                 <div className="flex items-center justify-between">
                                   <span className="text-xs font-semibold text-white">
@@ -633,7 +633,7 @@ export default function EmployeesPage() {
                             </div>
                           </div>
                         ) : (
-                          <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-gray-50 border border-gray-200 text-gray-500">
+                          <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/5 border border-white/20 text-gray-400">
                             <Info className="h-3.5 w-3.5" />
                             <span className="text-xs font-medium">Not screened</span>
                           </div>
