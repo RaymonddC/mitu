@@ -31,60 +31,60 @@ export function RiskBadge({
           icon: CheckCircle2,
           label: 'Low Risk',
           emoji: '🟢',
-          bgColor: 'bg-green-50',
-          textColor: 'text-green-700',
-          borderColor: 'border-green-200',
-          iconColor: 'text-green-600'
+          bgColor: 'bg-green-500/20',
+          textColor: 'text-green-300',
+          borderColor: 'border-green-400/30',
+          iconColor: 'text-green-400'
         }
       case 'medium':
         return {
           icon: Shield,
           label: 'Medium Risk',
           emoji: '🟡',
-          bgColor: 'bg-yellow-50',
-          textColor: 'text-yellow-700',
-          borderColor: 'border-yellow-200',
-          iconColor: 'text-yellow-600'
+          bgColor: 'bg-yellow-500/20',
+          textColor: 'text-yellow-300',
+          borderColor: 'border-yellow-400/30',
+          iconColor: 'text-yellow-400'
         }
       case 'high':
         return {
           icon: AlertTriangle,
           label: 'High Risk',
           emoji: '🟠',
-          bgColor: 'bg-orange-50',
-          textColor: 'text-orange-700',
-          borderColor: 'border-orange-200',
-          iconColor: 'text-orange-600'
+          bgColor: 'bg-orange-500/20',
+          textColor: 'text-orange-300',
+          borderColor: 'border-orange-400/30',
+          iconColor: 'text-orange-400'
         }
       case 'critical':
         return {
           icon: AlertCircle,
           label: 'Critical Risk',
           emoji: '🔴',
-          bgColor: 'bg-red-50',
-          textColor: 'text-red-700',
-          borderColor: 'border-red-200',
-          iconColor: 'text-red-600'
+          bgColor: 'bg-red-500/20',
+          textColor: 'text-red-300',
+          borderColor: 'border-red-400/30',
+          iconColor: 'text-red-400'
         }
       case 'loading':
         return {
           icon: Loader2,
           label: 'Scanning...',
           emoji: '⏳',
-          bgColor: 'bg-gray-50',
-          textColor: 'text-gray-700',
-          borderColor: 'border-gray-200',
-          iconColor: 'text-gray-600'
+          bgColor: 'bg-white/5',
+          textColor: 'text-gray-300',
+          borderColor: 'border-white/20',
+          iconColor: 'text-gray-400'
         }
       default:
         return {
           icon: AlertCircle,
           label: 'Unknown',
           emoji: '❓',
-          bgColor: 'bg-gray-50',
-          textColor: 'text-gray-700',
-          borderColor: 'border-gray-200',
-          iconColor: 'text-gray-600'
+          bgColor: 'bg-white/5',
+          textColor: 'text-gray-300',
+          borderColor: 'border-white/20',
+          iconColor: 'text-gray-400'
         }
     }
   }
@@ -122,9 +122,9 @@ export function RiskBadge({
             )}
             {action && (
               <span className={`text-xs font-medium px-1.5 py-0.5 rounded ${
-                action === 'block' ? 'bg-red-100 text-red-700' :
-                action === 'warn' ? 'bg-yellow-100 text-yellow-700' :
-                'bg-green-100 text-green-700'
+                action === 'block' ? 'bg-red-500/30 text-red-300' :
+                action === 'warn' ? 'bg-yellow-500/30 text-yellow-300' :
+                'bg-green-500/30 text-green-300'
               }`}>
                 {action.toUpperCase()}
               </span>
@@ -138,10 +138,10 @@ export function RiskBadge({
               {action && (
                 <div className={`inline-flex items-center gap-1.5 px-2 py-1 rounded text-xs font-bold ${
                   action === 'block'
-                    ? 'bg-red-100 text-red-800 border border-red-300'
+                    ? 'bg-red-500/30 text-red-300 border border-red-400/30'
                     : action === 'warn'
-                    ? 'bg-yellow-100 text-yellow-800 border border-yellow-300'
-                    : 'bg-green-100 text-green-800 border border-green-300'
+                    ? 'bg-yellow-500/30 text-yellow-300 border border-yellow-400/30'
+                    : 'bg-green-500/30 text-green-300 border border-green-400/30'
                 }`}>
                   {action === 'block' && '🚫 BLOCKED - Cannot receive payroll'}
                   {action === 'warn' && '⚠️ WARNING - Manual review required'}

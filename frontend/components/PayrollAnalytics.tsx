@@ -53,13 +53,13 @@ export function PayrollAnalytics({ totalMonthlyPayroll, employeeCount, employees
   return (
     <div className="grid gap-6 md:grid-cols-2">
       {/* Monthly Spending Trend */}
-      <Card className="shadow-2xl bg-white backdrop-blur-2xl border border-gray-200">
+      <Card className="shadow-2xl bg-white/10 backdrop-blur-2xl border border-white/20">
         <CardHeader>
           <div className="flex items-center gap-2">
-            <TrendingUp className="h-5 w-5 text-purple-600" />
-            <CardTitle>Monthly Spending Trend</CardTitle>
+            <TrendingUp className="h-5 w-5 text-purple-400" />
+            <CardTitle className="text-white">Monthly Spending Trend</CardTitle>
           </div>
-          <CardDescription>Payroll expenses over the last 6 months</CardDescription>
+          <CardDescription className="text-gray-400">Payroll expenses over the last 6 months</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
@@ -73,19 +73,19 @@ export function PayrollAnalytics({ totalMonthlyPayroll, employeeCount, employees
                         className="w-full bg-gradient-to-t from-purple-600 to-pink-500 rounded-t-lg transition-all duration-500 hover:from-purple-700 hover:to-pink-600 cursor-pointer group relative"
                         style={{ height: `${height}%` }}
                       >
-                        <div className="absolute -top-8 left-1/2 transform -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity bg-gray-900 text-white text-xs px-2 py-1 rounded whitespace-nowrap">
+                        <div className="absolute -top-8 left-1/2 transform -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity bg-slate-800 text-white text-xs px-2 py-1 rounded whitespace-nowrap border border-white/20">
                           ${(data.amount / 1000).toFixed(1)}k
                         </div>
                       </div>
                     </div>
-                    <span className="text-xs text-gray-600 font-medium">{data.month}</span>
+                    <span className="text-xs text-gray-300 font-medium">{data.month}</span>
                   </div>
                 );
               })}
             </div>
-            <div className="flex items-center justify-between pt-4 border-t">
-              <span className="text-sm text-gray-600">Total (6 months)</span>
-              <span className="text-lg font-bold text-purple-900">
+            <div className="flex items-center justify-between pt-4 border-t border-white/20">
+              <span className="text-sm text-gray-300">Total (6 months)</span>
+              <span className="text-lg font-bold text-white">
                 ${((monthlyData.reduce((sum, d) => sum + d.amount, 0)) / 1000).toFixed(1)}k
               </span>
             </div>
@@ -94,13 +94,13 @@ export function PayrollAnalytics({ totalMonthlyPayroll, employeeCount, employees
       </Card>
 
       {/* Salary Distribution */}
-      <Card className="shadow-2xl bg-white backdrop-blur-2xl border border-gray-200">
+      <Card className="shadow-2xl bg-white/10 backdrop-blur-2xl border border-white/20">
         <CardHeader>
           <div className="flex items-center gap-2">
-            <BarChart3 className="h-5 w-5 text-blue-600" />
-            <CardTitle>Salary Distribution</CardTitle>
+            <BarChart3 className="h-5 w-5 text-blue-400" />
+            <CardTitle className="text-white">Salary Distribution</CardTitle>
           </div>
-          <CardDescription>Employee count by salary range</CardDescription>
+          <CardDescription className="text-gray-400">Employee count by salary range</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="space-y-6">
@@ -109,10 +109,10 @@ export function PayrollAnalytics({ totalMonthlyPayroll, employeeCount, employees
               return (
                 <div key={index} className="space-y-2">
                   <div className="flex items-center justify-between text-sm">
-                    <span className="font-medium text-gray-700">{range.label}</span>
-                    <span className="text-gray-600">{range.count} employees</span>
+                    <span className="font-medium text-white">{range.label}</span>
+                    <span className="text-gray-300">{range.count} employees</span>
                   </div>
-                  <div className="w-full bg-gray-200 rounded-full h-3 overflow-hidden">
+                  <div className="w-full bg-white/10 rounded-full h-3 overflow-hidden">
                     <div
                       className={`h-full ${range.color} transition-all duration-700 rounded-full`}
                       style={{ width: `${percentage}%` }}
@@ -121,9 +121,9 @@ export function PayrollAnalytics({ totalMonthlyPayroll, employeeCount, employees
                 </div>
               );
             })}
-            <div className="flex items-center justify-between pt-4 border-t">
-              <span className="text-sm text-gray-600">Average Salary</span>
-              <span className="text-lg font-bold text-blue-900">
+            <div className="flex items-center justify-between pt-4 border-t border-white/20">
+              <span className="text-sm text-gray-300">Average Salary</span>
+              <span className="text-lg font-bold text-white">
                 ${(averageSalary / 1000).toFixed(1)}k/month
               </span>
             </div>
@@ -132,18 +132,18 @@ export function PayrollAnalytics({ totalMonthlyPayroll, employeeCount, employees
       </Card>
 
       {/* Top Earners */}
-      <Card className="shadow-2xl bg-white backdrop-blur-2xl border border-gray-200">
+      <Card className="shadow-2xl bg-white/10 backdrop-blur-2xl border border-white/20">
         <CardHeader>
           <div className="flex items-center gap-2">
-            <Users className="h-5 w-5 text-green-600" />
-            <CardTitle>Top Earners</CardTitle>
+            <Users className="h-5 w-5 text-green-400" />
+            <CardTitle className="text-white">Top Earners</CardTitle>
           </div>
-          <CardDescription>Highest paid employees</CardDescription>
+          <CardDescription className="text-gray-400">Highest paid employees</CardDescription>
         </CardHeader>
         <CardContent>
           {topEarners.length === 0 ? (
-            <div className="text-center py-8 text-gray-500">
-              <Users className="h-12 w-12 mx-auto mb-3 text-gray-400" />
+            <div className="text-center py-8 text-gray-400">
+              <Users className="h-12 w-12 mx-auto mb-3 text-gray-500" />
               <p className="text-sm">No employees added yet</p>
             </div>
           ) : (
@@ -151,17 +151,17 @@ export function PayrollAnalytics({ totalMonthlyPayroll, employeeCount, employees
               {topEarners.map((emp, index) => {
                 const percentage = totalMonthlyPayroll > 0 ? (Number(emp.salaryAmount) / totalMonthlyPayroll) * 100 : 0;
                 return (
-                  <div key={emp.id} className="flex items-center gap-3 p-3 rounded-lg bg-gradient-to-r from-green-50 to-emerald-50 border border-green-100">
-                    <div className="flex-shrink-0 w-8 h-8 rounded-full bg-green-600 text-white flex items-center justify-center font-bold text-sm">
+                  <div key={emp.id} className="flex items-center gap-3 p-3 rounded-lg bg-gradient-to-r from-green-500/20 to-emerald-500/20 border border-green-400/30">
+                    <div className="flex-shrink-0 w-8 h-8 rounded-full bg-green-600 text-white flex items-center justify-center font-bold text-sm shadow-md">
                       {index + 1}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="font-medium text-gray-900 truncate">{emp.name}</p>
-                      <p className="text-xs text-gray-600">{percentage.toFixed(1)}% of total payroll</p>
+                      <p className="font-medium text-white truncate">{emp.name}</p>
+                      <p className="text-xs text-gray-300">{percentage.toFixed(1)}% of total payroll</p>
                     </div>
                     <div className="text-right flex-shrink-0">
-                      <p className="font-bold text-green-900">${(Number(emp.salaryAmount) / 1000).toFixed(1)}k</p>
-                      <p className="text-xs text-gray-600">per month</p>
+                      <p className="font-bold text-green-300">${(Number(emp.salaryAmount) / 1000).toFixed(1)}k</p>
+                      <p className="text-xs text-gray-400">per month</p>
                     </div>
                   </div>
                 );
@@ -172,31 +172,31 @@ export function PayrollAnalytics({ totalMonthlyPayroll, employeeCount, employees
       </Card>
 
       {/* Payroll Summary */}
-      <Card className="shadow-2xl bg-gradient-to-br from-purple-50 to-pink-50 border-2 border-purple-200">
+      <Card className="shadow-2xl bg-white/10 backdrop-blur-2xl border border-white/20">
         <CardHeader>
           <div className="flex items-center gap-2">
-            <PieChart className="h-5 w-5 text-purple-600" />
-            <CardTitle>Payroll Summary</CardTitle>
+            <PieChart className="h-5 w-5 text-purple-400" />
+            <CardTitle className="text-white">Payroll Summary</CardTitle>
           </div>
-          <CardDescription>Key metrics at a glance</CardDescription>
+          <CardDescription className="text-gray-400">Key metrics at a glance</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-2 gap-4">
-            <div className="bg-white rounded-lg p-4 border border-purple-100">
-              <p className="text-sm text-gray-600 mb-1">Total Employees</p>
-              <p className="text-3xl font-bold text-purple-900">{employeeCount}</p>
+            <div className="bg-gradient-to-br from-purple-500/20 to-pink-500/20 rounded-lg p-4 border border-purple-400/40">
+              <p className="text-sm text-purple-300 mb-1 font-medium">Total Employees</p>
+              <p className="text-3xl font-bold text-white">{employeeCount}</p>
             </div>
-            <div className="bg-white rounded-lg p-4 border border-purple-100">
-              <p className="text-sm text-gray-600 mb-1">Monthly Cost</p>
-              <p className="text-3xl font-bold text-purple-900">${(totalMonthlyPayroll / 1000).toFixed(0)}k</p>
+            <div className="bg-gradient-to-br from-blue-500/20 to-cyan-500/20 rounded-lg p-4 border border-blue-400/40">
+              <p className="text-sm text-blue-300 mb-1 font-medium">Monthly Cost</p>
+              <p className="text-3xl font-bold text-white">${(totalMonthlyPayroll / 1000).toFixed(0)}k</p>
             </div>
-            <div className="bg-white rounded-lg p-4 border border-purple-100">
-              <p className="text-sm text-gray-600 mb-1">Average Salary</p>
-              <p className="text-2xl font-bold text-purple-900">${(averageSalary / 1000).toFixed(1)}k</p>
+            <div className="bg-gradient-to-br from-green-500/20 to-emerald-500/20 rounded-lg p-4 border border-green-400/40">
+              <p className="text-sm text-green-300 mb-1 font-medium">Average Salary</p>
+              <p className="text-2xl font-bold text-white">${(averageSalary / 1000).toFixed(1)}k</p>
             </div>
-            <div className="bg-white rounded-lg p-4 border border-purple-100">
-              <p className="text-sm text-gray-600 mb-1">Annual Cost</p>
-              <p className="text-2xl font-bold text-purple-900">${((totalMonthlyPayroll * 12) / 1000).toFixed(0)}k</p>
+            <div className="bg-gradient-to-br from-amber-500/20 to-orange-500/20 rounded-lg p-4 border border-amber-400/40">
+              <p className="text-sm text-amber-300 mb-1 font-medium">Annual Cost</p>
+              <p className="text-2xl font-bold text-white">${((totalMonthlyPayroll * 12) / 1000).toFixed(0)}k</p>
             </div>
           </div>
 
@@ -208,7 +208,7 @@ export function PayrollAnalytics({ totalMonthlyPayroll, employeeCount, employees
                   cx="80"
                   cy="80"
                   r="70"
-                  stroke="#e5e7eb"
+                  stroke="rgba(255, 255, 255, 0.1)"
                   strokeWidth="12"
                   fill="transparent"
                 />
@@ -230,8 +230,8 @@ export function PayrollAnalytics({ totalMonthlyPayroll, employeeCount, employees
                 </defs>
               </svg>
               <div className="absolute inset-0 flex flex-col items-center justify-center">
-                <span className="text-3xl font-bold text-purple-900">{employeeCount}</span>
-                <span className="text-xs text-gray-600">Employees</span>
+                <span className="text-3xl font-bold text-white">{employeeCount}</span>
+                <span className="text-xs text-gray-300">Employees</span>
               </div>
             </div>
           </div>

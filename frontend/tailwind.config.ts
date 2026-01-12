@@ -24,35 +24,55 @@ const config: Config = {
         background: 'hsl(var(--background))',
         foreground: 'hsl(var(--foreground))',
         primary: {
-          DEFAULT: '#3b82f6', // Blue
-          foreground: 'hsl(var(--primary-foreground))',
+          DEFAULT: '#9333ea', // Purple-600 (consistent with brand)
+          foreground: '#ffffff',
+          50: '#faf5ff',
+          100: '#f3e8ff',
+          200: '#e9d5ff',
+          300: '#d8b4fe',
+          400: '#c084fc',
+          500: '#a855f7',
+          600: '#9333ea',
+          700: '#7e22ce',
+          800: '#6b21a8',
+          900: '#581c87',
         },
         secondary: {
-          DEFAULT: '#1f2937', // Dark gray
-          foreground: 'hsl(var(--secondary-foreground))',
+          DEFAULT: '#f3f4f6', // Gray-100 (lighter for better contrast)
+          foreground: '#111827',
         },
         destructive: {
-          DEFAULT: 'hsl(var(--destructive))',
-          foreground: 'hsl(var(--destructive-foreground))',
+          DEFAULT: '#ef4444', // Red-500
+          foreground: '#ffffff',
         },
         muted: {
-          DEFAULT: 'hsl(var(--muted))',
-          foreground: 'hsl(var(--muted-foreground))',
+          DEFAULT: '#f9fafb',
+          foreground: '#6b7280',
         },
         accent: {
-          DEFAULT: 'hsl(var(--accent))',
-          foreground: 'hsl(var(--accent-foreground))',
+          DEFAULT: '#ec4899', // Pink-500 (complementary to purple)
+          foreground: '#ffffff',
         },
         popover: {
-          DEFAULT: 'hsl(var(--popover))',
-          foreground: 'hsl(var(--popover-foreground))',
+          DEFAULT: '#ffffff',
+          foreground: '#111827',
         },
         card: {
-          DEFAULT: 'hsl(var(--card))',
-          foreground: 'hsl(var(--card-foreground))',
+          DEFAULT: '#ffffff',
+          foreground: '#111827',
         },
-        success: '#10b981',
-        warning: '#f59e0b',
+        success: {
+          DEFAULT: '#10b981', // Green-500
+          foreground: '#ffffff',
+        },
+        warning: {
+          DEFAULT: '#f59e0b', // Amber-500
+          foreground: '#ffffff',
+        },
+        info: {
+          DEFAULT: '#3b82f6', // Blue-500
+          foreground: '#ffffff',
+        },
       },
       borderRadius: {
         lg: 'var(--radius)',
@@ -68,10 +88,15 @@ const config: Config = {
           from: { height: 'var(--radix-accordion-content-height)' },
           to: { height: '0' },
         },
+        'scan': {
+          '0%': { transform: 'translateY(0)' },
+          '100%': { transform: 'translateY(400px)' },
+        },
       },
       animation: {
         'accordion-down': 'accordion-down 0.2s ease-out',
         'accordion-up': 'accordion-up 0.2s ease-out',
+        'scan': 'scan 3s ease-in-out infinite',
       },
     },
   },

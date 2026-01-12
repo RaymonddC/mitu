@@ -3,7 +3,7 @@
  */
 
 import { Router } from 'express';
-import { createEmployer, getEmployer, updateEmployer, listEmployers } from '../controllers/employerController';
+import { createEmployer, getEmployer, updateEmployer, listEmployers, deleteEmployer } from '../controllers/employerController';
 
 const router = Router();
 
@@ -31,5 +31,11 @@ router.get('/:walletAddress', getEmployer);
  * Update employer details
  */
 router.put('/:id', updateEmployer);
+
+/**
+ * DELETE /api/employers/:id
+ * Delete employer (soft delete)
+ */
+router.delete('/:id', deleteEmployer);
 
 export default router;

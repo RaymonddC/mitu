@@ -7,7 +7,7 @@
  */
 
 import '@rainbow-me/rainbowkit/styles.css';
-import { RainbowKitProvider, connectorsForWallets } from '@rainbow-me/rainbowkit';
+import { RainbowKitProvider, connectorsForWallets, darkTheme } from '@rainbow-me/rainbowkit';
 import { metaMaskWallet, coinbaseWallet, walletConnectWallet, injectedWallet } from '@rainbow-me/rainbowkit/wallets';
 import { WagmiProvider, createConfig, http } from 'wagmi';
 import { sepolia, mainnet } from 'wagmi/chains';
@@ -57,7 +57,16 @@ export function Providers({ children }: { children: ReactNode }) {
   return (
     <WagmiProvider config={config}>
       <QueryClientProvider client={queryClient}>
-        <RainbowKitProvider modalSize="compact" showRecentTransactions={true}>
+        <RainbowKitProvider
+          modalSize="compact"
+          showRecentTransactions={true}
+          theme={darkTheme({
+            accentColor: '#3b82f6',
+            accentColorForeground: 'white',
+            borderRadius: 'medium',
+            overlayBlur: 'small',
+          })}
+        >
           {children}
         </RainbowKitProvider>
       </QueryClientProvider>

@@ -165,6 +165,7 @@ export const employerAPI = {
   create: (data: Partial<Employer>) => api.post('/employers', data),
   get: (walletAddress: string) => api.get<{ data: Employer }>(`/employers/${walletAddress}`),
   update: (id: string, data: Partial<Employer>) => api.put(`/employers/${id}`, data),
+  delete: (id: string) => api.delete(`/employers/${id}`),
 };
 
 // Employee API

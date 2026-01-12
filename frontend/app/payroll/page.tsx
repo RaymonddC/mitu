@@ -3,14 +3,15 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useStore } from '@/lib/store'
-import { payrollAPI, employeeAPI, riskAPI, type PayrollLog, type Employee, type EmployeeRiskResult } from '@/lib/api'
+import { payrollAPI, employeeAPI, type PayrollLog, type Employee } from '@/lib/api'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { formatCurrency, formatWalletAddress, formatDateTime, getStatusColor, getEtherscanTxUrl } from '@/lib/utils'
-import { PlayCircle, Clock, CheckCircle, XCircle, ExternalLink, RefreshCw, Shield, AlertTriangle } from 'lucide-react'
+import { PlayCircle, Clock, CheckCircle, XCircle, ExternalLink, RefreshCw, History, Wallet } from 'lucide-react'
 import { toast } from '@/components/ui/toaster'
-import { RiskBadge } from '@/components/RiskBadge'
-import { InfoTooltip } from '@/components/InfoTooltip'
+import { WalletApproval } from '@/components/WalletApproval'
+
+type TabType = 'run' | 'history' | 'approvals';
 
 export default function PayrollPage() {
   const router = useRouter()
@@ -20,9 +21,7 @@ export default function PayrollPage() {
   const [loading, setLoading] = useState(true)
   const [running, setRunning] = useState(false)
   const [refreshing, setRefreshing] = useState(false)
-  const [riskResults, setRiskResults] = useState<EmployeeRiskResult[]>([])
-  const [screeningRisk, setScreeningRisk] = useState(false)
-  const [showRiskDetails, setShowRiskDetails] = useState(false)
+  const [activeTab, setActiveTab] = useState<TabType>('run')
 
   useEffect(() => {
     if (!isConnected) {
@@ -30,10 +29,16 @@ export default function PayrollPage() {
       return
     }
 
+    // Redirect to company selection if no employer selected
+    if (!employer && !loading) {
+      router.push('/select-company')
+      return
+    }
+
     if (employer) {
       loadData()
     }
-  }, [isConnected, employer])
+  }, [isConnected, employer, loading])
 
   // Auto-refresh when page becomes visible
   useEffect(() => {
@@ -81,12 +86,13 @@ export default function PayrollPage() {
       })
 
       // Always expects approval (non-custodial mode only)
-      toast.success('Approval Created', 'Redirecting to dashboard to approve with your wallet...')
+      toast.success('Approval Created', 'Payroll approval created successfully. Go to Pending Approvals tab to approve with your wallet.')
 
-      // Redirect to dashboard after 1 second
-      setTimeout(() => {
-        router.push('/dashboard')
-      }, 1500)
+      // Refresh the page data to show the pending approval
+      await loadData()
+
+      // Switch to the approvals tab
+      setActiveTab('approvals')
 
     } catch (error: any) {
       console.error('Failed to create approval:', error)
@@ -118,30 +124,6 @@ export default function PayrollPage() {
     }
   }
 
-  const handleScreenEmployees = async () => {
-    if (!employer) return
-
-    setScreeningRisk(true)
-    try {
-      const res = await riskAPI.screenEmployees(employer.id)
-      setRiskResults(res.data.data.results)
-      setShowRiskDetails(true)
-
-      const summary = res.data.data.summary
-      if (summary.blocked > 0) {
-        toast.warning('Blocked Wallets', `${summary.blocked} employee(s) blocked. Check details below.`)
-      } else if (summary.risky > 0) {
-        toast.warning('Review Required', `${summary.risky} employee(s) need review.`)
-      } else {
-        toast.success('All Clear', `All ${summary.safe} employees passed screening.`)
-      }
-    } catch (error: any) {
-      toast.error('Screening Failed', error.response?.data?.message || 'Failed to screen employees')
-    } finally {
-      setScreeningRisk(false)
-    }
-  }
-
   if (loading) {
     return (
       <div className="container mx-auto px-4 py-8 pt-24">
@@ -152,369 +134,224 @@ export default function PayrollPage() {
 
   const totalPayroll = employees.reduce((sum, emp) => sum + Number(emp.salaryAmount), 0)
 
+  const tabs = [
+    { id: 'run' as TabType, label: 'Run Payroll', icon: PlayCircle },
+    { id: 'approvals' as TabType, label: 'Pending Approvals', icon: Wallet },
+    { id: 'history' as TabType, label: 'Payment History', icon: History },
+  ];
+
   return (
-    <div className="container mx-auto px-4 py-8 pt-24 space-y-8">
-      <div>
-        <h1 className="text-3xl font-bold">Payroll Management</h1>
-        <p className="text-gray-600 mt-1">Create payroll approvals and view payment history</p>
-      </div>
+    <div className="min-h-screen bg-gradient-to-br from-gray-950 via-slate-950 to-gray-950">
+      {/* Animated background effects */}
+      <div className="absolute inset-0 bg-[url('/grid.svg')] bg-center [mask-image:linear-gradient(180deg,white,rgba(255,255,255,0))]"></div>
 
-      {/* Run Payroll Card */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Run Payroll</CardTitle>
-          <CardDescription>
-            Review employee list and create payment approval
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          {employees.length > 0 && (
-            <div className="p-4 bg-gradient-to-r from-blue-50 to-cyan-50 border border-blue-200 rounded-lg">
-              <div className="flex items-start gap-3">
-                <Shield className="h-5 w-5 text-blue-600 flex-shrink-0 mt-0.5" />
-                <div>
-                  <p className="text-sm font-semibold text-blue-900 mb-1">Security First</p>
-                  <p className="text-xs text-blue-700 leading-relaxed mb-2">
-                    We recommend screening all employees before running payroll to detect any high-risk wallets.
-                  </p>
-                  <p className="text-xs text-blue-600 font-medium">
-                    Click "Screen All Employees" to check for sanctions, scams, and suspicious activity.
-                  </p>
-                </div>
-              </div>
-            </div>
-          )}
-          <div className="rounded-lg border border-gray-200 bg-gray-50 p-4">
-            <div className="grid gap-4 md:grid-cols-3">
-              <div>
-                <div className="text-sm text-gray-600">Total Employees</div>
-                <div className="text-2xl font-bold">{employees.length}</div>
-              </div>
-              <div>
-                <div className="text-sm text-gray-600">Total Amount</div>
-                <div className="text-2xl font-bold">{formatCurrency(totalPayroll)}</div>
-              </div>
-              <div>
-                <div className="text-sm text-gray-600">Status</div>
-                <div className="text-2xl font-bold">
-                  {running ? 'Running...' : 'Ready'}
-                </div>
-              </div>
-            </div>
-          </div>
+      {/* Floating orbs */}
+      <div className="absolute top-20 left-10 w-72 h-72 bg-blue-500/30 rounded-full blur-3xl animate-pulse"></div>
+      <div className="absolute bottom-20 right-10 w-96 h-96 bg-purple-500/20 rounded-full blur-3xl animate-pulse"></div>
 
-          <div className="rounded-lg bg-secondary border border-border p-4">
-            <div className="flex items-start gap-3">
-              <div className="flex-shrink-0">
-                <div className="h-10 w-10 bg-primary rounded-full flex items-center justify-center">
-                  <span className="text-white text-lg">🔐</span>
-                </div>
-              </div>
-              <div>
-                <h3 className="font-semibold text-foreground mb-1">Non-Custodial Wallet Signing</h3>
-                <p className="text-sm text-muted-foreground">
-                  This system uses <strong>wallet signing only</strong>. When you run payroll, an approval will be created.
-                  You'll then sign the transactions with your MetaMask wallet. Your funds stay in your wallet - maximum security!
-                </p>
-              </div>
-            </div>
-          </div>
+      <div className="relative container mx-auto px-4 md:px-6 py-8 pt-24 space-y-8">
+        <div className="mb-4">
+          <h1 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent">
+            Payroll Management
+          </h1>
+          <p className="text-gray-300 mt-3 text-base md:text-lg">Create payroll approvals and view payment history</p>
+        </div>
 
-          <div className="flex gap-3">
-            <Button
-              onClick={handleScreenEmployees}
-              disabled={screeningRisk || employees.length === 0}
-              size="lg"
-              variant="outline"
-              className="border-blue-300 text-blue-700 hover:bg-blue-50 hover:scale-105 transition-all duration-200"
-            >
-              {screeningRisk ? (
-                <>
-                  <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
-                  Screening...
-                </>
-              ) : (
-                <>
-                  <Shield className="mr-2 h-4 w-4" />
-                  Screen All Employees
-                </>
-              )}
-            </Button>
-            <Button
-              onClick={handleRunPayroll}
-              disabled={running || employees.length === 0}
-              size="lg"
-              className="bg-primary hover:bg-primary/90 hover:scale-105 transition-all duration-200"
-            >
-              {running ? (
-                <>
-                  <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
-                  Creating Approval...
-                </>
-              ) : (
-                <>
-                  <PlayCircle className="mr-2 h-4 w-4" />
-                  Create Payroll Approval
-                </>
-              )}
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Risk Screening Results */}
-      {showRiskDetails && riskResults.length > 0 && (
-        <Card className="border-2 border-blue-200">
-          <CardHeader className="bg-gradient-to-r from-blue-50 to-cyan-50">
-            <div className="flex items-center justify-between">
-              <div>
-                <CardTitle className="flex items-center gap-2">
-                  <Shield className="h-5 w-5 text-blue-600" />
-                  Security Screening Results
-                  <InfoTooltip content="This screening checks employee wallets against sanctions lists, known scams, and analyzes transaction patterns, wallet age, and balance behavior." size="md" />
-                </CardTitle>
-                <CardDescription>
-                  {riskResults.filter(r => r.action === 'block').length > 0
-                    ? `${riskResults.filter(r => r.action === 'block').length} high-risk wallet(s) detected`
-                    : riskResults.filter(r => r.action === 'warn').length > 0
-                    ? `${riskResults.filter(r => r.action === 'warn').length} wallet(s) require review`
-                    : 'All employees cleared for payroll'}
-                </CardDescription>
-              </div>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setShowRiskDetails(false)}
-              >
-                Hide
-              </Button>
-            </div>
-          </CardHeader>
-          <CardContent className="pt-6">
-            {/* Summary Stats */}
-            {riskResults.length > 0 && (
-              <div className="grid grid-cols-4 gap-4 mb-6 p-4 bg-gray-50 rounded-lg">
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-gray-900">{riskResults.length}</div>
-                  <div className="text-xs text-gray-600">Total Scanned</div>
-                </div>
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-green-600">
-                    {riskResults.filter(r => r.action === 'proceed').length}
-                  </div>
-                  <div className="text-xs text-gray-600">Safe</div>
-                </div>
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-yellow-600">
-                    {riskResults.filter(r => r.action === 'warn').length}
-                  </div>
-                  <div className="text-xs text-gray-600">Warning</div>
-                </div>
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-red-600">
-                    {riskResults.filter(r => r.action === 'block').length}
-                  </div>
-                  <div className="text-xs text-gray-600">Blocked</div>
-                </div>
-              </div>
-            )}
-            <div className="space-y-3">
-              {riskResults.map((result) => (
-                <div
-                  key={result.employeeId}
-                  className={`rounded-lg border-2 p-4 transition-all ${
-                    result.action === 'block'
-                      ? 'border-red-300 bg-red-50'
-                      : result.action === 'warn'
-                      ? 'border-yellow-300 bg-yellow-50'
-                      : 'border-green-300 bg-green-50'
+        {/* Tabs Navigation */}
+        <div className="border-b border-white/20 mt-6">
+          <div className="flex flex-wrap gap-4 sm:gap-6 md:gap-8">
+            {tabs.map((tab) => {
+              const Icon = tab.icon;
+              return (
+                <button
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id)}
+                  className={`flex items-center gap-2 pb-4 px-1 border-b-2 font-medium transition-colors text-sm md:text-base ${
+                    activeTab === tab.id
+                      ? 'border-blue-400 text-blue-400'
+                      : 'border-transparent text-gray-400 hover:text-gray-200 hover:border-gray-500'
                   }`}
                 >
-                  <div className="flex items-start justify-between gap-4">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-3 mb-3">
-                        <div className="font-semibold text-gray-900">{result.employeeName}</div>
-                        <span className="text-xs text-gray-500 font-mono bg-white px-2 py-0.5 rounded">
-                          {formatWalletAddress(result.walletAddress)}
-                        </span>
-                        <span className="text-sm font-medium text-gray-700 bg-white px-2 py-0.5 rounded">
-                          {formatCurrency(result.salaryAmount)}
-                        </span>
-                        {!result.canPayroll && (
-                          <span className="text-xs font-bold text-red-700 bg-red-100 px-2 py-1 rounded animate-pulse">
-                            🚫 BLOCKED
-                          </span>
-                        )}
-                      </div>
-                      <RiskBadge
-                        riskLevel={result.riskLevel as any}
-                        riskScore={result.riskScore}
-                        summary={result.summary}
-                        action={result.action as any}
-                        compact={false}
-                        showDetails={true}
-                      />
-                    </div>
-                    {!result.canPayroll && (
-                      <div className="flex-shrink-0">
-                        <div className="rounded-full bg-red-200 p-3 animate-pulse">
-                          <AlertTriangle className="h-6 w-6 text-red-700" />
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              ))}
-            </div>
-            {/* Critical Warning Banner */}
-            {riskResults.filter(r => r.action === 'block').length > 0 && (
-              <div className="mt-4 p-4 bg-red-50 border-2 border-red-300 rounded-lg animate-pulse">
-                <div className="flex items-start gap-3">
-                  <AlertTriangle className="h-6 w-6 text-red-700 flex-shrink-0 mt-0.5" />
-                  <div>
-                    <p className="text-sm font-bold text-red-900 mb-1">
-                      ⛔ CRITICAL SECURITY ALERT
-                    </p>
-                    <p className="text-sm text-red-800 leading-relaxed">
-                      <strong>{riskResults.filter(r => r.action === 'block').length} employee(s)</strong> have been <strong>BLOCKED</strong> and will be <strong>automatically excluded</strong> from payroll due to:
-                    </p>
-                    <ul className="mt-2 space-y-1 text-xs text-red-700 ml-4 list-disc">
-                      <li>OFAC sanctions (US Treasury blocked addresses)</li>
-                      <li>Tornado Cash mixer usage (privacy service)</li>
-                      <li>Known scam/fraud addresses</li>
-                      <li>Critical risk score (81-100)</li>
-                    </ul>
-                    <p className="mt-2 text-xs text-red-800 font-semibold">
-                      ⚠️ Do NOT attempt to pay these wallets manually. Contact compliance immediately.
-                    </p>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* Warning Banner for Risky Wallets */}
-            {riskResults.filter(r => r.action === 'warn').length > 0 && riskResults.filter(r => r.action === 'block').length === 0 && (
-              <div className="mt-4 p-4 bg-yellow-50 border-2 border-yellow-300 rounded-lg">
-                <div className="flex items-start gap-3">
-                  <Shield className="h-5 w-5 text-yellow-700 flex-shrink-0 mt-0.5" />
-                  <div>
-                    <p className="text-sm font-bold text-yellow-900 mb-1">
-                      ⚠️ Manual Review Required
-                    </p>
-                    <p className="text-sm text-yellow-800">
-                      {riskResults.filter(r => r.action === 'warn').length} employee(s) flagged with medium/high risk. Review recommended before proceeding with payroll.
-                    </p>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* Success Banner */}
-            {riskResults.filter(r => r.action === 'block').length === 0 && riskResults.filter(r => r.action === 'warn').length === 0 && (
-              <div className="mt-4 p-4 bg-green-50 border-2 border-green-300 rounded-lg">
-                <div className="flex items-start gap-3">
-                  <CheckCircle className="h-5 w-5 text-green-700 flex-shrink-0 mt-0.5" />
-                  <div>
-                    <p className="text-sm font-bold text-green-900 mb-1">
-                      ✅ All Clear - Safe to Proceed
-                    </p>
-                    <p className="text-sm text-green-800">
-                      All employees passed security screening. No high-risk wallets detected. You can safely run payroll.
-                    </p>
-                  </div>
-                </div>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Payroll History */}
-      <Card>
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <div>
-              <CardTitle>Payment History</CardTitle>
-              <CardDescription>Recent salary executions</CardDescription>
-            </div>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleRefresh}
-              disabled={refreshing}
-            >
-              <RefreshCw className={`h-4 w-4 mr-2 ${refreshing ? 'animate-spin' : ''}`} />
-              Refresh
-            </Button>
+                  <Icon className="h-4 w-4 md:h-5 md:w-5" />
+                  <span className="whitespace-nowrap">{tab.label}</span>
+                </button>
+              );
+            })}
           </div>
-        </CardHeader>
-        <CardContent>
-          {payrollHistory.length === 0 ? (
-            <div className="text-center py-12 text-gray-500">
-              No payroll history yet. Run your first payroll!
-            </div>
-          ) : (
-            <div className="space-y-3">
-              {payrollHistory.map((log) => (
-                <div
-                  key={log.id}
-                  className="flex items-center justify-between rounded-lg border p-4 hover:bg-gray-50"
-                >
-                  <div className="flex items-center gap-4">
-                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gray-100">
-                      {log.status === 'completed' && <CheckCircle className="h-5 w-5 text-green-600" />}
-                      {log.status === 'pending' && <Clock className="h-5 w-5 text-yellow-600" />}
-                      {log.status === 'failed' && <XCircle className="h-5 w-5 text-red-600" />}
+        </div>
+
+        {/* Tab Content */}
+        <div className="space-y-6 md:space-y-8">
+          {/* Run Payroll Tab */}
+          {activeTab === 'run' && (
+            <Card className="bg-white/10 backdrop-blur-2xl border-white/20 shadow-xl">
+              <CardHeader className="pb-6">
+                <CardTitle className="text-white text-xl md:text-2xl">Run Payroll</CardTitle>
+                <CardDescription className="text-gray-400 text-sm md:text-base mt-2">
+                  Review employee list and create payment approval
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div className="rounded-lg border border-white/20 bg-white/5 p-5 md:p-6">
+                  <div className="grid gap-6 sm:grid-cols-2 md:grid-cols-3">
+                    <div>
+                      <div className="text-xs md:text-sm text-gray-400 mb-2">Total Employees</div>
+                      <div className="text-xl md:text-2xl font-bold text-white">{employees.length}</div>
                     </div>
                     <div>
-                      <div className="font-medium">
-                        {log.employee?.name || 'Unknown Employee'}
+                      <div className="text-xs md:text-sm text-gray-400 mb-2">Total Amount</div>
+                      <div className="text-xl md:text-2xl font-bold text-white">{formatCurrency(totalPayroll)}</div>
+                    </div>
+                    <div className="sm:col-span-2 md:col-span-1">
+                      <div className="text-xs md:text-sm text-gray-400 mb-2">Status</div>
+                      <div className="text-xl md:text-2xl font-bold text-white">
+                        {running ? 'Running...' : 'Ready'}
                       </div>
-                      <div className="text-sm text-gray-600">
-                        {log.employee?.walletAddress && formatWalletAddress(log.employee.walletAddress)}
-                      </div>
                     </div>
-                  </div>
-
-                  <div className="flex items-center gap-6">
-                    <div className="text-right">
-                      <div className="font-semibold">{formatCurrency(Number(log.amount))}</div>
-                      <div className="text-xs text-gray-500">{formatDateTime(log.executedAt)}</div>
-                    </div>
-
-                    <div>
-                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(log.status)}`}>
-                        {log.status}
-                      </span>
-                    </div>
-
-                    {log.txHash && (
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        onClick={() => window.open(getEtherscanTxUrl(log.txHash!, Number(process.env.NEXT_PUBLIC_ETHEREUM_CHAIN_ID) || 1), '_blank')}
-                      >
-                        <ExternalLink className="h-4 w-4" />
-                      </Button>
-                    )}
-
-                    {log.status === 'failed' && log.retryCount < 3 && (
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => handleRetry(log.id)}
-                      >
-                        <RefreshCw className="h-4 w-4 mr-1" />
-                        Retry
-                      </Button>
-                    )}
                   </div>
                 </div>
-              ))}
+
+                <div className="rounded-lg bg-white/5 border border-white/20 p-5 md:p-6">
+                  <div className="flex items-start gap-3 md:gap-4">
+                    <div className="flex-shrink-0">
+                      <div className="h-10 w-10 md:h-12 md:w-12 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-full flex items-center justify-center">
+                        <span className="text-white text-lg md:text-xl">🔐</span>
+                      </div>
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <h3 className="font-semibold text-white mb-2 text-base md:text-lg">Non-Custodial Wallet Signing</h3>
+                      <p className="text-sm md:text-base text-gray-300">
+                        This system uses <strong>wallet signing only</strong>. When you run payroll, an approval will be created.
+                        You'll then sign the transactions with your MetaMask wallet. Your funds stay in your wallet - maximum security!
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                <Button
+                  onClick={handleRunPayroll}
+                  disabled={running || employees.length === 0}
+                  size="lg"
+                  className="w-full bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-200 text-white text-sm md:text-base py-6"
+                >
+                  {running ? (
+                    <>
+                      <RefreshCw className="mr-2 h-4 w-4 md:h-5 md:w-5 animate-spin" />
+                      <span>Creating Approval...</span>
+                    </>
+                  ) : (
+                    <>
+                      <PlayCircle className="mr-2 h-4 w-4 md:h-5 md:w-5" />
+                      <span>Create Payroll Approval</span>
+                    </>
+                  )}
+                </Button>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Pending Approvals Tab */}
+          {activeTab === 'approvals' && employer && (
+            <div>
+              <WalletApproval
+                employerId={employer.id}
+                onApprovalComplete={loadData}
+              />
             </div>
           )}
-        </CardContent>
-      </Card>
+
+          {/* Payment History Tab */}
+          {activeTab === 'history' && (
+            <Card className="bg-white/10 backdrop-blur-2xl border-white/20 shadow-xl">
+              <CardHeader className="pb-6">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                  <div>
+                    <CardTitle className="text-white text-xl md:text-2xl">Payment History</CardTitle>
+                    <CardDescription className="text-gray-400 text-sm md:text-base mt-2">Recent salary executions</CardDescription>
+                  </div>
+                  <Button
+                    className="bg-white/10 hover:bg-white/20 text-white border-white/20 w-full sm:w-auto"
+                    size="sm"
+                    onClick={handleRefresh}
+                    disabled={refreshing}
+                  >
+                    <RefreshCw className={`h-4 w-4 mr-2 ${refreshing ? 'animate-spin' : ''}`} />
+                    Refresh
+                  </Button>
+                </div>
+              </CardHeader>
+              <CardContent>
+                {payrollHistory.length === 0 ? (
+                  <div className="text-center py-16 text-gray-400">
+                    <p className="text-base md:text-lg">No payroll history yet. Run your first payroll!</p>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {payrollHistory.map((log) => (
+                      <div
+                        key={log.id}
+                        className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 rounded-lg border border-white/10 bg-white/5 p-4 md:p-5 hover:bg-white/10 transition-all"
+                      >
+                        <div className="flex items-center gap-3 md:gap-4 min-w-0 flex-1">
+                          <div className="flex h-10 w-10 md:h-12 md:w-12 flex-shrink-0 items-center justify-center rounded-full bg-white/10">
+                            {log.status === 'completed' && <CheckCircle className="h-5 w-5 md:h-6 md:w-6 text-green-400" />}
+                            {log.status === 'pending' && <Clock className="h-5 w-5 md:h-6 md:w-6 text-yellow-400" />}
+                            {log.status === 'failed' && <XCircle className="h-5 w-5 md:h-6 md:w-6 text-red-400" />}
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <div className="font-medium text-white text-sm md:text-base truncate">
+                              {log.employee?.name || 'Unknown Employee'}
+                            </div>
+                            <div className="text-xs md:text-sm text-gray-400 truncate">
+                              {log.employee?.walletAddress && formatWalletAddress(log.employee.walletAddress)}
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="flex flex-wrap items-center gap-3 sm:gap-4">
+                          <div className="text-left sm:text-right">
+                            <div className="font-semibold text-white text-sm md:text-base">{formatCurrency(Number(log.amount))}</div>
+                            <div className="text-xs text-gray-400">{formatDateTime(log.executedAt)}</div>
+                          </div>
+
+                          <div>
+                            <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium ${getStatusColor(log.status)}`}>
+                              {log.status}
+                            </span>
+                          </div>
+
+                          <div className="flex gap-2">
+                            {log.txHash && (
+                              <Button
+                                size="sm"
+                                className="bg-white/10 hover:bg-white/20 text-white"
+                                onClick={() => window.open(getEtherscanTxUrl(log.txHash!, Number(process.env.NEXT_PUBLIC_ETHEREUM_CHAIN_ID) || 1), '_blank')}
+                              >
+                                <ExternalLink className="h-4 w-4" />
+                              </Button>
+                            )}
+
+                            {log.status === 'failed' && log.retryCount < 3 && (
+                              <Button
+                                size="sm"
+                                className="bg-white/10 hover:bg-white/20 text-white border-white/20"
+                                onClick={() => handleRetry(log.id)}
+                              >
+                                <RefreshCw className="h-4 w-4 mr-1" />
+                                <span className="hidden sm:inline">Retry</span>
+                              </Button>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          )}
+        </div>
+      </div>
     </div>
   )
 }
