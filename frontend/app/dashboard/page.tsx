@@ -8,14 +8,13 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { formatCurrency, formatDate, getSeverityColor } from '@/lib/utils';
 import { Users, DollarSign, Calendar, AlertCircle, PlayCircle, BarChart3, Settings, Wallet } from 'lucide-react';
-import { WalletApproval } from '@/components/WalletApproval';
 import { BudgetManagement } from '@/components/BudgetManagement';
 import { PayrollAnalytics } from '@/components/PayrollAnalytics';
 import { isBatchTransferAvailable, calculateGasSavings } from '@/lib/batchTransferABI';
 import { checkBatchApproval, approveBatchContract } from '@/lib/batchApproval';
 import { useWalletClient } from 'wagmi';
 
-type TabType = 'overview' | 'approvals' | 'analytics' | 'budget';
+type TabType = 'overview' | 'analytics' | 'budget';
 
 export default function DashboardPage() {
   const router = useRouter();
@@ -338,7 +337,6 @@ export default function DashboardPage() {
 
   const tabs = [
     { id: 'overview' as TabType, label: 'Overview', icon: BarChart3 },
-    { id: 'approvals' as TabType, label: 'Pending Approvals', icon: Wallet },
     { id: 'analytics' as TabType, label: 'Analytics', icon: BarChart3 },
     { id: 'budget' as TabType, label: 'Budget & Automation', icon: Settings },
   ];
@@ -485,22 +483,6 @@ export default function DashboardPage() {
                 </CardContent>
               </Card>
             </div>
-          )}
-
-          {/* Pending Approvals Tab */}
-          {activeTab === 'approvals' && (
-            <Card className="bg-white/10 backdrop-blur-2xl border-white/20 shadow-xl">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-white">
-                  <Wallet className="h-5 w-5 text-blue-400" />
-                  Pending Approvals
-                </CardTitle>
-                <CardDescription className="text-gray-400">Transactions waiting for your signature</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <WalletApproval employerId={employer.id} onApprovalComplete={loadData} />
-              </CardContent>
-            </Card>
           )}
 
           {/* Analytics Tab */}

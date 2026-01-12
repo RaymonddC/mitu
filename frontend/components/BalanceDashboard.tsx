@@ -202,16 +202,16 @@ export function BalanceDashboard({ employerId }: BalanceDashboardProps) {
 
           {/* Deposit Form */}
           {showDepositForm && (
-            <div className="mt-4 p-4 border rounded-lg bg-gray-50">
-              <h4 className="font-semibold mb-3">Deposit Funds</h4>
+            <div className="mt-4 p-4 border border-white/20 rounded-lg bg-white/10">
+              <h4 className="font-semibold mb-3 text-white">Deposit Funds</h4>
               <div className="space-y-3">
                 <div>
-                  <label className="block text-sm font-medium mb-1">Amount (MNEE)</label>
+                  <label className="block text-sm font-medium mb-1 text-white">Amount (MNEE)</label>
                   <input
                     type="number"
                     value={depositAmount}
                     onChange={(e) => setDepositAmount(e.target.value)}
-                    className="w-full px-3 py-2 border rounded-md"
+                    className="w-full px-3 py-2 border border-white/20 bg-white/5 rounded-md text-white placeholder-gray-400"
                     placeholder="Enter amount"
                     step="0.00000001"
                     min="0"
@@ -229,28 +229,28 @@ export function BalanceDashboard({ employerId }: BalanceDashboardProps) {
 
           {/* Withdraw Form */}
           {showWithdrawForm && (
-            <div className="mt-4 p-4 border rounded-lg bg-gray-50">
-              <h4 className="font-semibold mb-3">Withdraw Funds</h4>
+            <div className="mt-4 p-4 border border-white/20 rounded-lg bg-white/10">
+              <h4 className="font-semibold mb-3 text-white">Withdraw Funds</h4>
               <div className="space-y-3">
                 <div>
-                  <label className="block text-sm font-medium mb-1">Amount (MNEE)</label>
+                  <label className="block text-sm font-medium mb-1 text-white">Amount (MNEE)</label>
                   <input
                     type="number"
                     value={withdrawAmount}
                     onChange={(e) => setWithdrawAmount(e.target.value)}
-                    className="w-full px-3 py-2 border rounded-md"
+                    className="w-full px-3 py-2 border border-white/20 bg-white/5 rounded-md text-white placeholder-gray-400"
                     placeholder="Enter amount"
                     step="0.00000001"
                     min="0"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-1">Destination Address</label>
+                  <label className="block text-sm font-medium mb-1 text-white">Destination Address</label>
                   <input
                     type="text"
                     value={withdrawAddress}
                     onChange={(e) => setWithdrawAddress(e.target.value)}
-                    className="w-full px-3 py-2 border rounded-md font-mono text-sm"
+                    className="w-full px-3 py-2 border border-white/20 bg-white/5 rounded-md font-mono text-sm text-white placeholder-gray-400"
                     placeholder="Enter Bitcoin address"
                   />
                 </div>
@@ -280,7 +280,7 @@ export function BalanceDashboard({ employerId }: BalanceDashboardProps) {
               {transactions.map((tx) => (
                 <div
                   key={tx.id}
-                  className="flex items-center justify-between p-3 border rounded-lg hover:bg-gray-50"
+                  className="flex items-center justify-between p-3 border border-white/20 bg-white/5 rounded-lg hover:bg-white/10"
                 >
                   <div className="flex items-center gap-3">
                     {getTransactionTypeIcon(tx.type)}

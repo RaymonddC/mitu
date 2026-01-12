@@ -7,10 +7,11 @@ import { payrollAPI, employeeAPI, type PayrollLog, type Employee } from '@/lib/a
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { formatCurrency, formatWalletAddress, formatDateTime, getStatusColor, getEtherscanTxUrl } from '@/lib/utils'
-import { PlayCircle, Clock, CheckCircle, XCircle, ExternalLink, RefreshCw, History } from 'lucide-react'
+import { PlayCircle, Clock, CheckCircle, XCircle, ExternalLink, RefreshCw, History, Wallet } from 'lucide-react'
 import { toast } from '@/components/ui/toaster'
+import { WalletApproval } from '@/components/WalletApproval'
 
-type TabType = 'run' | 'history';
+type TabType = 'run' | 'history' | 'approvals';
 
 export default function PayrollPage() {
   const router = useRouter()
@@ -85,12 +86,13 @@ export default function PayrollPage() {
       })
 
       // Always expects approval (non-custodial mode only)
-      toast.success('Approval Created', 'Redirecting to dashboard to approve with your wallet...')
+      toast.success('Approval Created', 'Payroll approval created successfully. Go to Pending Approvals tab to approve with your wallet.')
 
-      // Redirect to dashboard after 1 second
-      setTimeout(() => {
-        router.push('/dashboard')
-      }, 1500)
+      // Refresh the page data to show the pending approval
+      await loadData()
+
+      // Switch to the approvals tab
+      setActiveTab('approvals')
 
     } catch (error: any) {
       console.error('Failed to create approval:', error)
@@ -134,6 +136,7 @@ export default function PayrollPage() {
 
   const tabs = [
     { id: 'run' as TabType, label: 'Run Payroll', icon: PlayCircle },
+    { id: 'approvals' as TabType, label: 'Pending Approvals', icon: Wallet },
     { id: 'history' as TabType, label: 'Payment History', icon: History },
   ];
 
@@ -245,6 +248,16 @@ export default function PayrollPage() {
                 </Button>
               </CardContent>
             </Card>
+          )}
+
+          {/* Pending Approvals Tab */}
+          {activeTab === 'approvals' && employer && (
+            <div>
+              <WalletApproval
+                employerId={employer.id}
+                onApprovalComplete={loadData}
+              />
+            </div>
           )}
 
           {/* Payment History Tab */}

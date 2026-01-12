@@ -69,20 +69,20 @@ function DialogContent({ children, className }: DialogContentProps) {
     <>
       {/* Backdrop */}
       <div
-        className="fixed inset-0 bg-black/50 z-50"
+        className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50"
         onClick={() => setOpen(false)}
       />
 
       {/* Dialog */}
       <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
         <div
-          className={`bg-white rounded-lg shadow-lg max-w-lg w-full max-h-[90vh] overflow-y-auto relative ${className || ''}`}
+          className={`bg-slate-900 border-2 border-white/20 rounded-lg shadow-2xl max-w-lg w-full max-h-[90vh] overflow-y-auto relative ${className || ''}`}
           onClick={(e) => e.stopPropagation()}
         >
           {/* Close Button */}
           <button
             onClick={() => setOpen(false)}
-            className="absolute right-4 top-4 rounded-sm opacity-70 hover:opacity-100 transition-opacity focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2"
+            className="absolute right-4 top-4 rounded-sm text-gray-400 hover:text-white opacity-70 hover:opacity-100 transition-opacity focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 focus:ring-offset-slate-900"
             aria-label="Close"
           >
             <svg
@@ -127,7 +127,7 @@ interface DialogTitleProps {
 
 function DialogTitle({ children, className }: DialogTitleProps) {
   return (
-    <h2 className={`text-lg font-semibold ${className || ''}`}>
+    <h2 className={`text-lg font-semibold text-white ${className || ''}`}>
       {children}
     </h2>
   );
@@ -140,7 +140,7 @@ interface DialogDescriptionProps {
 
 function DialogDescription({ children, className }: DialogDescriptionProps) {
   return (
-    <p className={`text-sm text-gray-600 mt-2 ${className || ''}`}>
+    <p className={`text-sm text-gray-300 mt-2 ${className || ''}`}>
       {children}
     </p>
   );

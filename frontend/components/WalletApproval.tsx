@@ -339,6 +339,11 @@ export function WalletApproval({ employerId, onApprovalComplete }: WalletApprova
       // Refresh the list
       await fetchPendingApprovals();
 
+      // Call the callback to refresh parent component
+      if (onApprovalComplete) {
+        onApprovalComplete();
+      }
+
     } catch (error: any) {
       console.error('[TX Monitor] Timeout or error:', error);
 
@@ -638,7 +643,7 @@ export function WalletApproval({ employerId, onApprovalComplete }: WalletApprova
 
               {/* Expiration Warning */}
               {isExpired && (
-                <div className="flex items-center gap-2 text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-lg p-3">
+                <div className="flex items-center gap-2 text-sm text-amber-300 bg-amber-500/20 border border-amber-400/30 rounded-lg p-3">
                   <AlertCircle className="h-4 w-4" />
                   <p>Transaction expired. A new approval request will be created automatically.</p>
                 </div>
@@ -646,7 +651,7 @@ export function WalletApproval({ employerId, onApprovalComplete }: WalletApprova
 
               {/* Wallet Connection Warning */}
               {!address && (
-                <div className="flex items-center gap-2 text-sm text-blue-700 bg-blue-50 border border-blue-200 rounded-lg p-3">
+                <div className="flex items-center gap-2 text-sm text-blue-300 bg-blue-500/20 border border-blue-400/30 rounded-lg p-3">
                   <AlertCircle className="h-4 w-4" />
                   <p>Please connect your wallet to approve this transaction.</p>
                 </div>
@@ -658,47 +663,46 @@ export function WalletApproval({ employerId, onApprovalComplete }: WalletApprova
 
       {/* Confirmation Dialog */}
       <Dialog open={showConfirmDialog} onOpenChange={setShowConfirmDialog}>
-        <DialogContent className="max-w-2xl">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <Wallet className="h-5 w-5 text-purple-600" />
-              Confirm Payroll Transaction
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto bg-gradient-to-br from-slate-900 to-blue-900 border-2 border-purple-400/30">
+          <DialogHeader className="pb-3 px-2">
+            <DialogTitle className="flex items-center gap-2 text-lg md:text-xl">
+              <Wallet className="h-4 w-4 md:h-5 md:w-5 text-purple-400" />
+              <span className="break-words">Confirm Payroll Transaction</span>
             </DialogTitle>
-            <DialogDescription>
+            <DialogDescription className="text-xs md:text-sm mt-2">
               Please review the transaction details before signing with MetaMask
             </DialogDescription>
           </DialogHeader>
 
           {pendingApproval && (
-            <div className="space-y-4 py-4">
+            <div className="space-y-4 px-2">
               {/* Total Amount Highlight */}
-              <div className="bg-gradient-to-r from-purple-50 to-pink-50 border-2 border-purple-200 rounded-lg p-4">
-                <p className="text-sm text-purple-700 font-medium mb-2">Total Amount to Transfer</p>
-                <p className="text-4xl font-bold text-purple-900">{pendingApproval.totalAmount.toLocaleString()} MNEE</p>
-                <p className="text-sm text-purple-600 mt-1">to {pendingApproval.recipientCount} employees</p>
+              <div className="bg-gradient-to-r from-purple-500/20 to-pink-500/20 border-2 border-purple-400/40 rounded-lg p-4 md:p-5">
+                <p className="text-xs md:text-sm text-purple-300 font-medium mb-2">Total Amount to Transfer</p>
+                <p className="text-2xl md:text-3xl font-bold text-white mb-1 break-words">{pendingApproval.totalAmount.toLocaleString()} MNEE</p>
+                <p className="text-xs md:text-sm text-purple-200">to {pendingApproval.recipientCount} employees</p>
               </div>
 
               {/* Employee Breakdown */}
-              <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 max-h-64 overflow-y-auto">
-                <p className="text-sm font-semibold text-gray-900 mb-3 flex items-center gap-2">
-                  <Users className="h-4 w-4" />
+              <div className="bg-white/5 border border-white/20 rounded-lg p-4 md:p-5 max-h-48 md:max-h-60 overflow-y-auto">
+                <p className="text-sm md:text-base font-semibold text-white mb-3 flex items-center gap-2">
+                  <Users className="h-4 w-4 md:h-5 md:w-5" />
                   Employee Breakdown
                 </p>
-                <div className="space-y-2">
+                <div className="space-y-2 md:space-y-3">
                   {pendingApproval.recipients.map((recipient, index) => (
-                    <div key={recipient.employeeId} className="flex items-center justify-between bg-white rounded-lg p-3 border border-gray-200">
-                      <div className="flex items-center gap-3">
-                        <div className="h-8 w-8 rounded-full bg-purple-100 flex items-center justify-center text-purple-700 font-semibold text-sm">
+                    <div key={recipient.employeeId} className="flex flex-col sm:flex-row sm:items-center sm:justify-between bg-white/10 rounded-lg p-3 md:p-3.5 border border-white/20 gap-2 sm:gap-0">
+                      <div className="flex items-center gap-2 md:gap-3 min-w-0 flex-1">
+                        <div className="h-6 w-6 md:h-7 md:w-7 flex-shrink-0 rounded-full bg-purple-500/30 flex items-center justify-center text-purple-300 font-semibold text-xs border border-purple-400/30">
                           {index + 1}
                         </div>
-                        <div>
-                          <p className="font-medium text-gray-900">{recipient.name}</p>
-                          <p className="text-xs text-gray-500 font-mono">{recipient.address.slice(0, 10)}...{recipient.address.slice(-8)}</p>
+                        <div className="min-w-0 flex-1">
+                          <p className="font-medium text-white text-sm md:text-base truncate">{recipient.name}</p>
+                          <p className="text-xs text-gray-400 font-mono break-all sm:break-normal">{recipient.address.slice(0, 8)}...{recipient.address.slice(-6)}</p>
                         </div>
                       </div>
-                      <div className="text-right">
-                        <p className="font-bold text-gray-900">{recipient.amount.toLocaleString()} MNEE</p>
-                        <ArrowRight className="h-4 w-4 text-green-600 ml-auto" />
+                      <div className="text-left sm:text-right flex-shrink-0 pl-8 sm:pl-0">
+                        <p className="font-bold text-white text-sm md:text-base">{recipient.amount.toLocaleString()} MNEE</p>
                       </div>
                     </div>
                   ))}
@@ -707,12 +711,12 @@ export function WalletApproval({ employerId, onApprovalComplete }: WalletApprova
 
               {/* Transfer Mode Info */}
               {useBatchMode ? (
-                <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-                  <div className="flex items-start gap-3">
-                    <Zap className="h-5 w-5 text-green-600 mt-0.5" />
-                    <div className="flex-1">
-                      <p className="font-semibold text-green-900 mb-1">Batch Mode Enabled</p>
-                      <p className="text-sm text-green-700">
+                <div className="bg-green-500/20 border border-green-400/30 rounded-lg p-3 md:p-4">
+                  <div className="flex items-start gap-2 md:gap-3">
+                    <Zap className="h-4 w-4 md:h-5 md:w-5 text-green-400 mt-0.5 flex-shrink-0" />
+                    <div className="flex-1 min-w-0">
+                      <p className="font-semibold text-green-300 mb-1 text-xs md:text-sm">Batch Mode Enabled</p>
+                      <p className="text-xs md:text-sm text-green-200 break-words">
                         All {pendingApproval.recipientCount} payments will be processed in <strong>1 transaction</strong>.
                         {(() => {
                           const costData = calculateGasSavings(pendingApproval.recipientCount);
@@ -723,12 +727,12 @@ export function WalletApproval({ employerId, onApprovalComplete }: WalletApprova
                   </div>
                 </div>
               ) : (
-                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                  <div className="flex items-start gap-3">
-                    <Info className="h-5 w-5 text-blue-600 mt-0.5" />
-                    <div className="flex-1">
-                      <p className="font-semibold text-blue-900 mb-1">Individual Mode</p>
-                      <p className="text-sm text-blue-700">
+                <div className="bg-blue-500/20 border border-blue-400/30 rounded-lg p-3 md:p-4">
+                  <div className="flex items-start gap-2 md:gap-3">
+                    <Info className="h-4 w-4 md:h-5 md:w-5 text-blue-400 mt-0.5 flex-shrink-0" />
+                    <div className="flex-1 min-w-0">
+                      <p className="font-semibold text-blue-300 mb-1 text-xs md:text-sm">Individual Mode</p>
+                      <p className="text-xs md:text-sm text-blue-200 break-words">
                         You'll need to approve <strong>{pendingApproval.recipientCount} separate transactions</strong> in MetaMask.
                       </p>
                     </div>
@@ -738,17 +742,16 @@ export function WalletApproval({ employerId, onApprovalComplete }: WalletApprova
 
               {/* MetaMask Warning (only for batch mode) */}
               {useBatchMode && (
-                <div className="bg-amber-50 border border-amber-300 rounded-lg p-4">
-                  <div className="flex items-start gap-3">
-                    <AlertCircle className="h-5 w-5 text-amber-600 mt-0.5 flex-shrink-0" />
-                    <div>
-                      <p className="font-semibold text-amber-900 mb-2">MetaMask Display Limitation</p>
-                      <p className="text-sm text-amber-800 mb-2">
+                <div className="bg-amber-500/20 border border-amber-400/30 rounded-lg p-3 md:p-4">
+                  <div className="flex items-start gap-2 md:gap-3">
+                    <AlertCircle className="h-4 w-4 md:h-5 md:w-5 text-amber-400 mt-0.5 flex-shrink-0" />
+                    <div className="flex-1 min-w-0">
+                      <p className="font-semibold text-amber-300 mb-1 text-xs md:text-sm">MetaMask Display Limitation</p>
+                      <p className="text-xs md:text-sm text-amber-200 mb-2 break-words">
                         Due to MetaMask's limitations, it will only show <strong>{pendingApproval.recipients[0]?.amount.toLocaleString()} MNEE</strong> (first employee's amount) instead of the total <strong>{pendingApproval.totalAmount.toLocaleString()} MNEE</strong>.
                       </p>
-                      <p className="text-xs text-amber-700 bg-amber-100 rounded p-2 border border-amber-200">
+                      <p className="text-xs text-amber-200 bg-amber-500/20 rounded p-2 md:p-3 border border-amber-400/30 break-words">
                         <strong>This is normal!</strong> The actual transfer will be {pendingApproval.totalAmount.toLocaleString()} MNEE to all {pendingApproval.recipientCount} employees.
-                        You can verify the full transaction on Etherscan after signing.
                       </p>
                     </div>
                   </div>
@@ -757,22 +760,23 @@ export function WalletApproval({ employerId, onApprovalComplete }: WalletApprova
             </div>
           )}
 
-          <DialogFooter className="gap-2">
+          <DialogFooter className="gap-2 md:gap-3 pt-4 border-t border-white/20 mt-2 px-2 flex-col sm:flex-row">
             <Button
               variant="outline"
               onClick={() => {
                 setShowConfirmDialog(false);
                 setPendingApproval(null);
               }}
+              className="w-full sm:flex-1 bg-white/10 hover:bg-white/20 text-white border-white/30 hover:border-white/50 text-sm md:text-base"
             >
               Cancel
             </Button>
             <Button
               onClick={executeApproval}
-              className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700"
+              className="w-full sm:flex-1 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white shadow-lg hover:shadow-xl transition-all text-sm md:text-base"
             >
-              <CheckCircle className="mr-2 h-4 w-4" />
-              Confirm & Sign with MetaMask
+              <CheckCircle className="mr-2 h-4 w-4 md:h-5 md:w-5" />
+              <span className="truncate">Confirm & Sign with MetaMask</span>
             </Button>
           </DialogFooter>
         </DialogContent>
