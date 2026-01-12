@@ -44,7 +44,7 @@ export class ErrorBoundary extends Component<Props, State> {
   render() {
     if (this.state.hasError) {
       return (
-        <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900">
+        <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-gray-950 via-slate-950 to-gray-950">
           <div className="text-center bg-white/10 backdrop-blur-2xl border border-white/20 p-8 rounded-lg shadow-xl">
             <h2 className="text-2xl font-bold text-white mb-2">Something went wrong</h2>
             <p className="text-gray-300 mb-4">{this.state.error?.message}</p>

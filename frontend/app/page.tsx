@@ -39,7 +39,7 @@ export default function Home() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900 overflow-hidden">
+    <div className="min-h-screen bg-gradient-to-br from-gray-950 via-slate-950 to-gray-950 overflow-hidden">
       {/* Animated background effects with parallax */}
       <div
         className="absolute inset-0 bg-[url('/grid.svg')] bg-center [mask-image:linear-gradient(180deg,white,rgba(255,255,255,0))]"
