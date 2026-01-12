@@ -131,8 +131,8 @@ export default function SettingsPage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-96">
-        <div className="text-lg text-gray-600">Loading...</div>
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900 flex items-center justify-center">
+        <div className="text-lg text-gray-300">Loading...</div>
       </div>
     );
   }
@@ -146,34 +146,42 @@ export default function SettingsPage() {
   ];
 
   return (
-    <div className="container mx-auto px-4 pt-24 pb-8 max-w-7xl">
-      <div className="mb-8">
-        <h1 className="text-4xl font-bold mb-2">Settings</h1>
-        <p className="text-gray-600 text-lg">Manage your company and payroll preferences</p>
-      </div>
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900">
+      {/* Animated background effects */}
+      <div className="absolute inset-0 bg-[url('/grid.svg')] bg-center [mask-image:linear-gradient(180deg,white,rgba(255,255,255,0))]"></div>
 
-      {/* Tabs Navigation */}
-      <div className="mb-6 border-b border-gray-200">
-        <div className="flex space-x-8">
-          {tabs.map((tab) => {
-            const Icon = tab.icon;
-            return (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                className={`flex items-center gap-2 pb-4 px-1 border-b-2 font-medium transition-colors ${
-                  activeTab === tab.id
-                    ? 'border-purple-600 text-purple-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                }`}
-              >
-                <Icon className="h-5 w-5" />
-                {tab.label}
-              </button>
-            );
-          })}
+      {/* Floating orbs */}
+      <div className="absolute top-20 left-10 w-72 h-72 bg-blue-500/30 rounded-full blur-3xl animate-pulse"></div>
+      <div className="absolute bottom-20 right-10 w-96 h-96 bg-purple-500/20 rounded-full blur-3xl animate-pulse"></div>
+
+      <div className="relative container mx-auto px-4 pt-24 pb-8 max-w-7xl">
+        <div className="mb-10">
+          <h1 className="text-4xl font-bold mb-2 bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent">Settings</h1>
+          <p className="text-gray-300 text-lg">Manage your company and payroll preferences</p>
         </div>
-      </div>
+
+        {/* Tabs Navigation */}
+        <div className="mb-6 border-b border-white/20">
+          <div className="flex space-x-8">
+            {tabs.map((tab) => {
+              const Icon = tab.icon;
+              return (
+                <button
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id)}
+                  className={`flex items-center gap-2 pb-4 px-1 border-b-2 font-medium transition-colors ${
+                    activeTab === tab.id
+                      ? 'border-blue-400 text-blue-400'
+                      : 'border-transparent text-gray-400 hover:text-gray-200 hover:border-gray-500'
+                  }`}
+                >
+                  <Icon className="h-5 w-5" />
+                  {tab.label}
+                </button>
+              );
+            })}
+          </div>
+        </div>
 
       {/* Tab Content */}
       <div className="space-y-6">
@@ -184,24 +192,24 @@ export default function SettingsPage() {
 
         {/* Payment Settings Tab */}
         {activeTab === 'payments' && (
-          <Card className="shadow-2xl bg-white backdrop-blur-2xl border border-gray-200">
+          <Card className="bg-white/10 backdrop-blur-2xl border-white/20 shadow-xl">
             <CardHeader>
               <div className="flex items-center gap-2">
-                <Zap className="h-5 w-5 text-purple-600" />
-                <CardTitle>Batch Transfers</CardTitle>
+                <Zap className="h-5 w-5 text-blue-400" />
+                <CardTitle className="text-white">Batch Transfers</CardTitle>
               </div>
-              <CardDescription>
+              <CardDescription className="text-gray-400">
                 Pay all employees in one transaction to save on gas costs
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
               {!batchAvailable ? (
-                <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                <div className="bg-white/5 border border-white/20 rounded-lg p-4">
                   <div className="flex items-start gap-3">
-                    <AlertCircle className="h-5 w-5 text-gray-500 mt-0.5" />
+                    <AlertCircle className="h-5 w-5 text-gray-400 mt-0.5" />
                     <div>
-                      <p className="font-medium text-gray-900">Batch transfers not available</p>
-                      <p className="text-sm text-gray-600 mt-1">
+                      <p className="font-medium text-white">Batch transfers not available</p>
+                      <p className="text-sm text-gray-300 mt-1">
                         The batch transfer contract is not deployed. Contact support or deploy the contract to enable this feature.
                       </p>
                     </div>
@@ -210,72 +218,72 @@ export default function SettingsPage() {
               ) : (
                 <>
                   {/* Status */}
-                  <div className="flex items-center justify-between p-4 bg-gradient-to-r from-purple-50/80 to-blue-50/80 rounded-lg border border-purple-200/50 backdrop-blur-sm">
+                  <div className="flex items-center justify-between p-4 bg-white/5 rounded-lg border border-white/20">
                     <div className="flex items-center gap-3">
                       {isBatchApproved ? (
                         <>
-                          <div className="h-10 w-10 bg-gradient-to-br from-green-100 to-emerald-100 rounded-full flex items-center justify-center shadow-md">
-                            <CheckCircle className="h-6 w-6 text-green-600" />
+                          <div className="h-10 w-10 bg-gradient-to-br from-green-500/30 to-emerald-500/30 rounded-full flex items-center justify-center border border-green-400/30">
+                            <CheckCircle className="h-6 w-6 text-green-400" />
                           </div>
                           <div>
-                            <p className="font-semibold text-gray-900">Batch Transfers Enabled</p>
-                            <p className="text-sm text-gray-600">You can use batch mode when approving payroll</p>
+                            <p className="font-semibold text-white">Batch Transfers Enabled</p>
+                            <p className="text-sm text-gray-300">You can use batch mode when approving payroll</p>
                           </div>
                         </>
                       ) : (
                         <>
-                          <div className="h-10 w-10 bg-gray-100 rounded-full flex items-center justify-center">
-                            <XCircle className="h-6 w-6 text-gray-500" />
+                          <div className="h-10 w-10 bg-white/5 rounded-full flex items-center justify-center border border-white/20">
+                            <XCircle className="h-6 w-6 text-gray-400" />
                           </div>
                           <div>
-                            <p className="font-semibold text-gray-900">Batch Transfers Disabled</p>
-                            <p className="text-sm text-gray-600">Enable to save on gas costs</p>
+                            <p className="font-semibold text-white">Batch Transfers Disabled</p>
+                            <p className="text-sm text-gray-300">Enable to save on gas costs</p>
                           </div>
                         </>
                       )}
                     </div>
-                    <Badge variant={isBatchApproved ? "default" : "secondary"} className={isBatchApproved ? "bg-green-600" : ""}>
+                    <Badge variant={isBatchApproved ? "default" : "secondary"} className={isBatchApproved ? "bg-green-500/30 text-green-300 border border-green-400/30" : "bg-white/10 text-gray-300 border border-white/20"}>
                       {isBatchApproved ? "Active" : "Inactive"}
                     </Badge>
                   </div>
 
                   {/* Cost Comparison */}
-                  <div className="bg-gradient-to-br from-blue-100/60 via-purple-100/60 to-pink-100/60 border-2 border-purple-300/60 rounded-xl p-5 space-y-3 backdrop-blur-sm shadow-lg">
+                  <div className="bg-gradient-to-br from-blue-500/10 via-purple-500/10 to-pink-500/10 border-2 border-purple-400/30 rounded-xl p-5 space-y-3">
                     <button
                       onClick={() => setShowCostComparison(!showCostComparison)}
                       className="flex items-center justify-between w-full text-left"
                     >
                       <div className="flex items-center gap-2">
-                        <Info className="h-5 w-5 text-purple-600" />
-                        <span className="font-semibold text-gray-900">Cost Savings</span>
+                        <Info className="h-5 w-5 text-blue-400" />
+                        <span className="font-semibold text-white">Cost Savings</span>
                       </div>
-                      <span className="text-sm text-purple-700">
+                      <span className="text-sm text-blue-300">
                         {showCostComparison ? 'Hide' : 'Show'} Details
                       </span>
                     </button>
 
                     {showCostComparison && (
-                      <div className="bg-white rounded-lg border border-purple-200 p-5 space-y-4">
-                        <p className="text-sm text-gray-700 font-medium">
+                      <div className="bg-white/5 rounded-lg border border-white/20 p-5 space-y-4">
+                        <p className="text-sm text-gray-300 font-medium">
                           Based on {employeeCount} employees per payroll:
                         </p>
                         <div className="grid grid-cols-2 gap-4">
-                          <div className="bg-gray-50 rounded-lg p-4">
-                            <p className="text-sm text-gray-600 mb-2">Individual Transfers:</p>
-                            <p className="text-xl font-bold text-gray-900">${costData.individual.costUSD}</p>
-                            <p className="text-sm text-gray-500 mt-1.5">{employeeCount} transactions</p>
+                          <div className="bg-white/5 rounded-lg p-4 border border-white/10">
+                            <p className="text-sm text-gray-400 mb-2">Individual Transfers:</p>
+                            <p className="text-xl font-bold text-white">${costData.individual.costUSD}</p>
+                            <p className="text-sm text-gray-400 mt-1.5">{employeeCount} transactions</p>
                           </div>
-                          <div className="bg-purple-50 rounded-lg p-4">
-                            <p className="text-sm text-purple-700 mb-2">Batch Transfer:</p>
-                            <p className="text-xl font-bold text-purple-900">${costData.batch.costUSD}</p>
-                            <p className="text-sm text-purple-600 mt-1.5">1 transaction</p>
+                          <div className="bg-purple-500/10 rounded-lg p-4 border border-purple-400/30">
+                            <p className="text-sm text-purple-300 mb-2">Batch Transfer:</p>
+                            <p className="text-xl font-bold text-white">${costData.batch.costUSD}</p>
+                            <p className="text-sm text-purple-300 mt-1.5">1 transaction</p>
                           </div>
                         </div>
-                        <div className="flex items-center justify-between pt-4 border-t border-purple-100">
-                          <span className="text-sm font-semibold text-gray-700">You save per payroll:</span>
+                        <div className="flex items-center justify-between pt-4 border-t border-white/20">
+                          <span className="text-sm font-semibold text-gray-300">You save per payroll:</span>
                           <div className="text-right">
-                            <p className="text-lg font-bold text-green-600">${costData.savings.costUSD}</p>
-                            <p className="text-sm text-green-700">{costData.savings.percent}% cheaper</p>
+                            <p className="text-lg font-bold text-green-400">${costData.savings.costUSD}</p>
+                            <p className="text-sm text-green-300">{costData.savings.percent}% cheaper</p>
                           </div>
                         </div>
                       </div>
@@ -283,13 +291,13 @@ export default function SettingsPage() {
                   </div>
 
                   {/* Contract Info */}
-                  <div className="bg-gradient-to-br from-cyan-50/80 to-blue-50/80 border-2 border-cyan-300/60 rounded-xl p-4 space-y-2 backdrop-blur-sm shadow-md">
+                  <div className="bg-gradient-to-br from-cyan-500/10 to-blue-500/10 border-2 border-cyan-400/30 rounded-xl p-4 space-y-2">
                     <div className="flex items-start gap-2">
-                      <Shield className="h-5 w-5 text-blue-600 mt-0.5" />
+                      <Shield className="h-5 w-5 text-cyan-400 mt-0.5" />
                       <div className="flex-1">
-                        <p className="font-medium text-blue-900">Batch Contract Address</p>
-                        <p className="text-xs font-mono text-blue-700 mt-1 break-all">{batchContractAddress}</p>
-                        <p className="text-xs text-blue-600 mt-2">
+                        <p className="font-medium text-white">Batch Contract Address</p>
+                        <p className="text-xs font-mono text-cyan-300 mt-1 break-all">{batchContractAddress}</p>
+                        <p className="text-xs text-gray-300 mt-2">
                           This contract only has permission to transfer MNEE tokens you explicitly approve. It cannot access other tokens or perform any other actions.
                         </p>
                       </div>
@@ -303,7 +311,7 @@ export default function SettingsPage() {
                         onClick={handleRevokeBatchApproval}
                         disabled={revokingBatch}
                         variant="outline"
-                        className="flex-1"
+                        className="flex-1 bg-white/10 hover:bg-white/20 text-white border-white/20"
                       >
                         {revokingBatch ? (
                           <>
@@ -321,7 +329,7 @@ export default function SettingsPage() {
                       <Button
                         onClick={handleApproveBatchContract}
                         disabled={approvingBatch}
-                        className="flex-1 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700"
+                        className="flex-1 bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 shadow-lg hover:shadow-xl transition-all hover:scale-105 text-white"
                       >
                         {approvingBatch ? (
                           <>
@@ -339,12 +347,12 @@ export default function SettingsPage() {
                   </div>
 
                   {/* Warning */}
-                  <div className="bg-gradient-to-br from-amber-50/80 to-yellow-50/80 border-2 border-amber-300/60 rounded-xl p-3 backdrop-blur-sm shadow-md">
-                    <div className="flex items-start gap-2 text-sm text-amber-800">
+                  <div className="bg-gradient-to-br from-amber-500/10 to-yellow-500/10 border-2 border-amber-400/30 rounded-xl p-3">
+                    <div className="flex items-start gap-2 text-sm text-amber-300">
                       <AlertCircle className="h-4 w-4 mt-0.5 flex-shrink-0" />
                       <div>
-                        <p className="font-medium">Important:</p>
-                        <p className="text-xs mt-1">
+                        <p className="font-medium text-white">Important:</p>
+                        <p className="text-xs mt-1 text-gray-300">
                           Approving or revoking batch transfers requires a blockchain transaction and costs gas (~$1-2).
                           Once approved, you can toggle batch mode on/off in the payroll approval screen without additional costs.
                         </p>
@@ -356,6 +364,7 @@ export default function SettingsPage() {
             </CardContent>
           </Card>
         )}
+      </div>
       </div>
     </div>
   );

@@ -386,29 +386,26 @@ export function WalletApproval({ employerId, onApprovalComplete }: WalletApprova
 
   if (approvals.length === 0) {
     return (
-      <Card>
-        <CardHeader>
-          <div className="flex items-center gap-2">
-            <CheckCircle className="h-5 w-5 text-green-600" />
-            <CardTitle>Pending Approvals</CardTitle>
+      <div className="bg-white/5 border border-white/20 rounded-lg p-6">
+        <div className="flex items-start gap-3 mb-3">
+          <CheckCircle className="h-5 w-5 text-green-400 mt-0.5" />
+          <div>
+            <h3 className="font-semibold text-white">No pending payroll transactions to approve</h3>
+            <p className="text-sm text-gray-300 mt-2">
+              When autonomous payroll is ready to execute, approval requests will appear here.
+              You'll be able to review and sign transactions with your connected wallet.
+            </p>
           </div>
-          <CardDescription>No pending payroll transactions to approve</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <p className="text-sm text-gray-600">
-            When autonomous payroll is ready to execute, approval requests will appear here.
-            You'll be able to review and sign transactions with your connected wallet.
-          </p>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
     );
   }
 
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h2 className="text-xl font-bold">Pending Approvals ({approvals.length})</h2>
-        <Badge variant="secondary">
+        <h2 className="text-xl font-bold text-white">Pending Approvals ({approvals.length})</h2>
+        <Badge variant="secondary" className="bg-white/10 text-gray-300 border-white/20">
           <Clock className="mr-1 h-3 w-3" />
           Auto-refresh
         </Badge>
@@ -423,12 +420,12 @@ export function WalletApproval({ employerId, onApprovalComplete }: WalletApprova
         const isProcessing = processingId === approval.id;
 
         return (
-          <Card key={approval.id} className={isExpired ? 'opacity-60' : ''}>
+          <Card key={approval.id} className={`bg-white/10 backdrop-blur-2xl border-white/20 ${isExpired ? 'opacity-60' : ''}`}>
             <CardHeader>
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <Wallet className="h-5 w-5 text-purple-600" />
-                  <CardTitle className="text-lg">Payroll Approval Required</CardTitle>
+                  <Wallet className="h-5 w-5 text-purple-400" />
+                  <CardTitle className="text-lg text-white">Payroll Approval Required</CardTitle>
                 </div>
                 {isExpired ? (
                   <Badge variant="destructive">
@@ -436,26 +433,26 @@ export function WalletApproval({ employerId, onApprovalComplete }: WalletApprova
                     Expired
                   </Badge>
                 ) : (
-                  <Badge variant="secondary">
+                  <Badge variant="secondary" className="bg-white/10 text-gray-300 border-white/20">
                     <Clock className="mr-1 h-3 w-3" />
                     {minutesRemaining} min remaining
                   </Badge>
                 )}
               </div>
-              <CardDescription>
+              <CardDescription className="text-gray-400">
                 Created {new Date(approval.createdAt).toLocaleString()}
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               {/* Summary */}
               <div className="grid grid-cols-2 gap-4">
-                <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
-                  <p className="text-xs text-blue-700 font-medium mb-1">Total Amount</p>
-                  <p className="text-2xl font-bold text-blue-900">{approval.totalAmount.toLocaleString()} MNEE</p>
+                <div className="bg-blue-500/20 border border-blue-400/30 rounded-lg p-3">
+                  <p className="text-xs text-blue-300 font-medium mb-1">Total Amount</p>
+                  <p className="text-2xl font-bold text-white">{approval.totalAmount.toLocaleString()} MNEE</p>
                 </div>
-                <div className="bg-secondary border border-border rounded-lg p-3">
-                  <p className="text-xs text-muted-foreground font-medium mb-1">Recipients</p>
-                  <p className="text-2xl font-bold text-foreground flex items-center gap-1">
+                <div className="bg-white/10 border border-white/20 rounded-lg p-3">
+                  <p className="text-xs text-gray-300 font-medium mb-1">Recipients</p>
+                  <p className="text-2xl font-bold text-white flex items-center gap-1">
                     <Users className="h-5 w-5" />
                     {approval.recipientCount}
                   </p>
@@ -463,23 +460,23 @@ export function WalletApproval({ employerId, onApprovalComplete }: WalletApprova
               </div>
 
               {/* Employee List */}
-              <div className="rounded-lg bg-gray-50 border border-gray-200 p-4">
-                <p className="text-sm font-semibold text-gray-700 mb-3">Employees:</p>
+              <div className="rounded-lg bg-white/5 border border-white/20 p-4">
+                <p className="text-sm font-semibold text-white mb-3">Employees:</p>
                 <ul className="space-y-2">
                   {approval.recipients.map((recipient, idx) => (
                     <li key={idx} className="flex items-center justify-between text-sm">
                       <div className="flex items-center gap-2">
-                        <div className="h-8 w-8 bg-primary/20 rounded-full flex items-center justify-center">
-                          <span className="text-primary font-medium text-xs">
+                        <div className="h-8 w-8 bg-blue-500/30 rounded-full flex items-center justify-center border border-blue-400/30">
+                          <span className="text-blue-300 font-medium text-xs">
                             {recipient.name.charAt(0).toUpperCase()}
                           </span>
                         </div>
                         <div>
-                          <p className="font-medium text-gray-900">{recipient.name}</p>
-                          <p className="text-xs text-gray-500 font-mono">{recipient.address.slice(0, 10)}...{recipient.address.slice(-8)}</p>
+                          <p className="font-medium text-white">{recipient.name}</p>
+                          <p className="text-xs text-gray-400 font-mono">{recipient.address.slice(0, 10)}...{recipient.address.slice(-8)}</p>
                         </div>
                       </div>
-                      <span className="font-semibold text-gray-900">{recipient.amount} MNEE</span>
+                      <span className="font-semibold text-white">{recipient.amount} MNEE</span>
                     </li>
                   ))}
                 </ul>
@@ -487,15 +484,15 @@ export function WalletApproval({ employerId, onApprovalComplete }: WalletApprova
 
               {/* Batch Transfer Toggle & Cost Comparison */}
               {batchAvailable && (
-                <div className="rounded-lg bg-gradient-to-br from-blue-50 to-purple-50 border border-purple-200 p-4 space-y-3">
+                <div className="rounded-lg bg-gradient-to-br from-blue-500/20 to-purple-500/20 border border-purple-400/30 p-4 space-y-3">
                   {/* Approval Status Banner */}
                   {!isBatchApproved && (
-                    <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 space-y-2">
-                      <div className="flex items-start gap-2 text-sm text-amber-800">
+                    <div className="bg-amber-500/20 border border-amber-400/30 rounded-lg p-3 space-y-2">
+                      <div className="flex items-start gap-2 text-sm text-amber-200">
                         <Lock className="h-4 w-4 mt-0.5 flex-shrink-0" />
                         <div className="flex-1">
-                          <p className="font-medium mb-1">Batch transfers not enabled yet</p>
-                          <p className="text-xs text-amber-700">
+                          <p className="font-medium mb-1 text-white">Batch transfers not enabled yet</p>
+                          <p className="text-xs text-amber-300">
                             You need to approve the batch contract once to use batch transfers. This costs ~$1-2 gas (one-time).
                           </p>
                         </div>
@@ -524,12 +521,12 @@ export function WalletApproval({ employerId, onApprovalComplete }: WalletApprova
                   {/* Batch Toggle */}
                   <div className={`flex items-center justify-between ${!isBatchApproved ? 'opacity-50' : ''}`}>
                     <div className="flex items-center gap-2">
-                      <Zap className="h-5 w-5 text-purple-600" />
-                      <label className="font-semibold text-gray-900 cursor-pointer" htmlFor="batch-toggle">
+                      <Zap className="h-5 w-5 text-purple-400" />
+                      <label className="font-semibold text-white cursor-pointer" htmlFor="batch-toggle">
                         Use Batch Transfer
                       </label>
                       {checkingApproval && (
-                        <span className="text-xs text-gray-500">(checking...)</span>
+                        <span className="text-xs text-gray-400">(checking...)</span>
                       )}
                     </div>
                     <button
@@ -555,14 +552,14 @@ export function WalletApproval({ employerId, onApprovalComplete }: WalletApprova
                   </div>
 
                   {useBatchMode ? (
-                    <div className="flex items-start gap-2 text-sm text-purple-800">
+                    <div className="flex items-start gap-2 text-sm text-purple-200">
                       <CheckCircle className="h-4 w-4 mt-0.5 flex-shrink-0" />
-                      <p>
+                      <p className="text-white">
                         <strong>Batch mode ON:</strong> All {approval.recipientCount} employees will be paid in <strong>1 transaction</strong>. Cheaper and faster!
                       </p>
                     </div>
                   ) : isBatchApproved ? (
-                    <div className="flex items-start gap-2 text-sm text-gray-700">
+                    <div className="flex items-start gap-2 text-sm text-gray-300">
                       <AlertCircle className="h-4 w-4 mt-0.5 flex-shrink-0" />
                       <p>
                         Individual mode: Each employee gets a separate transaction ({approval.recipientCount} MetaMask popups).
@@ -573,7 +570,7 @@ export function WalletApproval({ employerId, onApprovalComplete }: WalletApprova
                   {/* Cost Comparison Button */}
                   <button
                     onClick={() => setShowCostComparison(!showCostComparison)}
-                    className="flex items-center gap-2 text-sm text-purple-700 hover:text-purple-900 font-medium"
+                    className="flex items-center gap-2 text-sm text-purple-300 hover:text-purple-100 font-medium"
                   >
                     <Info className="h-4 w-4" />
                     {showCostComparison ? 'Hide' : 'Show'} Cost Comparison
@@ -583,24 +580,24 @@ export function WalletApproval({ employerId, onApprovalComplete }: WalletApprova
                   {showCostComparison && (() => {
                     const costData = calculateGasSavings(approval.recipientCount);
                     return (
-                      <div className="bg-white rounded-lg border border-purple-200 p-3 space-y-2">
+                      <div className="bg-white/10 rounded-lg border border-purple-300/30 p-3 space-y-2">
                         <div className="grid grid-cols-2 gap-3 text-sm">
                           <div>
-                            <p className="text-gray-600 mb-1">Individual Transfers:</p>
-                            <p className="font-bold text-gray-900">${costData.individual.costUSD}</p>
-                            <p className="text-xs text-gray-500">{approval.recipientCount} transactions</p>
+                            <p className="text-gray-300 mb-1">Individual Transfers:</p>
+                            <p className="font-bold text-white">${costData.individual.costUSD}</p>
+                            <p className="text-xs text-gray-400">{approval.recipientCount} transactions</p>
                           </div>
                           <div>
-                            <p className="text-gray-600 mb-1">Batch Transfer:</p>
-                            <p className="font-bold text-purple-700">${costData.batch.costUSD}</p>
-                            <p className="text-xs text-gray-500">1 transaction</p>
+                            <p className="text-gray-300 mb-1">Batch Transfer:</p>
+                            <p className="font-bold text-purple-300">${costData.batch.costUSD}</p>
+                            <p className="text-xs text-gray-400">1 transaction</p>
                           </div>
                         </div>
-                        <div className="flex items-center justify-between pt-2 border-t border-purple-100">
-                          <span className="text-sm font-medium text-gray-700">You save:</span>
+                        <div className="flex items-center justify-between pt-2 border-t border-purple-300/30">
+                          <span className="text-sm font-medium text-gray-300">You save:</span>
                           <div className="text-right">
-                            <p className="font-bold text-green-600">${costData.savings.costUSD}</p>
-                            <p className="text-xs text-green-700">{costData.savings.percent}% cheaper</p>
+                            <p className="font-bold text-green-400">${costData.savings.costUSD}</p>
+                            <p className="text-xs text-green-300">{costData.savings.percent}% cheaper</p>
                           </div>
                         </div>
                       </div>

@@ -138,195 +138,204 @@ export default function PayrollPage() {
   ];
 
   return (
-    <div className="container mx-auto px-4 py-8 pt-24 space-y-6">
-      <div>
-        <h1 className="text-4xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
-          Payroll Management
-        </h1>
-        <p className="text-gray-600 mt-2 text-lg">Create payroll approvals and view payment history</p>
-      </div>
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900">
+      {/* Animated background effects */}
+      <div className="absolute inset-0 bg-[url('/grid.svg')] bg-center [mask-image:linear-gradient(180deg,white,rgba(255,255,255,0))]"></div>
 
-      {/* Tabs Navigation */}
-      <div className="border-b border-gray-200">
-        <div className="flex space-x-8">
-          {tabs.map((tab) => {
-            const Icon = tab.icon;
-            return (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                className={`flex items-center gap-2 pb-4 px-1 border-b-2 font-medium transition-colors ${
-                  activeTab === tab.id
-                    ? 'border-purple-600 text-purple-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                }`}
-              >
-                <Icon className="h-5 w-5" />
-                {tab.label}
-              </button>
-            );
-          })}
+      {/* Floating orbs */}
+      <div className="absolute top-20 left-10 w-72 h-72 bg-blue-500/30 rounded-full blur-3xl animate-pulse"></div>
+      <div className="absolute bottom-20 right-10 w-96 h-96 bg-purple-500/20 rounded-full blur-3xl animate-pulse"></div>
+
+      <div className="relative container mx-auto px-4 py-8 pt-24 space-y-6">
+        <div>
+          <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent">
+            Payroll Management
+          </h1>
+          <p className="text-gray-300 mt-2 text-lg">Create payroll approvals and view payment history</p>
         </div>
-      </div>
 
-      {/* Tab Content */}
-      <div className="space-y-6">
-        {/* Run Payroll Tab */}
-        {activeTab === 'run' && (
-          <Card className="shadow-xl bg-white border-2 border-gray-200">
-        <CardHeader>
-          <CardTitle>Run Payroll</CardTitle>
-          <CardDescription>
-            Review employee list and create payment approval
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="rounded-lg border border-gray-200 bg-gray-50 p-4">
-            <div className="grid gap-4 md:grid-cols-3">
-              <div>
-                <div className="text-sm text-gray-600">Total Employees</div>
-                <div className="text-2xl font-bold">{employees.length}</div>
-              </div>
-              <div>
-                <div className="text-sm text-gray-600">Total Amount</div>
-                <div className="text-2xl font-bold">{formatCurrency(totalPayroll)}</div>
-              </div>
-              <div>
-                <div className="text-sm text-gray-600">Status</div>
-                <div className="text-2xl font-bold">
-                  {running ? 'Running...' : 'Ready'}
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div className="rounded-lg bg-secondary border border-border p-4">
-            <div className="flex items-start gap-3">
-              <div className="flex-shrink-0">
-                <div className="h-10 w-10 bg-primary rounded-full flex items-center justify-center">
-                  <span className="text-white text-lg">🔐</span>
-                </div>
-              </div>
-              <div>
-                <h3 className="font-semibold text-foreground mb-1">Non-Custodial Wallet Signing</h3>
-                <p className="text-sm text-muted-foreground">
-                  This system uses <strong>wallet signing only</strong>. When you run payroll, an approval will be created.
-                  You'll then sign the transactions with your MetaMask wallet. Your funds stay in your wallet - maximum security!
-                </p>
-              </div>
-            </div>
-          </div>
-
-          <Button
-            onClick={handleRunPayroll}
-            disabled={running || employees.length === 0}
-            size="lg"
-            className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 hover:scale-105 transition-all duration-200"
-          >
-            {running ? (
-              <>
-                <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
-                Creating Approval...
-              </>
-            ) : (
-              <>
-                <PlayCircle className="mr-2 h-4 w-4" />
-                Create Payroll Approval
-              </>
-            )}
-          </Button>
-        </CardContent>
-      </Card>
-        )}
-
-        {/* Payment History Tab */}
-        {activeTab === 'history' && (
-          <Card className="shadow-xl bg-white border-2 border-gray-200">
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <div>
-              <CardTitle>Payment History</CardTitle>
-              <CardDescription>Recent salary executions</CardDescription>
-            </div>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleRefresh}
-              disabled={refreshing}
-            >
-              <RefreshCw className={`h-4 w-4 mr-2 ${refreshing ? 'animate-spin' : ''}`} />
-              Refresh
-            </Button>
-          </div>
-        </CardHeader>
-        <CardContent>
-          {payrollHistory.length === 0 ? (
-            <div className="text-center py-12 text-gray-500">
-              No payroll history yet. Run your first payroll!
-            </div>
-          ) : (
-            <div className="space-y-3">
-              {payrollHistory.map((log) => (
-                <div
-                  key={log.id}
-                  className="flex items-center justify-between rounded-lg border p-4 hover:bg-gray-50"
+        {/* Tabs Navigation */}
+        <div className="border-b border-white/20">
+          <div className="flex space-x-8">
+            {tabs.map((tab) => {
+              const Icon = tab.icon;
+              return (
+                <button
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id)}
+                  className={`flex items-center gap-2 pb-4 px-1 border-b-2 font-medium transition-colors ${
+                    activeTab === tab.id
+                      ? 'border-blue-400 text-blue-400'
+                      : 'border-transparent text-gray-400 hover:text-gray-200 hover:border-gray-500'
+                  }`}
                 >
-                  <div className="flex items-center gap-4">
-                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gray-100">
-                      {log.status === 'completed' && <CheckCircle className="h-5 w-5 text-green-600" />}
-                      {log.status === 'pending' && <Clock className="h-5 w-5 text-yellow-600" />}
-                      {log.status === 'failed' && <XCircle className="h-5 w-5 text-red-600" />}
+                  <Icon className="h-5 w-5" />
+                  {tab.label}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Tab Content */}
+        <div className="space-y-6">
+          {/* Run Payroll Tab */}
+          {activeTab === 'run' && (
+            <Card className="bg-white/10 backdrop-blur-2xl border-white/20 shadow-xl">
+              <CardHeader>
+                <CardTitle className="text-white">Run Payroll</CardTitle>
+                <CardDescription className="text-gray-400">
+                  Review employee list and create payment approval
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="rounded-lg border border-white/20 bg-white/5 p-4">
+                  <div className="grid gap-4 md:grid-cols-3">
+                    <div>
+                      <div className="text-sm text-gray-400">Total Employees</div>
+                      <div className="text-2xl font-bold text-white">{employees.length}</div>
                     </div>
                     <div>
-                      <div className="font-medium">
-                        {log.employee?.name || 'Unknown Employee'}
-                      </div>
-                      <div className="text-sm text-gray-600">
-                        {log.employee?.walletAddress && formatWalletAddress(log.employee.walletAddress)}
-                      </div>
+                      <div className="text-sm text-gray-400">Total Amount</div>
+                      <div className="text-2xl font-bold text-white">{formatCurrency(totalPayroll)}</div>
                     </div>
-                  </div>
-
-                  <div className="flex items-center gap-6">
-                    <div className="text-right">
-                      <div className="font-semibold">{formatCurrency(Number(log.amount))}</div>
-                      <div className="text-xs text-gray-500">{formatDateTime(log.executedAt)}</div>
-                    </div>
-
                     <div>
-                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(log.status)}`}>
-                        {log.status}
-                      </span>
+                      <div className="text-sm text-gray-400">Status</div>
+                      <div className="text-2xl font-bold text-white">
+                        {running ? 'Running...' : 'Ready'}
+                      </div>
                     </div>
-
-                    {log.txHash && (
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        onClick={() => window.open(getEtherscanTxUrl(log.txHash!, Number(process.env.NEXT_PUBLIC_ETHEREUM_CHAIN_ID) || 1), '_blank')}
-                      >
-                        <ExternalLink className="h-4 w-4" />
-                      </Button>
-                    )}
-
-                    {log.status === 'failed' && log.retryCount < 3 && (
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => handleRetry(log.id)}
-                      >
-                        <RefreshCw className="h-4 w-4 mr-1" />
-                        Retry
-                      </Button>
-                    )}
                   </div>
                 </div>
-              ))}
-            </div>
+
+                <div className="rounded-lg bg-white/5 border border-white/20 p-4">
+                  <div className="flex items-start gap-3">
+                    <div className="flex-shrink-0">
+                      <div className="h-10 w-10 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-full flex items-center justify-center">
+                        <span className="text-white text-lg">🔐</span>
+                      </div>
+                    </div>
+                    <div>
+                      <h3 className="font-semibold text-white mb-1">Non-Custodial Wallet Signing</h3>
+                      <p className="text-sm text-gray-300">
+                        This system uses <strong>wallet signing only</strong>. When you run payroll, an approval will be created.
+                        You'll then sign the transactions with your MetaMask wallet. Your funds stay in your wallet - maximum security!
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                <Button
+                  onClick={handleRunPayroll}
+                  disabled={running || employees.length === 0}
+                  size="lg"
+                  className="w-full bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-200 text-white"
+                >
+                  {running ? (
+                    <>
+                      <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
+                      Creating Approval...
+                    </>
+                  ) : (
+                    <>
+                      <PlayCircle className="mr-2 h-4 w-4" />
+                      Create Payroll Approval
+                    </>
+                  )}
+                </Button>
+              </CardContent>
+            </Card>
           )}
-        </CardContent>
-      </Card>
-        )}
+
+          {/* Payment History Tab */}
+          {activeTab === 'history' && (
+            <Card className="bg-white/10 backdrop-blur-2xl border-white/20 shadow-xl">
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <CardTitle className="text-white">Payment History</CardTitle>
+                    <CardDescription className="text-gray-400">Recent salary executions</CardDescription>
+                  </div>
+                  <Button
+                    className="bg-white/10 hover:bg-white/20 text-white border-white/20"
+                    size="sm"
+                    onClick={handleRefresh}
+                    disabled={refreshing}
+                  >
+                    <RefreshCw className={`h-4 w-4 mr-2 ${refreshing ? 'animate-spin' : ''}`} />
+                    Refresh
+                  </Button>
+                </div>
+              </CardHeader>
+              <CardContent>
+                {payrollHistory.length === 0 ? (
+                  <div className="text-center py-12 text-gray-400">
+                    No payroll history yet. Run your first payroll!
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {payrollHistory.map((log) => (
+                      <div
+                        key={log.id}
+                        className="flex items-center justify-between rounded-lg border border-white/10 bg-white/5 p-4 hover:bg-white/10 transition-all"
+                      >
+                        <div className="flex items-center gap-4">
+                          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-white/10">
+                            {log.status === 'completed' && <CheckCircle className="h-5 w-5 text-green-400" />}
+                            {log.status === 'pending' && <Clock className="h-5 w-5 text-yellow-400" />}
+                            {log.status === 'failed' && <XCircle className="h-5 w-5 text-red-400" />}
+                          </div>
+                          <div>
+                            <div className="font-medium text-white">
+                              {log.employee?.name || 'Unknown Employee'}
+                            </div>
+                            <div className="text-sm text-gray-400">
+                              {log.employee?.walletAddress && formatWalletAddress(log.employee.walletAddress)}
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center gap-6">
+                          <div className="text-right">
+                            <div className="font-semibold text-white">{formatCurrency(Number(log.amount))}</div>
+                            <div className="text-xs text-gray-400">{formatDateTime(log.executedAt)}</div>
+                          </div>
+
+                          <div>
+                            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(log.status)}`}>
+                              {log.status}
+                            </span>
+                          </div>
+
+                          {log.txHash && (
+                            <Button
+                              size="sm"
+                              className="bg-white/10 hover:bg-white/20 text-white"
+                              onClick={() => window.open(getEtherscanTxUrl(log.txHash!, Number(process.env.NEXT_PUBLIC_ETHEREUM_CHAIN_ID) || 1), '_blank')}
+                            >
+                              <ExternalLink className="h-4 w-4" />
+                            </Button>
+                          )}
+
+                          {log.status === 'failed' && log.retryCount < 3 && (
+                            <Button
+                              size="sm"
+                              className="bg-white/10 hover:bg-white/20 text-white border-white/20"
+                              onClick={() => handleRetry(log.id)}
+                            >
+                              <RefreshCw className="h-4 w-4 mr-1" />
+                              Retry
+                            </Button>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          )}
+        </div>
       </div>
     </div>
   )
